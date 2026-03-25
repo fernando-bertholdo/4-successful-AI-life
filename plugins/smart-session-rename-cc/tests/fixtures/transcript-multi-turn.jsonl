@@ -1,0 +1,10 @@
+{"role":"user","type":"human","content":"I need to refactor the authentication middleware to support OAuth2 tokens"}
+{"role":"assistant","type":"text","content":"I'll help with that..."}
+{"role":"user","type":"human","content":"Also add rate limiting to the auth endpoints"}
+{"role":"assistant","type":"text","content":"Good idea, I'll add rate limiting..."}
+{"role":"user","type":"human","content":"Now let's write tests for the new auth flow"}
+{"role":"assistant","type":"text","content":"Let me write comprehensive tests..."}
+{"role":"user","type":"human","content":"Can you also update the API documentation for these changes?"}
+{"role":"assistant","type":"text","content":"I'll update the docs..."}
+{"role":"user","type":"human","content":"Perfect, let's also add integration tests with the database"}
+{"role":"assistant","type":"text","content":"Adding integration tests..."}
