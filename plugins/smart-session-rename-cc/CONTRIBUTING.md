@@ -1,4 +1,4 @@
-# Contributing to smart-session-rename
+# Contributing to claude-code-smart-session-rename
 
 Thanks for your interest in contributing!
 

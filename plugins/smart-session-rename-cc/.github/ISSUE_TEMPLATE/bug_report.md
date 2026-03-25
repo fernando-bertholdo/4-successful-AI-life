@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a problem with smart-session-rename
+about: Report a problem with claude-code-smart-session-rename
 title: "[BUG] "
 labels: bug
 ---
@@ -21,4 +21,4 @@ What you expected to happen.
 2. ...
 
 ## Logs
-Check `~/.claude/plugins/data/smart-session-rename/logs/` for relevant log entries.
+Check `~/.claude/plugins/data/claude-code-smart-session-rename/logs/` for relevant log entries.

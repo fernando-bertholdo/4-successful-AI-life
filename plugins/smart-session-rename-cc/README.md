@@ -1,4 +1,4 @@
-# claude-code-smart-session-rename
+# claude-code-claude-code-smart-session-rename
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
@@ -18,7 +18,7 @@ Every time you start a new Claude Code session, it gets assigned a random three-
 
 ## The Solution
 
-`smart-session-rename` watches your conversations and automatically names your sessions based on what you're actually building. Smart enough to know when your work evolves. Transparent enough to stay out of your way.
+`claude-code-smart-session-rename` watches your conversations and automatically names your sessions based on what you're actually building. Smart enough to know when your work evolves. Transparent enough to stay out of your way.
 
 - **Auto-names sessions** after your first meaningful message
 - **Evolves the name** every 3 messages as your work progresses (e.g., `auth-refactor` → `auth-refactor-with-oauth`)
@@ -39,7 +39,7 @@ Every time you start a new Claude Code session, it gets assigned a random three-
 Install and done:
 
 ```bash
-claude plugin install smart-session-rename
+claude plugin install claude-code-smart-session-rename
 ```
 
 That's it. Zero configuration. The plugin works out of the box.
@@ -69,7 +69,7 @@ Customize behavior via environment variables or a config file:
 | `SMART_RENAME_MIN_WORDS` | `10` | Minimum words in first prompt to trigger naming |
 | `SMART_RENAME_MAX_TITLE_WORDS` | `5` | Maximum words allowed in generated title |
 
-Config file location: `~/.claude/plugins/data/smart-session-rename/config.json`
+Config file location: `~/.claude/plugins/data/claude-code-smart-session-rename/config.json`
 
 Example config:
 
@@ -126,7 +126,7 @@ Completely safe. The rename hook runs asynchronously and never blocks your work.
 Yes, on both counts. Set `SMART_RENAME_ENABLED=false` to pause without uninstalling, or:
 
 ```bash
-claude plugin uninstall smart-session-rename
+claude plugin uninstall claude-code-smart-session-rename
 ```
 
 Your session will revert to its original random name.

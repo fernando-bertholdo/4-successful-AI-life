@@ -1,5 +1,5 @@
 {
-  "name": "smart-session-rename",
+  "name": "claude-code-smart-session-rename",
   "version": "1.0.0",
   "description": "Automatically names and renames Claude Code sessions based on conversation content",
   "author": {
