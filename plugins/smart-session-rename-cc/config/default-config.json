@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "update_interval": 3,
+  "min_first_prompt_words": 10,
+  "max_title_words": 5
+}
