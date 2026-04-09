@@ -1,16 +1,20 @@
 # ui-excellence
 
-Comprehensive UI/UX craft, audit, and strategy skills for web interfaces.
+UI/UX foundations for web interfaces.
 
 **Version:** `1.0.0-alpha.1`
 **License:** MIT
 **Marketplace:** [`4-successful-ai-life`](../../README.md)
 
+> **Alpha scope:** This release ships the 4 **foundations** skills (animation/motion, visual polish, web standards, accessibility). Upcoming alphas will add typography, microinteractions, heuristic audits, CRO methodology, and engagement loops — see [Coming in Future Alphas](#coming-in-future-alphas).
+
 ---
 
 ## What This Plugin Does
 
-`ui-excellence` bundles opinionated, production-ready skills covering the full spectrum of web interface work — from low-level motion and visual polish to full accessibility compliance and web platform standards. Each skill is framework-agnostic and focuses on decisions, trade-offs, and concrete checklists rather than boilerplate code.
+`ui-excellence` bundles opinionated, production-ready skills for web interface work. Each skill is framework-agnostic and focuses on decisions, trade-offs, and concrete checklists rather than boilerplate code.
+
+The `v1.0.0-alpha.1` release covers the **foundations** layer: low-level motion, visual polish, general web standards, and full accessibility compliance. Additional layers (systems, audit, interaction, behavior) are scoped for future alphas.
 
 The plugin is designed for two modes of use:
 

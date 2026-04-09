@@ -1,7 +1,7 @@
 {
   "name": "ui-excellence",
   "version": "1.0.0-alpha.1",
-  "description": "Comprehensive UI/UX craft, audit, and strategy skills for web interfaces",
+  "description": "UI/UX foundations for web interfaces. This alpha ships 4 skills: animation/motion, visual polish, web standards, and accessibility (WCAG 2.1 AA).",
   "author": { "name": "Fernando Bertholdo" },
   "license": "MIT",
   "skills": [

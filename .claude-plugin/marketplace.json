@@ -11,11 +11,11 @@
     {
       "name": "ui-excellence",
       "source": "./plugins/ui-excellence",
-      "description": "Comprehensive UI/UX craft, audit, and strategy skills for web interfaces (12+ skills spanning animation, accessibility, typography, microinteractions, heuristic audits, engagement loops, and UX writing).",
+      "description": "UI/UX foundations for web interfaces. v1.0.0-alpha.1 ships 4 skills: animation/motion, visual polish, web standards, and accessibility (WCAG 2.1 AA). Upcoming alphas add typography, microinteractions, heuristic audits, CRO, and engagement loops.",
       "version": "1.0.0-alpha.1",
       "license": "MIT",
       "category": "design",
-      "keywords": ["ui", "ux", "accessibility", "animation", "typography"],
+      "keywords": ["ui", "ux", "accessibility", "animation", "web-standards"],
       "author": { "name": "Fernando Bertholdo" }
     }
   ]

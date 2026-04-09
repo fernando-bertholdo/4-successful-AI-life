@@ -9,6 +9,9 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [1.0.0-alpha.1] — 2026-04-09
 
+### Changed (2026-04-09, post-Codex review)
+- `marketplace.json` plugin description, `plugin.json` description, and `README.md` intro rewritten to reflect the actual `v1.0.0-alpha.1` scope (4 foundations skills) instead of the aspirational 12+ skills scope. Aspirational content preserved in the "Coming in Future Alphas" section and in `marketplace.json` keywords.
+
 ### Added
 - Initial plugin scaffold with `.claude-plugin/plugin.json` manifest.
 - Four foundations skills migrated from the `tech-product-template` baseline:
