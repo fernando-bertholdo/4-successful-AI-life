@@ -1,0 +1,22 @@
+{
+  "name": "4-successful-ai-life",
+  "owner": {
+    "name": "Fernando Bertholdo"
+  },
+  "metadata": {
+    "description": "Curated plugins for AI-assisted work: UI/UX excellence, planning, and more.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ui-excellence",
+      "source": "./plugins/ui-excellence",
+      "description": "Comprehensive UI/UX craft, audit, and strategy skills for web interfaces (12+ skills spanning animation, accessibility, typography, microinteractions, heuristic audits, engagement loops, and UX writing).",
+      "version": "1.0.0-alpha.1",
+      "license": "MIT",
+      "category": "design",
+      "keywords": ["ui", "ux", "accessibility", "animation", "typography"],
+      "author": { "name": "Fernando Bertholdo" }
+    }
+  ]
+}
