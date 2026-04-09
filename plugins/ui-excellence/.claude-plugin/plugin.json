@@ -1,0 +1,13 @@
+{
+  "name": "ui-excellence",
+  "version": "1.0.0-alpha.1",
+  "description": "Comprehensive UI/UX craft, audit, and strategy skills for web interfaces",
+  "author": { "name": "Fernando Bertholdo" },
+  "license": "MIT",
+  "skills": [
+    "./skills/foundations/animation-motion/",
+    "./skills/foundations/visual-polish/",
+    "./skills/foundations/web-standards/",
+    "./skills/foundations/accessibility/"
+  ]
+}
