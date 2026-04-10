@@ -1,10 +1,11 @@
 {
   "name": "ui-excellence",
-  "version": "1.0.0-alpha.2",
-  "description": "Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
+  "version": "1.0.0-alpha.3",
+  "description": "Comprehensive UI/UX skills for web interfaces — 13 skills with triage coordinator spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
   "author": { "name": "Fernando Bertholdo" },
   "license": "MIT",
   "skills": [
+    "./skills/_coordinator/",
     "./skills/foundations/animation-motion/",
     "./skills/foundations/visual-polish/",
     "./skills/foundations/web-standards/",
