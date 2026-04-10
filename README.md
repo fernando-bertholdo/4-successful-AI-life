@@ -10,7 +10,7 @@ Curated plugins for AI-assisted work — focused on craft, rigor, and practical 
 
 | Plugin | Version | Description |
 |---|---|---|
-| [`ui-excellence`](./plugins/ui-excellence/) | `1.0.0-alpha.2` | 12 skills for UI/UX craft: visual design, typography, accessibility, usability audits, CRO, microinteractions, and engagement loops. |
+| [`ui-excellence`](./plugins/ui-excellence/) | `1.0.0-alpha.3` | 13 skills with triage coordinator for UI/UX craft: visual design, typography, accessibility, usability audits, CRO, microinteractions, and engagement loops. |
 
 More plugins are planned — see the [roadmap](#roadmap) below.
 

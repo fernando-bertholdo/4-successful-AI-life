@@ -1,8 +1,8 @@
 # ui-excellence
 
-Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.
+Comprehensive UI/UX skills for web interfaces — 13 skills (12 specialists + 1 triage coordinator) spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.
 
-**Version:** `1.0.0-alpha.2`
+**Version:** `1.0.0-alpha.3`
 **License:** MIT (dual — see [LICENSE](./LICENSE) for wondelai attribution)
 **Marketplace:** [`4-successful-ai-life`](../../README.md)
 
@@ -105,13 +105,21 @@ See the [marketplace-level README](../../README.md#installing-plugins) for the f
 
 ---
 
-## Coming in Future Alphas
+## Coordinator
 
-The plugin's full scope includes 13 skills organized in six groups. The `v1.0.0-alpha.2` release contains 12 skills across five groups. The remaining release will add:
+The `_coordinator` skill (`/ui-excellence:coordinator`) is a triage router that analyzes task context and loads the right specialist skill(s) automatically. It includes:
 
-- **`_coordinator/`** — triage skill with `paths:` frontmatter for auto-loading when editing UI files, routing to the right specialist based on prompt signals (13th skill)
+- Decision tree covering 12 task patterns (from "build a modal" to "engagement audit")
+- Signal-based routing with specific file/prompt triggers for each skill
+- 16-entry Multi-Routing table for common multi-skill combinations
+- 9-layer priority order for applying multiple skills simultaneously
+- `paths:` frontmatter for auto-loading when editing UI files (`*.tsx`, `*.vue`, `*.css`, etc.)
 
-After the coordinator ships (`v1.0.0-alpha.3`), the plugin will be considered feature-complete for `v1.0.0`.
+**Note:** `paths:` auto-loading in plugin skills is aspirational — empirical validation pending. The coordinator can always be invoked directly via `/ui-excellence:coordinator`.
+
+## Feature Completeness
+
+The `v1.0.0-alpha.3` release contains all 13 planned skills. The plugin is feature-complete for the `v1.0.0` milestone. Remaining work before `v1.0.0` release is integration and cleanup in the consumer repos (flat replication to `.codex/` and `.agents/`, settings.json configuration, and legacy skill cleanup).
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for release history.
 

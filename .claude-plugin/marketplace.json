@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, planning, and more.",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {
       "name": "ui-excellence",
       "source": "./plugins/ui-excellence",
       "description": "Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.0-alpha.3",
       "license": "MIT",
       "category": "design",
       "keywords": ["ui", "ux", "accessibility", "animation", "typography", "audit", "engagement", "microinteractions", "design-systems", "cro", "retention"],

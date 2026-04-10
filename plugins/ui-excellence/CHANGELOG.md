@@ -7,6 +7,31 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [1.0.0-alpha.3] — 2026-04-10
+
+### Added
+- `_coordinator/SKILL.md` — triage router skill with expanded routing logic for 13 domains.
+  Analyzes task context and routes to the right specialist skill(s).
+  Includes: decision tree, signal-based routing for all 12 skills, 16-entry Multi-Routing table,
+  9-layer priority order, and grouped severity output format.
+- `paths:` frontmatter on coordinator for auto-loading when editing UI files
+  (`*.tsx`, `*.jsx`, `*.vue`, `*.svelte`, `*.html`, `*.css`, `*.scss`,
+  `src/components/**/*`, `src/pages/**/*`, `src/layouts/**/*`, `src/styles/**/*`).
+  **Note:** `paths:` in plugin skills is aspirational per Claude Code docs — empirical
+  validation pending (TPT-3/TPT-4 of the ecosystem review plan).
+
+### Changed
+- `plugin.json`: skills array expanded from 12 to 13 paths (added `_coordinator/`). Version bumped to `1.0.0-alpha.3`.
+- `marketplace.json`: version bumped to `0.3.0`, description updated.
+- Plugin README updated to reflect coordinator availability.
+
+### Notes
+- The coordinator is feature-complete for `v1.0.0`. After this alpha, the plugin contains
+  all 13 planned skills. Remaining work before `v1.0.0` release is validation and cleanup
+  in the consumer repos (PR-4 and PR-5 of the ui-excellence-plugin detour).
+
+---
+
 ## [1.0.0-alpha.2] — 2026-04-10
 
 ### Added

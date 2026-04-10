@@ -7,6 +7,13 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [0.3.0] — 2026-04-10
+
+### Changed
+- `ui-excellence` plugin bumped to `v1.0.0-alpha.3`: added coordinator skill with triage routing for all 13 domains and `paths:` frontmatter. Plugin is now feature-complete for `v1.0.0`. See [`plugins/ui-excellence/CHANGELOG.md`](./plugins/ui-excellence/CHANGELOG.md).
+
+---
+
 ## [0.2.0] — 2026-04-10
 
 ### Changed
