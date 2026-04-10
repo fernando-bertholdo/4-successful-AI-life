@@ -1,13 +1,21 @@
 {
   "name": "ui-excellence",
-  "version": "1.0.0-alpha.1",
-  "description": "UI/UX foundations for web interfaces. This alpha ships 4 skills: animation/motion, visual polish, web standards, and accessibility (WCAG 2.1 AA).",
+  "version": "1.0.0-alpha.2",
+  "description": "Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
   "author": { "name": "Fernando Bertholdo" },
   "license": "MIT",
   "skills": [
     "./skills/foundations/animation-motion/",
     "./skills/foundations/visual-polish/",
     "./skills/foundations/web-standards/",
-    "./skills/foundations/accessibility/"
+    "./skills/foundations/accessibility/",
+    "./skills/systems/refactoring/",
+    "./skills/systems/typography/",
+    "./skills/audit/heuristics/",
+    "./skills/audit/cro/",
+    "./skills/interaction/microinteractions/",
+    "./skills/behavior/hooked/",
+    "./skills/behavior/retention/",
+    "./skills/behavior/copy/"
   ]
 }

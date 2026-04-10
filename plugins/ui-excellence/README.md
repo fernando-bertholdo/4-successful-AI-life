@@ -1,12 +1,10 @@
 # ui-excellence
 
-UI/UX foundations for web interfaces.
+Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.
 
-**Version:** `1.0.0-alpha.1`
-**License:** MIT
+**Version:** `1.0.0-alpha.2`
+**License:** MIT (dual — see [LICENSE](./LICENSE) for wondelai attribution)
 **Marketplace:** [`4-successful-ai-life`](../../README.md)
-
-> **Alpha scope:** This release ships the 4 **foundations** skills (animation/motion, visual polish, web standards, accessibility). Upcoming alphas will add typography, microinteractions, heuristic audits, CRO methodology, and engagement loops — see [Coming in Future Alphas](#coming-in-future-alphas).
 
 ---
 
@@ -14,38 +12,61 @@ UI/UX foundations for web interfaces.
 
 `ui-excellence` bundles opinionated, production-ready skills for web interface work. Each skill is framework-agnostic and focuses on decisions, trade-offs, and concrete checklists rather than boilerplate code.
 
-The `v1.0.0-alpha.1` release covers the **foundations** layer: low-level motion, visual polish, general web standards, and full accessibility compliance. Additional layers (systems, audit, interaction, behavior) are scoped for future alphas.
-
 The plugin is designed for two modes of use:
 
-1. **On-demand invocation** — call individual skills when you need targeted guidance (`/ui-excellence:animation-motion` for motion decisions, `/ui-excellence:accessibility` for WCAG reviews, etc.).
+1. **On-demand invocation** — call individual skills when you need targeted guidance (`/ui-excellence:animation-motion` for motion decisions, `/ui-excellence:heuristics` for usability audits, etc.).
 2. **Path-aware auto-loading** *(coming in a later release)* — a coordinator skill will auto-load when editing UI files (`*.tsx`, `*.vue`, `*.svelte`, `*.css`, `*.scss`, `*.html`) and route to the right specialist based on signals in your prompt.
 
 ---
 
-## Skills in This Release (`v1.0.0-alpha.1`)
+## Skills (`v1.0.0-alpha.2` — 12 skills)
 
-This alpha ships the **foundations** group — the four core skills migrated from the `tech-product-template` baseline. More skills land in upcoming alphas.
+### Foundations (original)
 
-### `foundations/animation-motion`
-Motion and animation decisions grounded in Emil Kowalski's framework: when to animate, easing curves, spring physics, performance (60fps discipline), accessibility (`prefers-reduced-motion`), and gesture handling.
+Skills migrated from the `tech-product-template` baseline.
 
-**Invoke as:** `/ui-excellence:animation-motion`
+| Skill | Invoke as | Description |
+|---|---|---|
+| `foundations/animation-motion` | `/ui-excellence:animation-motion` | Emil Kowalski's motion framework: easing, springs, 60fps, `prefers-reduced-motion`, gestures. |
+| `foundations/visual-polish` | `/ui-excellence:visual-polish` | Jakub Krehel's principles: text wrapping, border radius, optical alignment, shadow composition. |
+| `foundations/web-standards` | `/ui-excellence:web-standards` | Vercel Web Interface Guidelines: WCAG 2.1 AA, component patterns, forms, performance. |
+| `foundations/accessibility` | `/ui-excellence:accessibility` | Full WCAG 2.1 AA implementation: keyboard nav, semantic HTML, ARIA, color contrast, screen readers. |
 
-### `foundations/visual-polish`
-Refinement of visual details that compound into a polished, cohesive experience. Following Jakub Krehel's principles: text wrapping strategies, balanced border radius hierarchies, optical alignment, shadow composition, contextual micro-animations.
+### Systems (adapted from [wondelai/skills](https://github.com/wondelai/skills))
 
-**Invoke as:** `/ui-excellence:visual-polish`
+Macro-level design systems and typography.
 
-### `foundations/web-standards`
-Comprehensive guidance aligned with Vercel's Web Interface Guidelines: accessibility compliance (WCAG 2.1 AA), component patterns, form handling, typography, performance, navigation, and anti-patterns to avoid.
+| Skill | Invoke as | Description |
+|---|---|---|
+| `systems/refactoring` | `/ui-excellence:refactoring` | Audit and fix visual hierarchy, spacing, color, depth. Grayscale-first workflow, constrained scales, design tokens. Based on Wathan & Schoger's *Refactoring UI*. |
+| `systems/typography` | `/ui-excellence:typography` | Typeface selection, pairing, responsive type, web font loading, performance. Based on Jason Santa Maria's *On Web Typography*. |
 
-**Invoke as:** `/ui-excellence:web-standards`
+### Audit (adapted from [wondelai/skills](https://github.com/wondelai/skills))
 
-### `foundations/accessibility`
-Full WCAG 2.1 Level AA implementation and review guide: keyboard navigation, semantic HTML, ARIA attributes, color contrast, screen reader support, and assistive technology compatibility.
+Usability evaluation and conversion optimization.
 
-**Invoke as:** `/ui-excellence:accessibility`
+| Skill | Invoke as | Description |
+|---|---|---|
+| `audit/heuristics` | `/ui-excellence:heuristics` | Nielsen's 10 heuristics, Krug's usability principles, severity ratings, cognitive walkthrough, information architecture. |
+| `audit/cro` | `/ui-excellence:cro` | CRO methodology: funnel mapping, A/B testing, objection handling, persuasion assets. Based on Blanks & Jesson's *Making Websites Win*. |
+
+### Interaction (adapted from [wondelai/skills](https://github.com/wondelai/skills))
+
+Micro-level interaction details.
+
+| Skill | Invoke as | Description |
+|---|---|---|
+| `interaction/microinteractions` | `/ui-excellence:microinteractions` | Trigger design, state rules, feedback mechanisms, progressive loops. Based on Dan Saffer's framework. |
+
+### Behavior (adapted from [wondelai/skills](https://github.com/wondelai/skills))
+
+Engagement, retention, and persuasion.
+
+| Skill | Invoke as | Description |
+|---|---|---|
+| `behavior/hooked` | `/ui-excellence:hooked` | Hook Model (Trigger→Action→Variable Reward→Investment). Ethics evaluation, habit testing. Based on Nir Eyal's *Hooked*. |
+| `behavior/retention` | `/ui-excellence:retention` | Behavior design (B=MAP), Ability Chain, activation milestones, tiny habits. Based on BJ Fogg's research. |
+| `behavior/copy` | `/ui-excellence:copy` | SUCCESs checklist (Simple, Unexpected, Concrete, Credible, Emotional, Stories). Based on Chip & Dan Heath's *Made to Stick*. |
 
 ---
 
@@ -86,22 +107,26 @@ See the [marketplace-level README](../../README.md#installing-plugins) for the f
 
 ## Coming in Future Alphas
 
-The plugin's full scope includes 13 skills organized in six groups. The `v1.0.0-alpha.1` release contains only `foundations/` (4 skills). Upcoming releases will add:
+The plugin's full scope includes 13 skills organized in six groups. The `v1.0.0-alpha.2` release contains 12 skills across five groups. The remaining release will add:
 
-- **`systems/`** — refactoring-ui and web-typography (adapted from [wondelai/skills](https://github.com/wondelai/skills), MIT)
-- **`audit/`** — Nielsen heuristics and CRO methodology (adapted from wondelai/skills, MIT)
-- **`interaction/`** — microinteractions (adapted from wondelai/skills, MIT)
-- **`behavior/`** — Hooked model (Nir Eyal), retention loops, and Made-to-Stick copywriting (adapted from wondelai/skills, MIT)
-- **`_coordinator/`** — triage skill with `paths:` frontmatter for auto-loading when editing UI files
+- **`_coordinator/`** — triage skill with `paths:` frontmatter for auto-loading when editing UI files, routing to the right specialist based on prompt signals (13th skill)
 
-Wondelai attribution and dual-MIT licensing will be added to this plugin's [`LICENSE`](./LICENSE) when those skills land in `v1.0.0-alpha.2`.
+After the coordinator ships (`v1.0.0-alpha.3`), the plugin will be considered feature-complete for `v1.0.0`.
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for release history.
 
 ---
 
+## Cross-References to External Skills
+
+Some wondelai skills reference other wondelai skills (e.g., "For typeface selection, see web-typography") in their description fields. These are navigational hints from the original catalog, not functional dependencies. Where the referenced skill exists in this plugin, it is accessible via the new namespace (e.g., `/ui-excellence:typography`). Where it does not exist in this plugin (e.g., `top-design`, `contagious`, `drive-motivation`, `storybrand-messaging`, `one-page-marketing`, `design-everyday-things`), the reference is a pointer to the original [wondelai/skills](https://github.com/wondelai/skills) catalog.
+
+---
+
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT (dual) — see [LICENSE](./LICENSE).
 
-This plugin currently contains only original content authored by Fernando Bertholdo (migrated from the `tech-product-template` baseline). Future releases will incorporate MIT-licensed content from [wondelai/skills](https://github.com/wondelai/skills) with full attribution and dual-MIT licensing.
+This plugin contains:
+- **Original content** authored by Fernando Bertholdo (`foundations/` group — 4 skills).
+- **Adapted content** from [wondelai/skills](https://github.com/wondelai/skills), MIT-licensed, with attribution (`systems/`, `audit/`, `interaction/`, `behavior/` groups — 8 skills). See the LICENSE file for the full dual-MIT notice and provenance table.

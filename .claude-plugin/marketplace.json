@@ -5,17 +5,17 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, planning, and more.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "ui-excellence",
       "source": "./plugins/ui-excellence",
-      "description": "UI/UX foundations for web interfaces. v1.0.0-alpha.1 ships 4 skills: animation/motion, visual polish, web standards, and accessibility (WCAG 2.1 AA). Upcoming alphas add typography, microinteractions, heuristic audits, CRO, and engagement loops.",
-      "version": "1.0.0-alpha.1",
+      "description": "Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
+      "version": "1.0.0-alpha.2",
       "license": "MIT",
       "category": "design",
-      "keywords": ["ui", "ux", "accessibility", "animation", "web-standards"],
+      "keywords": ["ui", "ux", "accessibility", "animation", "typography", "audit", "engagement", "microinteractions", "design-systems", "cro", "retention"],
       "author": { "name": "Fernando Bertholdo" }
     }
   ]

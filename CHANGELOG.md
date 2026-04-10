@@ -7,6 +7,14 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [0.2.0] — 2026-04-10
+
+### Changed
+- `ui-excellence` plugin bumped to `v1.0.0-alpha.2`: adopted 8 skills from [wondelai/skills](https://github.com/wondelai/skills) (MIT), expanding the plugin from 4 to 12 skills. See [`plugins/ui-excellence/CHANGELOG.md`](./plugins/ui-excellence/CHANGELOG.md) for details.
+- `marketplace.json` plugin entry updated with expanded description, version, and keywords.
+
+---
+
 ## [0.1.0] — 2026-04-09
 
 ### Added
