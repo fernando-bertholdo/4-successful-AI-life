@@ -1282,12 +1282,21 @@ transcript_parse_current_turn() {
   ' 2>/dev/null || echo "")
 
   local assistant_sentence_count
-  assistant_sentence_count=$(echo "$assistant_text" | sed 's/```[^`]*```//g' | grep -oE '[.!?]' | wc -l | tr -d ' ' || echo 0)
+  # NOTE (Phase 3.1 lesson, 2026-04-15): wrap grep in `{ ... || true; }` because
+  # `set -euo pipefail` in tests turns grep's exit-1 (no matches) into a pipeline
+  # failure. Without this, `... | wc -l | tr ... || echo 0` produces "0\n0" which
+  # then breaks `--argjson asent` downstream.
+  assistant_sentence_count=$(echo "$assistant_text" | sed 's/```[^`]*```//g' | { grep -oE '[.!?]' || true; } | wc -l | tr -d ' ' || echo 0)
 
   local domain_guess
-  # Try top-level directory dominant
+  # Try top-level directory dominant. Skip generic container dirs (src, tests, lib,
+  # app, pkg) because they describe folder TYPE, not subject DOMAIN — falling
+  # through to second-level extracts the meaningful name (e.g., "auth" from
+  # both src/auth/... and tests/auth/...). Lesson from Phase 3.1, 2026-04-15.
+  # TODO (Phase 9/10 calibration): consider expanding the skip list (docs,
+  # scripts, internal, vendor, third_party) once we observe more real transcripts.
   domain_guess=$(echo "$all_files" | jq -r '
-    [.[] | split("/")[0] | select(length > 0)]
+    [.[] | split("/")[0] | select(length > 0) | select(. != "src" and . != "tests" and . != "lib" and . != "app" and . != "pkg")]
     | group_by(.) | map({k:.[0], n:length}) | sort_by(-.n) | first.k // empty
   ' 2>/dev/null)
   if [[ -z "$domain_guess" || "$domain_guess" == "null" ]]; then
