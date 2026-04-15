@@ -1,0 +1,13 @@
+{
+  "name": "smart-session-rename-dev",
+  "owner": {
+    "name": "Fernando Bertholdo"
+  },
+  "plugins": [
+    {
+      "name": "claude-code-smart-session-rename",
+      "source": "./",
+      "description": "Automatically names and renames Claude Code sessions based on conversation content"
+    }
+  ]
+}

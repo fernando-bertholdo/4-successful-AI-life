@@ -86,6 +86,10 @@ tests/
 - `scripts/generate-name.sh`, `scripts/session-writer.sh`, `scripts/utils.sh`
 - `tests/test-generate-name.sh`, `tests/test-rename-hook.sh`, `tests/test-session-writer.sh`, `tests/test-utils.sh`
 
+### Files to CREATE (additional)
+
+- `.claude-plugin/marketplace.json` — minimal local marketplace manifest pointing at `./`. Required for `/plugin` install to discover this repo as a dev plugin (without it, `/plugin` errors with "Marketplace file not found"). Discovered during Phase 1.3 smoke test (iteration 1) and committed as part of Phase 1.3.
+
 ### Files to MODIFY
 
 - `.claude-plugin/plugin.json` — bump to 1.5.0
@@ -479,20 +483,77 @@ git commit -m "test(v1.5): capture real Claude Code JSONL fixture for parser val
 - Modify: `skills/smart-rename/SKILL.md` (minimal Phase 1 version)
 - Create: `docs/test-results/2026-04-14-skill-prototype.md`
 
+> **Lesson learned (Phase 1.3 first iteration, 2026-04-15):** the smoke test
+> revealed that `$CLAUDE_SESSION_ID` and `$CLAUDE_TRANSCRIPT_PATH` are NOT
+> exposed as env vars when a skill invokes the Bash tool — only `$CLAUDE_PLUGIN_ROOT`
+> is. The CLI must therefore derive the session id from `pwd -P` (scan
+> `~/.claude/projects/<encoded-cwd>/` for the most recent `.jsonl`). The code
+> below already incorporates that fix; the SKILL.md no longer passes a
+> transcript-path arg. Encoding rule observed: replace `/` AND `_` with `-`,
+> prepend `-`, resolve symlinks via `pwd -P` (matters on macOS where `/tmp` is
+> `/private/tmp`).
+
 - [ ] **Step 1: Create minimal `scripts/smart-rename-cli.sh`**
 
 ```bash
 #!/usr/bin/env bash
 # smart-rename-cli.sh — skill subcommand dispatcher (Phase 1: freeze/unfreeze only)
+#
+# Session id resolution (in priority order):
+#   1. $CLAUDE_SESSION_ID env var (set by hooks; usually NOT set when invoked from a skill)
+#   2. transcript path arg ($1) → derive from .jsonl filename
+#   3. cwd-derive: scan ~/.claude/projects/<encoded-pwd>/ for the most recent .jsonl
+#
+# Encoding rule (observed empirically from Claude Code CLI v2.1.85):
+#   - Resolve symlinks via `pwd -P`
+#   - Strip leading `/`
+#   - Replace every `/` AND `_` with `-`
+#   - Prepend a single `-`
+# Example: /Users/x/tech_projects/foo  →  -Users-x-tech-projects-foo
+#
+# Set SMART_RENAME_DEBUG=1 to print resolution steps to stderr.
+
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib/state.sh"
 
+_dbg() { [[ -n "${SMART_RENAME_DEBUG:-}" ]] && echo "[debug] $*" >&2 || true; }
+
+_encode_cwd() {
+  local p="${1:-$(pwd -P)}"
+  echo "-$(echo "$p" | sed 's|^/||' | tr '/_' '--')"
+}
+
+_session_id_from_cwd() {
+  local encoded proj_dir latest
+  encoded="$(_encode_cwd)"
+  proj_dir="$HOME/.claude/projects/$encoded"
+  _dbg "cwd=$(pwd -P)"
+  _dbg "encoded=$encoded"
+  _dbg "proj_dir=$proj_dir (exists=$([[ -d "$proj_dir" ]] && echo yes || echo no))"
+  [[ -d "$proj_dir" ]] || return 1
+  latest="$(ls -t "$proj_dir"/*.jsonl 2>/dev/null | head -1)"
+  _dbg "latest_jsonl=$latest"
+  [[ -z "$latest" ]] && return 1
+  basename "$latest" .jsonl
+}
+
 session_id_from_args() {
-  if [[ -n "${CLAUDE_SESSION_ID:-}" ]]; then echo "$CLAUDE_SESSION_ID"; return 0; fi
-  if [[ -n "${1:-}" && -f "$1" ]]; then basename "$1" .jsonl; return 0; fi
-  echo ""; return 1
+  if [[ -n "${CLAUDE_SESSION_ID:-}" ]]; then
+    _dbg "source=env CLAUDE_SESSION_ID"
+    echo "$CLAUDE_SESSION_ID"; return 0
+  fi
+  if [[ -n "${1:-}" && -f "$1" ]]; then
+    _dbg "source=arg transcript_path=$1"
+    basename "$1" .jsonl; return 0
+  fi
+  local sid; sid="$(_session_id_from_cwd)" || true
+  if [[ -n "$sid" ]]; then
+    _dbg "source=cwd-derive"
+    echo "$sid"; return 0
+  fi
+  return 1
 }
 
 cmd="${1:-}"; shift || true
@@ -500,7 +561,12 @@ cmd="${1:-}"; shift || true
 case "$cmd" in
   freeze|unfreeze)
     sid="$(session_id_from_args "${1:-}")"
-    [[ -z "$sid" ]] && { echo "ERROR: cannot determine session id"; exit 1; }
+    if [[ -z "$sid" ]]; then
+      echo "ERROR: cannot determine session id" >&2
+      echo "  Tried: \$CLAUDE_SESSION_ID, transcript_path arg, cwd-derive from $(pwd -P)" >&2
+      echo "  Run with SMART_RENAME_DEBUG=1 for resolution trace." >&2
+      exit 1
+    fi
     state_lock "$sid" || { echo "ERROR: could not lock"; exit 1; }
     trap "state_unlock $sid" EXIT
     state=$(state_load "$sid")
@@ -532,24 +598,34 @@ description: Manage the smart-session-rename plugin. Phase 1 prototype supports 
 
 # /smart-rename (Phase 1 prototype)
 
-When the user invokes `/smart-rename freeze` or `/smart-rename unfreeze`, run the matching command via the Bash tool and report the output.
+When the user invokes `/smart-rename freeze` or `/smart-rename unfreeze`, run the matching command via the Bash tool and report the output verbatim.
 
-## Determining session id
+## How session id is determined
 
-If `$CLAUDE_SESSION_ID` is set, the script uses it. Otherwise it derives the id from the transcript filename.
+Empirical finding (Phase 1.3 smoke test): `$CLAUDE_SESSION_ID` and `$CLAUDE_TRANSCRIPT_PATH` are NOT exposed as env vars when a skill invokes Bash. The CLI therefore derives the session id from `pwd -P`: it scans `~/.claude/projects/<encoded-cwd>/` for the most recently modified `.jsonl` and treats that as the active session.
+
+If the derivation fails, the CLI exits 1 with `ERROR: cannot determine session id` and prints what it tried.
 
 ## Commands
 
 ### `/smart-rename freeze`
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze "$CLAUDE_TRANSCRIPT_PATH"
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze
 ```
 
 ### `/smart-rename unfreeze`
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unfreeze "$CLAUDE_TRANSCRIPT_PATH"
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unfreeze
+```
+
+## Debug
+
+If something goes wrong, re-run with debug tracing:
+
+```bash
+SMART_RENAME_DEBUG=1 ${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze
 ```
 
 Any other subcommand: reply "Not yet implemented (Phase 1 prototype)."
@@ -679,6 +755,18 @@ before continuing to Phase 2.
 ## Phase 2: Config and logger, refactor state
 
 ### Task 2.1: Create `lib/config.sh` with tests
+
+> **Note from Phase 1.3 smoke test:** `$CLAUDE_PLUGIN_DATA` is **injected by
+> Claude Code per-plugin** when a skill or hook invokes the Bash tool. It
+> resolves to `~/.claude/plugins/data/<plugin-name>-<marketplace-name>/`
+> (example for our dev install: `claude-code-smart-session-rename-smart-session-rename-dev`).
+> A user `export CLAUDE_PLUGIN_DATA=...` in their outer shell is **overridden**
+> by CC inside skill/hook executions and only takes effect for out-of-band CLI
+> invocations. `config.sh` already treats `${CLAUDE_PLUGIN_DATA:-}` as the
+> source of truth for both default-config and user-override file paths — no
+> code change needed, just be aware of where the user-config file actually
+> needs to live (CC's path, not the user's chosen one). Document this in the
+> Phase 11 README under "Configuration".
 
 **Files:**
 - Create: `scripts/lib/config.sh`
@@ -2314,6 +2402,15 @@ git commit -m "feat(v1.5): rewrite rename-hook.sh (orchestrator with all critica
 ### Task 7.1: Expand `smart-rename-cli.sh` with all subcommands
 
 Addresses: A4 (cmd_suggest consumes budget), A2 (cmd_anchor sets manual_anchor for domain — not title override).
+
+> **Forward-port from Phase 1.3 lesson:** the `session_id_from_args` function
+> in the verbatim CLI block below must include the **cwd-derive** fallback
+> (already proven necessary in Task 1.3). Specifically: keep the env-var and
+> transcript-arg paths, then add a third path that scans
+> `~/.claude/projects/<encoded-pwd>/` for the most recent `.jsonl`. Use
+> `pwd -P` and the encoding rule `[/_]` → `-`, prefix `-`. Optional
+> `SMART_RENAME_DEBUG=1` toggle for resolution tracing. The rest of the CLI
+> below (dispatcher, cmd_*, etc.) stays as written.
 
 **Files:**
 - Rewrite: `scripts/smart-rename-cli.sh`
