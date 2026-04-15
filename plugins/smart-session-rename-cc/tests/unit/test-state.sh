@@ -61,6 +61,17 @@ stale=$(_state_lock_stale_seconds)
 assert_eq "env override" "120" "$stale"
 unset SMART_RENAME_LOCK_STALE
 
+echo "-- config_get integration: lock_stale honored via config.json --"
+# Source config.sh and set a config-level override
+source "$SCRIPT_DIR/../../scripts/lib/config.sh"
+unset SMART_RENAME_LOCK_STALE
+cat > "$CLAUDE_PLUGIN_DATA/config.json" <<EOF
+{"lock_stale_seconds": 999}
+EOF
+config_load
+stale=$(_state_lock_stale_seconds)
+assert_eq "config_get wins over default" "999" "$stale"
+
 rm -rf "$CLAUDE_PLUGIN_DATA"
 echo ""
 echo "Result: $PASS passed, $FAIL failed"
