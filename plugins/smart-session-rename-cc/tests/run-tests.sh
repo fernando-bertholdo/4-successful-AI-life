@@ -2,17 +2,21 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-TOTAL_PASS=0
-TOTAL_FAIL=0
+TOTAL_PASS=0; TOTAL_FAIL=0
 
-for test_file in "$SCRIPT_DIR"/test-*.sh; do
+run_one() {
+  local f="$1"
   echo ""
-  echo "Running $(basename "$test_file")..."
-  if bash "$test_file"; then
+  echo "Running $(basename "$(dirname "$f")")/$(basename "$f")..."
+  if bash "$f"; then
     ((TOTAL_PASS++)) || true
   else
     ((TOTAL_FAIL++)) || true
   fi
+}
+
+for test_file in "$SCRIPT_DIR"/unit/test-*.sh "$SCRIPT_DIR"/integration/test-*.sh; do
+  [[ -f "$test_file" ]] && run_one "$test_file"
 done
 
 echo ""
