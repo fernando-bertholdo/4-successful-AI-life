@@ -1,46 +1,38 @@
-# Smart Rename
+---
+name: smart-rename
+description: Manage the smart-session-rename plugin. Phase 1 prototype supports freeze/unfreeze only.
+---
 
-Intelligently rename the current Claude Code session based on conversation context.
+# /smart-rename (Phase 1 prototype)
 
-## When This Skill Is Invoked
+When the user invokes `/smart-rename freeze` or `/smart-rename unfreeze`, run the matching command via the Bash tool and report the output verbatim.
 
-The user runs `/smart-rename` or asks to rename the current session intelligently.
+## How session id is determined
 
-## Instructions
+Empirical finding (Phase 1.3 smoke test): `$CLAUDE_SESSION_ID` and `$CLAUDE_TRANSCRIPT_PATH` are NOT exposed as env vars when a skill invokes Bash. The CLI therefore derives the session id from `pwd -P`: it scans `~/.claude/projects/<encoded-cwd>/` for the most recently modified `.jsonl` and treats that as the active session.
 
-When this skill is invoked, follow these steps:
+If the derivation fails, the CLI exits 1 with `ERROR: cannot determine session id` and prints what it tried.
 
-1. **Analyze the conversation so far.** Look at:
-   - The user's initial request (what started this session)
-   - The main topics and files discussed
-   - Any key actions taken (debugging, refactoring, feature work, etc.)
+## Commands
 
-2. **Generate a concise session name** following these rules:
-   - Use kebab-case (e.g., `fix-login-bug`, `refactor-auth-module`)
-   - 2-5 words maximum
-   - Focus on the ACTION and TARGET (what + where)
-   - Be specific enough to distinguish from other sessions
+### `/smart-rename freeze`
 
-3. **Present the suggested name to the user:**
-   > Based on our conversation, I suggest renaming this session to: `suggested-name-here`
-   >
-   > This captures [brief explanation of why this name fits].
-   >
-   > Should I apply this name?
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze
+```
 
-4. **If the user approves**, execute:
-   ```
-   /rename suggested-name-here
-   ```
+### `/smart-rename unfreeze`
 
-5. **If the user wants changes**, iterate on the name until they're satisfied, then apply.
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unfreeze
+```
 
-## Examples
+## Debug
 
-| Session Context | Suggested Name |
-|---|---|
-| Debugging a failing login form | `fix-login-validation` |
-| Adding OAuth2 to an Express API | `add-oauth2-auth` |
-| Refactoring database models | `refactor-db-models` |
-| Writing unit tests for payments | `test-payment-module` |
-| General project exploration | `explore-project-setup` |
+If something goes wrong, re-run with debug tracing:
+
+```bash
+SMART_RENAME_DEBUG=1 ${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze
+```
+
+Any other subcommand: reply "Not yet implemented (Phase 1 prototype)."
