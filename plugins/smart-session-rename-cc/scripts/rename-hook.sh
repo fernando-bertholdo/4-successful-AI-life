@@ -59,15 +59,29 @@ if [[ ! -f "$TRANSCRIPT_PATH" ]]; then
   exit 0
 fi
 
-# --- State management with flock ---
+# --- State management with portable locking ---
 STATE_DIR="${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/state"
 mkdir -p "$STATE_DIR"
 STATE_FILE="$STATE_DIR/$SESSION_ID.json"
-LOCK_FILE="$STATE_FILE.lock"
+LOCK_DIR="$STATE_FILE.lockdir"
 
-# Try to acquire lock (2 second timeout)
-exec 200>"$LOCK_FILE"
-if ! flock -w 2 200; then
+# Portable lock using mkdir (atomic on all POSIX systems)
+acquire_lock() {
+  local max_wait=2
+  local waited=0
+  while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+    if [[ $waited -ge $max_wait ]]; then
+      return 1
+    fi
+    sleep 0.5
+    waited=$((waited + 1))
+  done
+  # Ensure lock is released on exit
+  trap 'rm -rf "$LOCK_DIR"' EXIT
+  return 0
+}
+
+if ! acquire_lock; then
   log_info "$SESSION_ID" "Could not acquire lock, skipping"
   exit 0
 fi

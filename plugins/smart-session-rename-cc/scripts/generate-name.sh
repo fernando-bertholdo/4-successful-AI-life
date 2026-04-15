@@ -3,22 +3,35 @@
 # Sourced by rename-hook.sh. Requires utils.sh to be sourced first.
 
 # Extract the first user message from a transcript JSONL
+# Claude Code JSONL format: {"type":"user", "message":{"role":"user","content":"..."}}
+# Filter out system/command messages that start with '<' (after trimming whitespace)
 extract_first_user_prompt() {
   local transcript="$1"
-  jq -r 'select(.role == "user" and .type == "human") | .content' "$transcript" | head -1
+  jq -r 'select(.type == "user") | .message.content // empty' "$transcript" \
+    | sed 's/^[[:space:]]*//' \
+    | grep -v '^<' \
+    | grep -v '^$' \
+    | head -1
 }
 
 # Extract recent user messages (last N) from transcript
 extract_recent_context() {
   local transcript="$1"
   local count="${2:-2}"
-  jq -r 'select(.role == "user" and .type == "human") | .content' "$transcript" | tail -"$count"
+  jq -r 'select(.type == "user") | .message.content // empty' "$transcript" \
+    | sed 's/^[[:space:]]*//' \
+    | grep -v '^<' \
+    | grep -v '^$' \
+    | tail -"$count"
 }
 
-# Count user messages in transcript
+# Count user messages in transcript (excluding commands/system)
 count_user_messages() {
   local transcript="$1"
-  jq -r 'select(.role == "user" and .type == "human") | .content' "$transcript" | wc -l | tr -d ' '
+  jq -r 'select(.type == "user") | .message.content // empty' "$transcript" \
+    | sed 's/^[[:space:]]*//' \
+    | grep -cv '^<' \
+    || echo "0"
 }
 
 # Validate and clean LLM output into a valid session name
