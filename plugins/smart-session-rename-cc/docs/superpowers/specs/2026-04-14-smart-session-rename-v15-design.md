@@ -84,7 +84,7 @@ Stop hook do Claude Code dispara (async, timeout 30s)
         ▼
 ┌────────────────────────────────────┐
 │ 2. Detectar /rename nativo         │  ← compara último custom-title no JSONL
-│    (atualiza manual_anchor se veio) │     com last_plugin_written_title
+│    (seta manual_title_override)     │     com last_plugin_written_title
 └────────────────────────────────────┘
         │
         ▼
@@ -136,7 +136,7 @@ Stop hook do Claude Code dispara (async, timeout 30s)
 - **Peso do determinismo.** Dado o custo alto de LLM em modo OAuth, o `scorer` é a peça mais importante arquiteturalmente. Ele economiza dinheiro real a cada decisão "não chamar".
 - **Falhas isoladas.** Cada falha termina em log + exit 0. Nunca bloqueia o usuário. Um circuit breaker simples (não dois como no spec v2) desabilita LLM após 3 falhas consecutivas.
 - **Structured output nativo.** Usa `--json-schema` do `claude -p`. A Anthropic garante que o output conforme o schema. Eliminando parsing frágil, o código v1.5 vira significativamente mais simples que a v1 ou o spec v2 seriam.
-- **Idempotência.** `last_processed_turn` no estado evita reprocessamento em caso de re-execução do hook no mesmo turno.
+- **Idempotência por assinatura.** `last_processed_signature` no estado (formato `turn_number:file_size`) evita reprocessamento em caso de re-execução do hook no mesmo turno, **e cobre loops agênticos** onde o Stop hook pode disparar várias vezes no mesmo turno com o JSONL crescendo entre disparos.
 
 ### 3.3 Estrutura de diretórios
 
@@ -186,7 +186,7 @@ claude-code-smart-session-rename/
 | `lib/writer.sh` | Append de `custom-title` no JSONL | `writer_append_title(transcript_path, title)` |
 | `lib/validate.sh` | Valida schema, aplica guardrails, renderiza | `validate_and_render(llm_output, state) → title ou SKIP` |
 | `lib/logger.sh` | Logs JSONL estruturados | `log_event(level, event_type, data_json)` |
-| `prompts/generation.md` | Prompt da LLM com variáveis | substituídas via `envsubst` no `llm.sh` |
+| `prompts/generation.md` | Prompt da LLM com variáveis | substituídas via `jq --rawfile + gsub` no `llm.sh` (seguro para multi-linha, aspas, barras) |
 
 ### 3.5 Schema do output do `transcript_parse_current_turn`
 
@@ -204,11 +204,14 @@ O parser emite um JSON em stdout consumido por `scorer.sh`, `llm.sh` e `validate
   "all_files_touched": ["src/auth/rate-limit.ts", "tests/auth.test.ts"],
   "new_files_this_turn": ["src/auth/rate-limit.ts"],
   "domain_guess": "auth",
-  "branch": "feat/auth-hardening"
+  "branch": "feat/auth-hardening",
+  "file_size": 8432
 }
 ```
 
-`new_files_this_turn` é computado comparando contra `state.active_files_recent`. `domain_guess` é uma heurística leve: diretório dominante (token mais frequente) entre `all_files_touched`, ou fallback para o último segmento do `cwd`.
+`new_files_this_turn` é computado comparando contra `state.active_files_recent`. `domain_guess` é uma heurística leve: diretório dominante (token mais frequente) entre `all_files_touched`, ou fallback para o último segmento do `cwd` (passado explicitamente pelo hook via argumento, **não** lido de `$PWD`). `file_size` é `wc -c` do transcript inteiro e alimenta a `last_processed_signature` do hook (Seção 6.4) — essencial para cobrir Stop hooks múltiplos no mesmo turno agêntico.
+
+O parser aceita `content` tanto como string quanto como array (caso comum em mensagens de usuário com `tool_result` + `text` blocks) — no segundo caso, concatena os text blocks.
 
 ---
 
@@ -304,7 +307,7 @@ claude -p \
   2>/dev/null
 ```
 
-Timeout no shell: `timeout ${llm_timeout_seconds:-25}` (folga dentro dos 30s do hook).
+Timeout no shell: wrapper portável. `llm.sh` tenta `timeout`, depois `gtimeout` (GNU coreutils via brew), depois `perl -e 'alarm shift; exec @ARGV'` como fallback. **Nunca assumir que `timeout` existe** — ele não está disponível por default no macOS (que é a plataforma alvo do Level 4 via Computer Use). O wrapper é transparente para o caller (sempre chama `_llm_with_timeout "$seconds" claude -p ...`).
 
 ### 5.2 JSON schema
 
@@ -341,7 +344,7 @@ O campo `.structured_output` é preenchido pelo Claude Code quando `--json-schem
 
 ### 5.4 Prompt (`prompts/generation.md`)
 
-Template com variáveis substituídas via `envsubst` ou sed:
+Template com variáveis `${VAR}` substituídas via `jq -nr --rawfile tmpl --argjson ctx '...' | reduce ... (gsub(...))` — abordagem segura para valores com newlines, aspas, barras e caracteres especiais. **Nunca usar `sed` ou `envsubst`** (quebra em valores multi-linha):
 
 ```markdown
 You are generating a concise title for an ongoing Claude Code session.
@@ -375,11 +378,12 @@ RULES:
 
 Após obter `{domain, clauses[]}`:
 
-1. **Schema garantido pelo claude -p**; ainda assim, validação defensiva: `domain` não vazio, `clauses` array não vazio, items com comprimento razoável.
-2. **Guardrail de anchor:** se `state.manual_anchor != null`, sobrescreve `domain` com o valor do anchor.
-3. **Dedupe de cláusulas:** lowercase + trim + colapso de whitespace; cláusulas normalizadas idênticas são mescladas (mantém primeira ocorrência).
-4. **Render:** `title = "${domain}: ${clauses.join(', ')}"`.
-5. **Comparação:** se `rendered_title == state.rendered_title`, retorna SKIP (não chama writer).
+1. **Precedência de override:** se `state.manual_title_override != null`, retorna o override como `rendered_title` verbatim (sem `clauses`, sem prefixo de domain) e pula as regras 2-4.
+2. **Schema garantido pelo claude -p**; ainda assim, validação defensiva: `domain` não vazio, `clauses` array não vazio, items com comprimento razoável.
+3. **Guardrail de anchor:** se `state.manual_anchor != null`, sobrescreve `domain` com o valor do anchor.
+4. **Dedupe de cláusulas:** lowercase + trim + colapso de whitespace; cláusulas normalizadas idênticas são mescladas (mantém primeira ocorrência).
+5. **Render:** `title = "${domain}: ${clauses.join(', ')}"`.
+6. **Comparação:** se `rendered_title == state.rendered_title`, retorna SKIP (não chama writer).
 
 ---
 
@@ -397,6 +401,7 @@ Após obter `{domain, clauses[]}`:
     "clauses": ["fix jwt expiry", "add tests"]
   },
   "manual_anchor": null,
+  "manual_title_override": null,
   "frozen": false,
   "force_next": false,
 
@@ -405,7 +410,7 @@ Após obter `{domain, clauses[]}`:
   "overflow_used": 0,
   "failure_count": 0,
   "llm_disabled": false,
-  "last_processed_turn": 14,
+  "last_processed_signature": "14:8432",
 
   "domain_guess": "auth",
   "active_files_recent": ["src/auth/jwt.ts", "src/auth/rate-limit.ts"],
@@ -426,7 +431,7 @@ Após obter `{domain, clauses[]}`:
 ### 6.2 Locking e atomicidade
 
 - **Lock:** `mkdir ${statefile}.lockdir` (atômico em todos os POSIX).
-- **Stale check:** se `mtime do lockdir > lock_stale_seconds (30s)`, remove como órfão.
+- **Stale check:** se `mtime do lockdir > lock_stale_seconds (default 60s, deliberadamente ≥ 2× `llm_timeout_seconds` para evitar race entre hook longo e hook órfão)`, remove como órfão.
 - **Retry:** até 2s com passos de 0.5s. Falha de aquisição = skip silencioso (preserva "nunca bloqueia").
 - **Escrita atômica:** `temp_file + mv -f`.
 
@@ -445,12 +450,12 @@ A skill é uma instrução em `skills/smart-rename/SKILL.md` lida pelo Claude Co
 | Comando | Efeito no estado | Chama LLM? |
 |---|---|---|
 | `/smart-rename` | Lê estado + transcript, chama LLM bypassando scorer, mostra sugestão, espera aprovação, se aprovado chama writer | Sim (+1 budget) |
-| `/smart-rename <nome>` | `manual_anchor = <nome>`; chama writer com `<nome>` (render aplica anchor) | Não |
+| `/smart-rename <nome>` | Writer escreve `<nome>` primeiro; se OK, seta `manual_anchor = <nome>`, limpa `manual_title_override` | Não |
 | `/smart-rename freeze` | `frozen = true` | Não |
 | `/smart-rename unfreeze` | `frozen = false` | Não |
 | `/smart-rename force` | `force_next = true` (consumido pelo próximo Stop hook) | Não diretamente |
 | `/smart-rename explain` | Lê estado + últimos eventos do log; formata saída human-readable | Não |
-| `/smart-rename unanchor` | `manual_anchor = null` | Não |
+| `/smart-rename unanchor` | Limpa **ambos** `manual_anchor = null` e `manual_title_override = null` (retorno único ao modo automático) | Não |
 
 ### 7.3 Saída de `/smart-rename explain`
 
@@ -473,18 +478,25 @@ Work score acumulado: 12.5 (próximo call em ≥40)
 
 ### 7.4 Detecção de `/rename` nativo
 
+O `/rename` nativo do Claude Code escreve um `custom-title` diretamente no JSONL com **texto livre** (não necessariamente um slug). Tratá-lo como `manual_anchor` (domain slug para o render `domain: clauses`) produz títulos esteticamente quebrados como `"Meu titulo livre: add tests, fix bug"`. Por isso separamos:
+
+- **`manual_anchor`**: domínio em formato slug, setado por `/smart-rename <slug>` — entra no render normal `anchor: clauses`.
+- **`manual_title_override`**: título bruto, setado pela detecção de `/rename` nativo — renderizado **verbatim**, sem cláusulas.
+
 A cada execução do hook, antes de qualquer decisão:
 
 1. Lê o **último** `custom-title` do JSONL (em ordem de aparição no arquivo).
 2. Compara com `state.last_plugin_written_title`.
-3. Se diferem: ocorreu rename manual. Plugin seta:
-   - `state.manual_anchor = <último custom-title>`
+3. Se diferem: ocorreu rename manual nativo. Plugin seta:
+   - `state.manual_title_override = <último custom-title>`
    - `state.rendered_title = <último custom-title>`
    - `state.last_plugin_written_title = <último custom-title>` (evita detecção duplicada)
    - Registra entrada `{turn: N, title: ..., reason: "manual_rename"}` em `transition_history`.
 4. Se iguais: nenhum rename manual, segue fluxo normal.
 
-Para limpar a âncora: `/smart-rename unanchor`.
+O renderer da Seção 5.5 dá precedência a `manual_title_override` (verbatim) > `manual_anchor` (domain) > domain gerado pela LLM.
+
+Para limpar **ambos** os estados manuais de uma vez (voltar ao modo totalmente automático): `/smart-rename unanchor`. Esse comando limpa tanto `manual_anchor` quanto `manual_title_override` para simplificar a UX — não há caminho de limpeza separada.
 
 ---
 
@@ -503,7 +515,7 @@ Para limpar a âncora: `/smart-rename unanchor`.
 | Transcript ausente/ilegível | `[ ! -r "$path" ]` | Log warn "transcript missing", sai |
 | Estado JSON corrompido | jq não parseia | Log error, renomeia para `*.corrupt.bak`, recria estado vazio |
 | Lock não adquirido em 2s | timeout no retry loop | Log info "lock contention", sai |
-| Lock órfão | mtime > 30s | Remove, adquire, log info |
+| Lock órfão | mtime > lock_stale_seconds (60s) | Remove, adquire, log info |
 | `CLAUDE_PLUGIN_DATA` não setado | env check no início | Log error, sai |
 | `claude` CLI ausente | `command -v claude` | Log error, marca `llm_disabled`, sai |
 | `jq` ausente | `command -v jq` | Log error fatal, sai |
@@ -523,17 +535,22 @@ Quando `llm_disabled == true`, `scorer_should_call_llm()` retorna sempre SKIP. P
 
 ### 8.4 Idempotência
 
-`last_processed_turn` evita reprocessamento em race:
+`last_processed_signature` (formato `turn_number:file_size`) evita reprocessamento em race **e cobre loops agênticos** onde o Stop hook pode disparar várias vezes no mesmo turno com JSONL crescendo entre disparos:
 
 ```
-current_turn = count of user messages in transcript
-if current_turn == state.last_processed_turn:
-    # hook rodando duas vezes para o mesmo turno
+signature = turn_number + ":" + file_size (em bytes)
+if signature == state.last_processed_signature:
+    # hook rodando duas vezes para o mesmo snapshot do transcript
     apenas re-anexa título se aplicável
     não atualiza work_score
     não chama LLM
     sai
+# Se turn_number é o mesmo mas file_size cresceu (novo bloco de assistant
+# apareceu durante um loop agêntico), a signature mudou e o hook processa
+# o novo conteúdo.
 ```
+
+**Importante:** a signature é avançada apenas em saídas consistentes — skip, skip_identical, ok+writer_success, invalid, LLM error. **Não** é avançada em ok+writer_failure, para permitir retry do writer no próximo hook.
 
 ---
 
@@ -578,7 +595,7 @@ Arquivo: `${CLAUDE_PLUGIN_DATA}/logs/{session_id}.jsonl` — uma linha por event
 
   "reattach_interval": 10,
   "circuit_breaker_threshold": 3,
-  "lock_stale_seconds": 30,
+  "lock_stale_seconds": 60,
   "llm_timeout_seconds": 25,
 
   "log_level": "info",
@@ -621,7 +638,7 @@ Cobertura mínima:
 - **`config.sh`:** precedência env > file > defaults; cada campo individualmente; valores inválidos.
 - **`state.sh`:** load com arquivo ausente; save atômico; lock aquisição OK; lock stale removido; concorrência simulada.
 - **`transcript.sh`:** parse de turno simples; turno com loop agêntico (múltiplos blocks + tool_use); extração de arquivos; turno sem tool calls.
-- **`scorer.sh`:** fórmula do delta em cenários variados; matriz completa de guards; idempotência via `last_processed_turn`.
+- **`scorer.sh`:** fórmula do delta em cenários variados; matriz completa de guards; idempotência via `last_processed_signature`.
 - **`validate.sh`:** render em todos os branches (padrão, com anchor, dedupe de clauses, comparação SKIP).
 - **`writer.sh`:** append correto; erro de permissão; verificação de integridade.
 - **`logger.sh`:** formato JSONL válido; filtro por nível; rotação se aplicável.
@@ -709,7 +726,7 @@ O agente (Claude nesta sessão de desenvolvimento) executa validação end-to-en
 | 5 | Claude Code muda formato JSONL da sessão | Baixa | Alto | Parser isolado em `lib/transcript.sh`; uso de `jq // empty` defensivo |
 | 6 | `/rename` nativo escrito no JSONL antes do hook ler | Baixa | Baixo | Comparação via `last_plugin_written_title` resolve |
 | 7 | Skill dentro da sessão não consegue executar scripts | Média | Alto | Fase 1 da implementação valida protótipo antes de investir nos 7 subcomandos |
-| 8 | Lock órfão de processo morto | Média | Médio | Stale check (>30s) |
+| 8 | Lock órfão de processo morto | Média | Médio | Stale check (>60s; 2× llm_timeout) |
 | 9 | Estado JSON corrompido | Baixa | Médio | Recovery para `*.corrupt.bak` + estado vazio |
 | 10 | `transition_history` cresce (mitigado para 3) | Baixa | Baixo | Hard cap em 3 itens na escrita |
 | 11 | JSONL acumula `custom-title` records em sessões gigantes | Alta (longo prazo) | Baixo | Limitação conhecida; aceita; GC fica para v2 |
@@ -737,7 +754,7 @@ Como a v1 nunca foi usada em prática, não há fases gradativas de rollout. A s
 - [ ] `scripts/prompts/generation.md` com prompt iterável
 - [ ] `smart-rename-cli.sh` + `SKILL.md` implementando os 7 subcomandos
 - [ ] Locking + stale check + escrita atômica
-- [ ] Idempotência via `last_processed_turn`
+- [ ] Idempotência via `last_processed_signature` (cobrindo multi-Stop agêntico)
 - [ ] Detecção de `/rename` nativo via `last_plugin_written_title`
 - [ ] Logs JSONL estruturados (Seção 9)
 - [ ] Configuração com precedência env > file > defaults (Seção 10)

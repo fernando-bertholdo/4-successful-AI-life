@@ -1863,16 +1863,26 @@ source "$SCRIPT_DIR/lib/validate.sh"
 source "$SCRIPT_DIR/lib/writer.sh"
 
 # --- Traps split: EXIT unlocks only; ERR logs crash (with sentinel to avoid double-logging) ---
+# --- Traps: EXIT captures $? at entry (before state_unlock mutates it) ---
+# Invariant: every early `exit 0` path MUST set _HOOK_CLEAN_EXIT=1. Adding a new exit
+# path that forgets the sentinel would cause false hook_crashed logs.
 _HOOK_CLEAN_EXIT=""
 _cleanup_exit() {
+  local rc=$?                     # capture status FIRST, before any command below mutates it
   [[ -n "${SESSION_ID:-}" ]] && state_unlock "$SESSION_ID" 2>/dev/null || true
-  if [[ -z "$_HOOK_CLEAN_EXIT" && $? -ne 0 ]]; then
-    [[ -n "${SESSION_ID:-}" ]] && log_event error hook_crashed "$SESSION_ID" '{}' || true
+  if [[ -z "$_HOOK_CLEAN_EXIT" && $rc -ne 0 ]]; then
+    [[ -n "${SESSION_ID:-}" ]] && log_event error hook_crashed "$SESSION_ID" "$(jq -nc --argjson rc "$rc" '{exit_code:$rc}' 2>/dev/null || echo '{}')" || true
   fi
 }
 trap _cleanup_exit EXIT
 
-# --- 1. Parse input ---
+# --- 1. Check dependencies BEFORE any jq usage (jq needed for log_event) ---
+if ! command -v jq >/dev/null 2>&1; then
+  # Cannot log without jq; silent exit
+  _HOOK_CLEAN_EXIT=1; exit 0
+fi
+
+# --- 2. Parse input ---
 INPUT_RAW="$(cat)"
 SESSION_ID="$(echo "$INPUT_RAW" | jq -r '.session_id // empty' 2>/dev/null)"
 TRANSCRIPT_PATH="$(echo "$INPUT_RAW" | jq -r '.transcript_path // empty' 2>/dev/null)"
@@ -1882,7 +1892,6 @@ if [[ -z "$SESSION_ID" || -z "$TRANSCRIPT_PATH" ]]; then
   _HOOK_CLEAN_EXIT=1; exit 0
 fi
 
-command -v jq >/dev/null 2>&1 || { log_event error missing_dep "$SESSION_ID" '{"dep":"jq"}'; _HOOK_CLEAN_EXIT=1; exit 0; }
 command -v claude >/dev/null 2>&1 || { log_event error missing_dep "$SESSION_ID" '{"dep":"claude"}'; _HOOK_CLEAN_EXIT=1; exit 0; }
 
 if [[ ! -r "$TRANSCRIPT_PATH" ]]; then
@@ -2017,6 +2026,11 @@ STATE=$(echo "$STATE" | jq '.failure_count = 0 | .llm_disabled = false')
 VALIDATED=$(validate_and_render "$LLM_OUTPUT" "$STATE")
 STATUS=$(echo "$VALIDATED" | jq -r '.status')
 
+# Track whether to advance the signature. We advance for all outcomes EXCEPT
+# "LLM returned ok but writer failed" — in that case we want the next hook
+# to re-evaluate (possibly re-calling LLM) rather than silently stuck.
+ADVANCE_SIGNATURE=1
+
 case "$STATUS" in
   ok)
     TITLE=$(echo "$VALIDATED" | jq -r '.rendered_title')
@@ -2035,7 +2049,8 @@ case "$STATUS" in
       log_event info title_written "$SESSION_ID" "$(jq -nc --arg t "$TITLE" '{title:$t}')"
     else
       log_event warn title_write_failed "$SESSION_ID" "$(jq -nc --arg t "$TITLE" '{attempted_title:$t}')"
-      # Do NOT promote state; next hook will re-evaluate
+      # Do NOT promote state; do NOT advance signature — next hook will re-evaluate.
+      ADVANCE_SIGNATURE=0
     fi
     ;;
   skip_identical)
@@ -2047,7 +2062,9 @@ case "$STATUS" in
     ;;
 esac
 
-STATE=$(echo "$STATE" | jq --arg s "$CURRENT_SIGNATURE" '.last_processed_signature = $s')
+if [[ $ADVANCE_SIGNATURE -eq 1 ]]; then
+  STATE=$(echo "$STATE" | jq --arg s "$CURRENT_SIGNATURE" '.last_processed_signature = $s')
+fi
 state_save "$SESSION_ID" "$STATE"
 _HOOK_CLEAN_EXIT=1
 exit 0
@@ -2185,6 +2202,17 @@ cmd_anchor() {
   else
     title="$name: $(echo "$clauses" | jq -r 'join(", ")')"
   fi
+
+  # R4: Write JSONL FIRST; only promote state if the write succeeded. If no
+  # transcript was provided, skip the write but still update state (the caller
+  # is explicitly anchoring without wanting the JSONL rewritten).
+  if [[ -n "$transcript" && -f "$transcript" ]]; then
+    if ! writer_append_title "$transcript" "$title"; then
+      echo "ERROR: could not append custom-title to transcript; aborting anchor (state unchanged)"
+      return 1
+    fi
+  fi
+
   state_save "$sid" "$(echo "$st" | jq --arg a "$name" --arg t "$title" '
     .manual_anchor = $a
     | .manual_title_override = null
@@ -2194,19 +2222,23 @@ cmd_anchor() {
     | .last_plugin_written_title = $t
     | .updated_at = (now | todate)
   ')"
-  if [[ -f "$transcript" ]]; then
-    writer_append_title "$transcript" "$title" || true
-  fi
   log_event info manual_anchor_set "$sid" "$(jq -nc --arg a "$name" '{anchor:$a}')"
   echo "Anchor set: $name (title: \"$title\")"
 }
 
+# R3: unanchor clears BOTH manual_anchor AND manual_title_override so the user
+# has a single command to return to fully automatic naming after either a
+# /smart-rename <name> or a /rename nativo.
 cmd_unanchor() {
   local sid="$1"
   local st; st=$(state_load "$sid")
-  state_save "$sid" "$(echo "$st" | jq '.manual_anchor = null | .updated_at = (now | todate)')"
-  log_event info manual_anchor_set "$sid" '{"anchor":null}'
-  echo "Anchor cleared."
+  state_save "$sid" "$(echo "$st" | jq '
+    .manual_anchor = null
+    | .manual_title_override = null
+    | .updated_at = (now | todate)
+  ')"
+  log_event info manual_anchor_set "$sid" '{"anchor":null,"override":null}'
+  echo "Anchor and title override cleared. Plugin resumes automatic naming on next Stop hook."
 }
 
 cmd_explain() {
@@ -2256,21 +2288,29 @@ EOF
 }
 
 # /smart-rename (no args): suggest. CONSUMES 1 budget slot (A4).
+# Mirrors the hook's circuit breaker behavior (N4) and checks validate status (N5).
+# Accepts explicit cwd so domain_guess/branch are correct when called from the skill (R5).
 cmd_suggest() {
-  local sid="$1" transcript="$2"
+  local sid="$1" transcript="$2" cwd="${3:-$PWD}"
   local st; st=$(state_load "$sid")
 
   local calls_made=$(echo "$st" | jq -r '.calls_made // 0')
   local overflow_used=$(echo "$st" | jq -r '.overflow_used // 0')
   local max_calls=$(config_get max_budget_calls)
   local overflow_slots=$(config_get overflow_manual_slots)
+  local cb_thr=$(config_get circuit_breaker_threshold)
+  local llm_disabled=$(echo "$st" | jq -r '.llm_disabled // false')
+
+  if [[ "$llm_disabled" == "true" ]]; then
+    echo "Circuit breaker active (LLM disabled for this session). Use /smart-rename force to reset."
+    return 1
+  fi
 
   if [[ "$calls_made" -ge "$max_calls" ]] && [[ "$overflow_used" -ge "$overflow_slots" ]]; then
     echo "Budget and overflow exhausted. Use /smart-rename <name> to anchor manually."
     return 1
   fi
 
-  local cwd="${PWD:-}"
   local prev_files=$(echo "$st" | jq -c '.active_files_recent // []')
   local turn=$(transcript_parse_current_turn "$transcript" "$prev_files" "$cwd")
 
@@ -2285,7 +2325,8 @@ cmd_suggest() {
     --arg rt "" \
     '{CURRENT_TITLE:$t, MANUAL_ANCHOR:$a, BRANCH:$br, DOMAIN_GUESS:$dg, RECENT_FILES:$rf, USER_MSG:$um, ASSISTANT_SUMMARY:$as, RECENT_TURNS:$rt}')
 
-  # Consume budget BEFORE call (consistent with hook behavior)
+  # Consume budget BEFORE call (consistent with hook behavior). Save immediately so
+  # a subsequent crash still records the spend.
   if [[ "$calls_made" -ge "$max_calls" ]]; then
     st=$(echo "$st" | jq '.overflow_used = ((.overflow_used // 0) + 1)')
   else
@@ -2296,26 +2337,54 @@ cmd_suggest() {
   local out=$(llm_generate_title "$ctx" || echo '{"error":"call_failed"}')
   local err=$(echo "$out" | jq -r '.error // ""')
   if [[ -n "$err" ]]; then
-    echo "LLM call failed: $err"
+    # N4: integrate with circuit breaker identically to the hook
+    local new_fail=$(($(echo "$st" | jq -r '.failure_count // 0') + 1))
+    st=$(echo "$st" | jq --argjson n "$new_fail" --argjson thr "$cb_thr" '
+      .failure_count = $n | .llm_disabled = ($n >= $thr)
+    ')
+    state_save "$sid" "$st"
+    log_event warn llm_error "$sid" "$(jq -nc --arg e "$err" --argjson n "$new_fail" '{error:$e, failure_count:$n}')"
+    if (( new_fail >= cb_thr )); then
+      echo "LLM call failed ($err). Circuit breaker tripped ($new_fail/$cb_thr); use /smart-rename force to reset."
+    else
+      echo "LLM call failed ($err). Failure count: $new_fail/$cb_thr."
+    fi
     return 1
   fi
 
+  # Success resets failure counter (keeps CB behavior consistent across hook/skill)
+  st=$(echo "$st" | jq '.failure_count = 0 | .llm_disabled = false')
+  state_save "$sid" "$st"
+
   local validated=$(validate_and_render "$out" "$st")
+  local vstatus=$(echo "$validated" | jq -r '.status')
+
+  # N5: treat invalid/error validation results honestly instead of printing "null"
+  if [[ "$vstatus" != "ok" && "$vstatus" != "skip_identical" ]]; then
+    local verr=$(echo "$validated" | jq -r '.error // "unknown_validation_error"')
+    echo "Validation failed: $verr (LLM output was malformed or rejected). No changes applied."
+    return 1
+  fi
+
   local title=$(echo "$validated" | jq -r '.rendered_title')
+  local sdomain=$(echo "$validated" | jq -r '.title_struct.domain // ""')
   echo "Suggested title: $title"
   echo ""
-  echo "To apply as anchor, run:   /smart-rename $(echo "$validated" | jq -r '.title_struct.domain')"
+  echo "To apply as anchor, run:   /smart-rename $sdomain"
   echo "Or accept literally via:   /rename \"$title\"   (native command)"
 }
 
+# Dispatcher. Third positional arg to cmd_suggest is optional cwd; the SKILL should
+# pass $CLAUDE_PROJECT_DIR when available, else $PWD is used as fallback.
 cmd="${1:-}"; shift || true
 
 case "$cmd" in
   "" )
     transcript="${1:-}"
+    cwd_arg="${2:-${CLAUDE_PROJECT_DIR:-${PWD:-}}}"
     sid="$(session_id_from_args "$transcript")"
     [[ -z "$sid" ]] && { echo "ERROR: cannot determine session id"; exit 1; }
-    with_lock "$sid" cmd_suggest "$sid" "$transcript"
+    with_lock "$sid" cmd_suggest "$sid" "$transcript" "$cwd_arg"
     ;;
   freeze)   sid="$(session_id_from_args "${1:-}")"; with_lock "$sid" cmd_freeze "$sid" ;;
   unfreeze) sid="$(session_id_from_args "${1:-}")"; with_lock "$sid" cmd_unfreeze "$sid" ;;
@@ -2349,7 +2418,7 @@ When the user invokes `/smart-rename [args]`, run the matching command via the B
 
 ### `/smart-rename` — suggest (consumes 1 budget slot)
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh "" "$CLAUDE_TRANSCRIPT_PATH"
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh "" "$CLAUDE_TRANSCRIPT_PATH" "${CLAUDE_PROJECT_DIR:-$PWD}"
 ```
 
 ### `/smart-rename <name>` — set domain anchor
@@ -2463,17 +2532,36 @@ cp "$SCRIPT_DIR/../fixtures/transcript-v15-qa.jsonl" "$tqa"
 run_hook "$tqa" "sess-qa"
 assert_eq "no LLM" "0" "$(jq -r '.calls_made // 0' "$CLAUDE_PLUGIN_DATA/state/sess-qa.json")"
 
-echo "-- Feature: threshold met → LLM call + title written --"
+echo "-- Feature: threshold met → LLM call + title written (pre-seeded score to 20) --"
 unset MOCK_CLAUDE_MODE
 export MOCK_CLAUDE_RESPONSE='[{"type":"result","is_error":false,"duration_ms":200,"total_cost_usd":0.05,"structured_output":{"domain":"auth","clauses":["add rate limiting"]}}]'
 tf=$(mktemp).jsonl
 cp "$SCRIPT_DIR/../fixtures/transcript-v15-feature.jsonl" "$tf"
+# N3: pre-seed accumulated_score so the delta from this fixture (~13) pushes total past threshold 20.
+# This documents the intent explicitly rather than relying on coincidental fixture arithmetic.
+mkdir -p "$CLAUDE_PLUGIN_DATA/state"
+jq -nc '{version:"1.5", accumulated_score:10, title_struct:null, calls_made:0, overflow_used:0, failure_count:0, llm_disabled:false, last_processed_signature:""}' \
+  > "$CLAUDE_PLUGIN_DATA/state/sess-feat.json"
 run_hook "$tf" "sess-feat"
 s=$(cat "$CLAUDE_PLUGIN_DATA/state/sess-feat.json")
 assert_eq "calls_made 1" "1" "$(echo "$s" | jq -r '.calls_made')"
 assert_eq "title set" "auth: add rate limiting" "$(echo "$s" | jq -r '.rendered_title')"
 assert_eq "JSONL has custom-title" "custom-title" "$(tail -1 "$tf" | jq -r '.type')"
 assert_eq "last_processed_signature set" "true" "$(echo "$s" | jq 'has("last_processed_signature")')"
+
+echo "-- Writer failure: state NOT promoted, signature NOT advanced (R1) --"
+tfw=$(mktemp).jsonl
+cp "$SCRIPT_DIR/../fixtures/transcript-v15-feature.jsonl" "$tfw"
+chmod 444 "$tfw"   # readonly → writer_append_title returns non-zero
+jq -nc '{version:"1.5", accumulated_score:15, title_struct:null, calls_made:0, overflow_used:0, failure_count:0, llm_disabled:false, last_processed_signature:""}' \
+  > "$CLAUDE_PLUGIN_DATA/state/sess-wf.json"
+run_hook "$tfw" "sess-wf"
+s=$(cat "$CLAUDE_PLUGIN_DATA/state/sess-wf.json")
+# title_struct should remain null (not promoted), rendered_title empty
+assert_eq "rendered_title empty (not promoted)" "" "$(echo "$s" | jq -r '.rendered_title // ""')"
+# signature should be empty (not advanced)
+assert_eq "signature not advanced" "" "$(echo "$s" | jq -r '.last_processed_signature // ""')"
+chmod 644 "$tfw"
 
 echo "-- LLM failure increments failure_count --"
 export MOCK_CLAUDE_MODE=fail
@@ -2495,11 +2583,13 @@ assert_eq "failure 3" "3" "$(echo "$s" | jq -r '.failure_count')"
 assert_eq "llm_disabled" "true" "$(echo "$s" | jq -r '.llm_disabled')"
 unset MOCK_CLAUDE_MODE
 
-echo "-- Idempotency: same signature does NOT double-count --"
+echo "-- Idempotency: same signature does NOT double-count (pre-seed so first call fires) --"
 unset MOCK_CLAUDE_MODE
 export MOCK_CLAUDE_RESPONSE='[{"type":"result","is_error":false,"duration_ms":200,"total_cost_usd":0.05,"structured_output":{"domain":"test","clauses":["a"]}}]'
 tid=$(mktemp).jsonl
 cp "$SCRIPT_DIR/../fixtures/transcript-v15-feature.jsonl" "$tid"
+jq -nc '{version:"1.5", accumulated_score:15, title_struct:null, calls_made:0, overflow_used:0, failure_count:0, llm_disabled:false, last_processed_signature:""}' \
+  > "$CLAUDE_PLUGIN_DATA/state/sess-idem.json"
 run_hook "$tid" "sess-idem"
 # Second run with SAME file → same signature → scorer skips
 run_hook "$tid" "sess-idem"
@@ -2536,8 +2626,12 @@ s=$(cat "$CLAUDE_PLUGIN_DATA/state/sess-man.json")
 assert_eq "override persists" "My custom free-form title" "$(echo "$s" | jq -r '.manual_title_override')"
 assert_eq "rendered still override" "My custom free-form title" "$(echo "$s" | jq -r '.rendered_title')"
 
-echo "-- Pivot: domain changes are reflected when LLM returns new domain --"
+echo "-- Pivot: domain changes are reflected when LLM returns new domain (pre-seeded state with existing title_struct) --"
 export MOCK_CLAUDE_RESPONSE='[{"type":"result","is_error":false,"duration_ms":200,"total_cost_usd":0.05,"structured_output":{"domain":"ci","clauses":["add vercel workflow"]}}]'
+# Pre-seed: session already has a title (title_struct set) so ongoing_threshold=40 applies.
+# Fixture delta is ~5; we pre-seed accumulated_score=40 so decision is CALL.
+jq -nc '{version:"1.5", accumulated_score:40, title_struct:{domain:"auth",clauses:["old"]}, rendered_title:"auth: old", calls_made:1, overflow_used:0, failure_count:0, llm_disabled:false, last_processed_signature:""}' \
+  > "$CLAUDE_PLUGIN_DATA/state/sess-pv.json"
 tpv=$(mktemp).jsonl
 cp "$SCRIPT_DIR/../fixtures/transcript-v15-pivot.jsonl" "$tpv"
 run_hook "$tpv" "sess-pv"
