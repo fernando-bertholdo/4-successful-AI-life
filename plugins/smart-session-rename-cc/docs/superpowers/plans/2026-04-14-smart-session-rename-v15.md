@@ -1647,9 +1647,18 @@ EOF
     exit 0
     ;;
   success|*)
-    cat <<EOF
-${MOCK_CLAUDE_RESPONSE:-[{"type":"result","is_error":false,"duration_ms":100,"total_cost_usd":0.001,"structured_output":{"domain":"test","clauses":["do thing"]}}]}
+    # NOTE (Phase 5.2 lesson, 2026-04-15): bash's ${var:-default} parser does NOT
+    # track nested braces in the default value, so a literal default containing
+    # `}` chars (like JSON) terminates the expansion early and corrupts output.
+    # Use explicit if/else with a quoted heredoc for the default to keep braces
+    # literal.
+    if [[ -n "${MOCK_CLAUDE_RESPONSE:-}" ]]; then
+      echo "$MOCK_CLAUDE_RESPONSE"
+    else
+      cat <<'EOF'
+[{"type":"result","is_error":false,"duration_ms":100,"total_cost_usd":0.001,"structured_output":{"domain":"test","clauses":["do thing"]}}]
 EOF
+    fi
     ;;
 esac
 ```
