@@ -14,6 +14,14 @@
 
 ## Changes since previous revision (post Gate 1+2 review)
 
+**2026-04-15 addendum:** added a "Manual Testing Strategy" section after
+"File Structure". Tasks 1.2, 1.3, 7.1, 9.1, 10.1 were rewritten to tag each
+step as **[AGENT]** or **[USER]** and to include copy-paste commands,
+pre-filled results-template docs, and explicit handoff points. Rationale:
+the implementing agent cannot drive another Claude Code TUI via `computer-use`
+(Terminal is tier "click" — typing is sandbox-blocked), so the manual steps
+were made verbose enough for the user to run them without guessing.
+
 This plan was revised after adversarial review found 8 critical bugs and several architectural issues. Key changes:
 
 - **Phase order reshuffled:** skill prototype now runs BEFORE config/logger investment (spec §13 Phase 1).
@@ -86,6 +94,86 @@ tests/
 - `skills/smart-rename/SKILL.md` — rewrite for v1.5 subcommands
 - `tests/run-tests.sh` — walk `unit/` and `integration/`
 - `README.md`, `CHANGELOG.md` — in Phase 11 (after Level 3/4 findings)
+
+---
+
+## Manual Testing Strategy
+
+Several tasks (1.2, 1.3, 7.1, 9.1, 10.1) involve interaction with a "real" Claude
+Code session. The implementing agent **cannot** drive another Claude Code session
+via `computer-use` because Terminal/iTerm apps are tier **"click"** under the
+computer-use sandbox (typing is blocked in terminals and IDEs) — so the agent
+cannot type prompts or slash commands into another interactive Claude Code
+instance. This constraint shapes the protocol below.
+
+### Step ownership convention
+
+Each step in affected tasks is tagged:
+- **[AGENT]** — the implementing agent performs it alone (file ops, Bash,
+  commits, jq queries).
+- **[USER]** — requires the human user: running interactive commands, pasting
+  output back, observing behavior that only shows in a real session.
+
+### Handoff protocol for [USER] steps
+
+1. **[AGENT]** prepares every artifact the user needs (scripts, SKILL.md,
+   results-template doc pre-filled with the questions to answer).
+2. **[AGENT]** writes the exact copy-paste commands the user must run, with
+   expected output for each, in a single code block.
+3. **[AGENT]** stops and says "Pausing for manual test — when done, paste
+   command outputs back and answer the questions in docs/test-results/…".
+4. **[USER]** runs commands, captures output, answers questions.
+5. **[AGENT]** fills the results doc, commits, continues.
+
+### Task-specific strategies
+
+**Task 1.2 — Capture real JSONL**
+Uses the **current implementing session's own JSONL** (the agent is *in* a real
+Claude Code session; its transcript under `~/.claude/projects/<encoded>/….jsonl`
+is a real fixture). All steps are [AGENT]; no user involvement needed.
+
+**Task 1.3 — Skill prototype smoke test**
+[AGENT] generates `smart-rename-cli.sh`, `SKILL.md`, and the results-template
+doc. [AGENT] then instructs [USER] to dev-install the plugin (via `/plugin` or
+`CLAUDE_PLUGIN_ROOT=<repo>` env) and run `/smart-rename freeze` +
+`/smart-rename unfreeze` in a *fresh* Claude Code session (not this one — a new
+session is needed because the current session was started before the plugin
+existed in this state, so its skill registry doesn't include smart-rename yet).
+
+**Task 7.1 — Full skill smoke test**
+Same pattern as 1.3 but covering all 7 subcommands. [AGENT] generates CLI +
+SKILL.md + results template. [USER] runs the subcommand chain in a fresh
+session. [AGENT] records findings.
+
+**Task 9.1 — Level 3 manual scenarios ($10 cap)**
+[AGENT] writes `docs/test-results/<date>-level3-scenarios.md` with: explicit
+prerequisites (plugin installed, `CLAUDE_PLUGIN_DATA` set, mock OFF), copy-paste
+prompt scripts for each scenario (A/B/C), the exact cost-meter `jq` command to
+run between scenarios, and a stop-loss checklist. [USER] runs scenarios in real
+sessions (paying real LLM cost), reports observations. [AGENT] finalizes the
+results doc and commits.
+
+**Task 10.1 — Level 4 Computer Use ($10 cap)**
+[AGENT] writes the scenario doc. [USER] enables Computer Use MCP + macOS
+permissions, runs the 5 scenarios driving Claude Code from a secondary agent
+via computer-use (the user's own desktop, not this agent's). [USER] reports
+observations + screenshots. [AGENT] records results and commits.
+
+### Why the agent cannot self-run 1.3 / 7.1 / 9.1 / 10.1
+
+- **Tier "click" blocks `type`/`key` on Terminal/iTerm**: `left_click` works,
+  but typing a prompt is denied by the sandbox. The agent can `open_application`
+  and `screenshot` the terminal but cannot enter text.
+- **`claude -p` (print mode) does not execute slash commands the same way** —
+  slash commands are handled by the interactive skill registry, not by the
+  non-interactive `-p` pipeline. So `claude -p "/smart-rename freeze"` is not
+  equivalent and would not validate the skill mechanism this plan needs to test.
+- **Forking a child `claude` interactive process via Bash** doesn't help either:
+  the TUI requires a controlled terminal (PTY) and bidirectional input the
+  agent cannot supply through `Bash` tool invocations alone.
+
+The net effect: the agent can do everything except press Enter in a Claude Code
+TUI. That single step is what [USER] covers.
 
 ---
 
@@ -309,48 +397,73 @@ git commit -m "feat(v1.5): add lib/state.sh with atomic save, portable lock, env
 
 Rationale: Gate 2 flagged that the parser was being validated only against synthetic fixtures. This task captures a real transcript to verify format assumptions before freezing the parser.
 
+Per the **Manual Testing Strategy** section, this task reuses the implementing
+session's own JSONL — no separate manual session required. All steps [AGENT].
+
 **Files:**
 - Create: `tests/fixtures/transcript-real-capture.jsonl`
 
-- [ ] **Step 1: Start a fresh Claude Code session**
+- [ ] **Step 1: [AGENT] Locate the current session's JSONL**
 
-In a throwaway project directory, run `claude` interactively. Send 3-5 prompts that involve tool use (Read, Edit, Bash). Example flow:
-- "List the files in this directory"
-- "Create a file `hello.txt` with content `hi`"
-- "Rename it to `greeting.txt`"
-
-Exit the session.
-
-- [ ] **Step 2: Copy the transcript**
-
-Find it in `~/.claude/projects/<encoded-path>/<session-id>.jsonl` and copy:
+Claude Code stores each session at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`.
+The encoded cwd for this repo is
+`-Users-fernandobertholdo-Documents-tech-projects-claude-code-smart-session-rename`.
+Pick the most recently modified JSONL in that directory (= the current session):
 
 ```bash
-# List recent sessions to find the one just created
-ls -lt ~/.claude/projects/ | head -5
-# Copy the newest one
-TRANSCRIPT="$(ls -t ~/.claude/projects/*/*.jsonl | head -1)"
-cp "$TRANSCRIPT" tests/fixtures/transcript-real-capture.jsonl
+PROJECT_ENCODED="-Users-fernandobertholdo-Documents-tech-projects-claude-code-smart-session-rename"
+SRC="$(ls -t ~/.claude/projects/"$PROJECT_ENCODED"/*.jsonl 2>/dev/null | head -1)"
+echo "Source: $SRC"
+wc -l "$SRC"
 ```
 
-- [ ] **Step 3: Sanity-check format assumptions**
+If `SRC` is empty, fall back to scanning all project dirs (`ls -t ~/.claude/projects/*/*.jsonl | head -1`). If that also yields nothing, STOP and report (user will need to run something in Claude Code first).
+
+- [ ] **Step 2: [AGENT] Copy as fixture**
 
 ```bash
-# User messages should have {"type":"user","message":{"role":"user","content":<string or array>}}
+mkdir -p tests/fixtures
+cp "$SRC" tests/fixtures/transcript-real-capture.jsonl
+```
+
+- [ ] **Step 3: [AGENT] Sanity-check format assumptions**
+
+```bash
+echo "-- user content shapes --"
+jq -rs '[.[] | select(.type == "user") | .message.content | type] | unique' tests/fixtures/transcript-real-capture.jsonl
+
+echo "-- sample user entries --"
 jq -c 'select(.type == "user")' tests/fixtures/transcript-real-capture.jsonl | head -3
-# Assistant with tool_use blocks
-jq -c 'select(.type == "assistant" and (.message.content | type == "array"))' tests/fixtures/transcript-real-capture.jsonl | head -3
-# Note whether content can be array or string in user messages
-jq -r '[.[] | select(.type == "user") | .message.content | type] | unique' -s tests/fixtures/transcript-real-capture.jsonl
+
+echo "-- assistant with tool_use --"
+jq -c 'select(.type == "assistant" and (.message.content | type == "array"))' tests/fixtures/transcript-real-capture.jsonl | head -2
+
+echo "-- distinct record types --"
+jq -rs '[.[] | .type] | unique' tests/fixtures/transcript-real-capture.jsonl
 ```
 
-Record findings as comments at the top of the fixture file (e.g., `# User content was observed as: string AND array` to calibrate the parser later).
+Record observations as a `#`-prefixed comment at the **top** of the fixture
+file — specifically whether `user.message.content` was observed as `string`,
+`array`, or both. (This calibrates expectations for the parser in Phase 3.1.)
 
-- [ ] **Step 4: Scrub any sensitive content**
+- [ ] **Step 4: [AGENT] Scrub sensitive content**
 
-Open `tests/fixtures/transcript-real-capture.jsonl` and remove anything personal (paths under `/Users/<name>`, tokens, real file contents). Replace with placeholders.
+The raw transcript may contain absolute paths (`/Users/fernandobertholdo/…`),
+API keys, or conversational content the user doesn't want in git. Apply a
+scrub pass:
 
-- [ ] **Step 5: Commit**
+```bash
+# Replace absolute user path with a generic placeholder
+sed -i.bak 's#/Users/fernandobertholdo#/Users/<user>#g' tests/fixtures/transcript-real-capture.jsonl
+rm -f tests/fixtures/transcript-real-capture.jsonl.bak
+```
+
+Then manually scan the file for: `ghp_`, `sk-ant-`, `sk-`, `xoxb-`, IP
+addresses, email addresses, or any content that looks personal. Replace with
+`<redacted>`. Report the scrub result to the user before committing, listing
+any redactions made so the user can confirm nothing sensitive slipped through.
+
+- [ ] **Step 5: [AGENT] Commit (after user confirms the scrub)**
 
 ```bash
 git add tests/fixtures/transcript-real-capture.jsonl
@@ -442,40 +555,124 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unfreeze "$CLAUDE_TRANSCRIPT_P
 Any other subcommand: reply "Not yet implemented (Phase 1 prototype)."
 ```
 
-- [ ] **Step 3: Manual smoke test**
+- [ ] **Step 3: [AGENT] Create results-template doc pre-filled with questions**
 
-Launch an interactive Claude Code session (dev install of this plugin). Run:
+Create `docs/test-results/2026-04-14-skill-prototype.md`:
+
+```markdown
+# Phase 1.3 — Skill Prototype Smoke Test Results
+
+Date: 2026-04-14
+Tester: Fernando Bertholdo
+
+## Environment
+- Claude Code version: <paste `claude --version` output here>
+- CLAUDE_PLUGIN_DATA: <paste `echo $CLAUDE_PLUGIN_DATA` output here>
+- Plugin install mode: dev (linked from this repo)
+
+## Test transcript
+
+### 1. /smart-rename freeze
+- [ ] Ran command: `/smart-rename freeze`
+- Output observed: `<paste verbatim output>`
+- Expected: `Smart rename: FROZEN for session <id>`
+- Matched expected? yes / no
+
+### 2. State file after freeze
+- [ ] Ran: `cat "$CLAUDE_PLUGIN_DATA/state/<id>.json" | jq .`
+- Output observed:
+  ```
+  <paste jq output>
+  ```
+- `.frozen` field present and `true`? yes / no
+
+### 3. /smart-rename unfreeze
+- [ ] Ran command: `/smart-rename unfreeze`
+- Output observed: `<paste verbatim output>`
+- Expected: `Smart rename: UNFROZEN for session <id>`
+- Matched expected? yes / no
+
+### 4. State file after unfreeze
+- [ ] `.frozen` field now `false`? yes / no
+
+## Mechanism validation questions
+- Was `$CLAUDE_SESSION_ID` set in the skill environment when the script ran?
+  (Check by adding `echo "SID=$CLAUDE_SESSION_ID" >&2` temporarily to the CLI,
+  or confirm indirectly: does the session_id in the state file match the
+  current session's id shown in Claude Code header?)
+  Answer: __________
+- Did the Bash tool execute `${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh`
+  without path issues? (If yes, `$CLAUDE_PLUGIN_ROOT` was correctly exposed.)
+  Answer: __________
+- Any race with the Stop hook firing after the skill's own turn?
+  (If you see a `custom-title` record appended immediately after the freeze
+  command, the Stop hook ran — note whether it respected the freeze flag.)
+  Answer: __________
+- Did session-id derivation from `$CLAUDE_TRANSCRIPT_PATH` work correctly when
+  `$CLAUDE_SESSION_ID` was absent? (Force-test: unset CLAUDE_SESSION_ID and
+  re-run. Not strictly required at this phase.)
+  Answer: __________ (skip if not tested)
+
+## Verdict
+- [ ] ✅ Prototype succeeded — proceed to Phase 2.
+- [ ] ❌ Prototype failed — see adjustments needed below.
+
+## Adjustments needed (only if failed)
+<describe what broke and what the mechanism needs to change>
+```
+
+- [ ] **Step 4: [USER] Dev-install the plugin and run the smoke test**
+
+Prerequisites:
+- The current agent-driven session may NOT see the new skill because its
+  plugin registry was loaded at session start. **Start a fresh Claude Code
+  session** for this smoke test.
+- Dev-install this repo as a plugin. Two common ways:
+  - `/plugin` in Claude Code → point at this repo path, or
+  - Export `CLAUDE_PLUGIN_ROOT` env to this repo before launching `claude`:
+    ```bash
+    export CLAUDE_PLUGIN_ROOT=/Users/fernandobertholdo/Documents/tech_projects/claude-code-smart-session-rename
+    claude
+    ```
+- Pick **any** small project as the working directory (doesn't need to be
+  this repo — in fact, not this repo is preferable to avoid the Stop hook
+  clashing with your smoke test).
+
+In the fresh session, run in order:
 
 ```
 /smart-rename freeze
 ```
-
-Expected: "Smart rename: FROZEN for session `<id>`". Verify state:
-
 ```bash
-cat "$CLAUDE_PLUGIN_DATA/state/<id>.json" | jq .
+# In a second terminal (while the Claude Code session is still open):
+cat "${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/state/"*.json | jq .
 ```
-Should show `"frozen": true`.
+Record the values you see (session id, `.frozen`).
 
-Then `/smart-rename unfreeze` — verify state shows `"frozen": false`.
+```
+/smart-rename unfreeze
+```
+```bash
+cat "${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/state/"*.json | jq .
+```
+Confirm `.frozen` is now `false`.
 
-- [ ] **Step 4: Document results in `docs/test-results/2026-04-14-skill-prototype.md`**
+**Fill in** `docs/test-results/2026-04-14-skill-prototype.md` with the actual
+outputs and answers, then paste the completed content back to the agent
+(or commit it yourself — either works).
 
-Record:
-- Was `$CLAUDE_SESSION_ID` available in the skill environment?
-- Did Bash tool execute the script from `${CLAUDE_PLUGIN_ROOT}`?
-- Any race with the Stop hook firing after the skill's own turn?
-- Did session-id derivation from `$CLAUDE_TRANSCRIPT_PATH` work?
+- [ ] **Step 5: [AGENT] Assess verdict + commit**
 
-**If the prototype succeeded:** proceed to Phase 2.
-**If it failed:** stop here and adjust the mechanism (e.g., pass session_id explicitly, different invocation pattern) before continuing.
-
-- [ ] **Step 5: Commit**
+If the user's results doc shows ✅ verdict: commit and proceed to Phase 2.
 
 ```bash
 git add scripts/smart-rename-cli.sh skills/smart-rename/SKILL.md docs/test-results/2026-04-14-skill-prototype.md
 git commit -m "feat(v1.5): Phase 1 skill prototype (freeze/unfreeze) validates mechanism"
 ```
+
+If ❌: STOP. Review the "Adjustments needed" section with the user; revise
+the mechanism (pass session_id explicitly, different invocation, etc.)
+before continuing to Phase 2.
 
 ---
 
@@ -2450,26 +2647,80 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unanchor "$CLAUDE_TRANSCRIPT_P
 If the CLI exits non-zero, report the error message verbatim. Do not retry automatically.
 ```
 
-- [ ] **Step 3: Manual smoke test**
+- [ ] **Step 3: [AGENT] Create results-template doc with all 7 subcommands**
 
-In an interactive Claude Code session, exercise:
+Create `docs/test-results/2026-04-14-skill-full.md`:
+
+```markdown
+# Phase 7.1 — Full Skill Smoke Test Results
+
+Date: <date>
+Tester: Fernando Bertholdo
+
+## Environment
+- Claude Code version: __________
+- Plugin dev-install mode confirmed? yes / no
+
+## Subcommand matrix
+
+| # | Command | Expected output contains | Actual output | State change observed | OK? |
+|---|---------|--------------------------|---------------|-----------------------|-----|
+| 1 | `/smart-rename freeze` | "FROZEN for session …" | | `.frozen = true` | |
+| 2 | `/smart-rename explain` | "Estado: congelado" | | N/A (read-only) | |
+| 3 | `/smart-rename unfreeze` | "UNFROZEN for session …" | | `.frozen = false` | |
+| 4 | `/smart-rename my-test-anchor` | "Anchor set: my-test-anchor" | | `.manual_anchor = "my-test-anchor"` | |
+| 5 | `/smart-rename explain` | "anchor: my-test-anchor" | | N/A | |
+| 6 | `/smart-rename unanchor` | "Anchor and title override cleared" | | `.manual_anchor = null` | |
+| 7 | `/smart-rename force` | "Force flag set" | | `.force_next = true` | |
+| 8 | `/smart-rename` (no args, costs ~$0.10) | "Suggested title: …" | | `.calls_made` +1 | |
+
+(Run #8 only if you want to spend budget. Skip if cost-sensitive.)
+
+## Cross-cutting checks
+- Did `/smart-rename` (no args) correctly consume 1 budget slot when called?
+  Answer: __________ (only if step #8 ran)
+- Did the JSONL get a `custom-title` record written for anchor/override paths?
+  Answer: __________
+- Any errors from the CLI that were unclear / unhelpful?
+  Answer: __________
+
+## Verdict
+- [ ] ✅ All subcommands behave as specified. Proceed to Phase 8.
+- [ ] ⚠️ Minor issues (list below, but not blocking Phase 8).
+- [ ] ❌ Blocking issues (list below; must fix before Phase 8).
+
+## Issues observed
+<list>
 ```
-/smart-rename freeze
-/smart-rename explain
-/smart-rename unfreeze
-/smart-rename my-test-anchor
-/smart-rename explain
-/smart-rename unanchor
+
+- [ ] **Step 4: [USER] Run the smoke test in a fresh session**
+
+Prerequisites:
+- Fresh Claude Code session (not this agent's session — plugin registry must
+  reload with v1.5 skill).
+- Plugin dev-installed (same setup as Task 1.3 Step 4).
+- Working directory: any throwaway project.
+
+Run the sequence from the table above in order. Between commands, you can
+inspect state:
+```bash
+ls "${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/state/"
+jq . "${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/state/"*.json
+tail -5 "${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/logs/"*.jsonl
 ```
 
-Verify each command produces expected output and state mutations.
+Record outputs in the results doc. Fill the verdict. Commit the doc yourself
+or paste it back to the agent.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: [AGENT] Commit (after user verdict)**
 
 ```bash
-git add scripts/smart-rename-cli.sh skills/smart-rename/SKILL.md
+git add scripts/smart-rename-cli.sh skills/smart-rename/SKILL.md docs/test-results/2026-04-14-skill-full.md
 git commit -m "feat(v1.5): complete skill (all 7 subcommands; suggest consumes budget)"
 ```
+
+If verdict is ❌: STOP, resolve with user, revise CLI or SKILL.md before
+continuing to Phase 8.
 
 ---
 
@@ -2749,11 +3000,43 @@ If sum > $8, stop.
 - Record: confirm `calls_made: 0`.
 ```
 
-- [ ] **Step 3: Execute scenarios**
+- [ ] **Step 3: [USER] Execute scenarios in real Claude Code sessions**
 
-Human or agent runs them. Fill in the results file as they go. Stop if cost cap hit.
+Prerequisites:
+- Plugin dev-installed.
+- `CLAUDE_PLUGIN_DATA` set to a known directory (so the cost meter below works).
+- Real LLM calls will happen — budget meter active.
 
-- [ ] **Step 4: Commit results**
+**Before starting:** set a single CLAUDE_PLUGIN_DATA that captures all 3
+scenarios into one log tree:
+```bash
+export CLAUDE_PLUGIN_DATA="$HOME/.local/share/smart-session-rename/level3-$(date +%Y%m%d)"
+mkdir -p "$CLAUDE_PLUGIN_DATA"
+echo "Level 3 data root: $CLAUDE_PLUGIN_DATA"
+```
+
+For each scenario, open a **fresh** Claude Code session in a throwaway
+project dir and run the suggested prompts. After every session, capture:
+```bash
+SID=<session-id from Claude Code header>
+jq -s 'map(select(.event == "llm_call_end")) | {calls: length, cost_total: (map(.cost_usd) | add // 0)}' \
+  "$CLAUDE_PLUGIN_DATA/logs/$SID.jsonl"
+jq . "$CLAUDE_PLUGIN_DATA/state/$SID.json"
+```
+
+Cumulative cost meter (run after each scenario):
+```bash
+find "$CLAUDE_PLUGIN_DATA/logs" -name '*.jsonl' -exec \
+  jq -s 'map(select(.event == "llm_call_end")) | map(.cost_usd) | add // 0' {} \; \
+  | awk '{s+=$1} END {printf "Cumulative Level 3 cost: $%.4f / $10 cap\n", s}'
+```
+**If cumulative >= $8, STOP and assess before continuing.**
+
+Fill in `docs/test-results/2026-04-14-level3-scenarios.md` as you go — for
+each scenario record: session id, turn count, calls_made, cost, title
+evolution history, subjective quality notes, any surprises.
+
+- [ ] **Step 4: [AGENT] Commit results (after user completes scenarios)**
 
 ```bash
 git add docs/test-results/2026-04-14-level3-scenarios.md
@@ -2769,31 +3052,55 @@ git commit -m "test(v1.5): Level 3 manual scenario results"
 **Files:**
 - Create: `docs/test-results/2026-04-14-computer-use.md`
 
-- [ ] **Step 1: Enable Computer Use**
+Per the **Manual Testing Strategy** section, the implementing agent cannot
+drive another interactive Claude Code session via computer-use (Terminal is
+tier "click"). Therefore Phase 10 scenarios are run by the **user's own
+Claude Code session** with computer-use enabled — that Claude (a separate
+instance) drives Claude Code interactions on the desktop. The implementing
+agent (this one) prepares the scenario doc and records results afterwards.
 
-In interactive session: `/mcp` → find `computer-use` → Enable. Grant macOS Accessibility + Screen Recording permissions.
+- [ ] **Step 1: [USER] Enable Computer Use in their primary Claude session**
 
-- [ ] **Step 2: Define budget cap**
+In a fresh Claude Code session (not this implementing one):
+- Run `/mcp` → find `computer-use` → Enable.
+- Grant macOS Accessibility + Screen Recording permissions when prompted.
+- Verify: `mcp__computer-use__screenshot` should work (take a test screenshot).
 
-Hard cap: **$10 USD for all Computer Use scenarios**. Same monitoring as Level 3.
+- [ ] **Step 2: [AGENT] Write scenario doc and budget instructions**
 
-- [ ] **Step 3: Execute scenarios**
+Create `docs/test-results/2026-04-14-computer-use.md` with the scenarios
+below and the cost-meter command (same pattern as Phase 9).
 
-Write into `docs/test-results/2026-04-14-computer-use.md` as you go:
+Scenarios:
 
-1. **Smoke test (~5 turns):** agent drives a separate terminal, invokes `/smart-rename freeze`, verifies state.
+1. **Smoke test (~5 turns):** ask the CU-driving Claude to invoke
+   `/smart-rename freeze` in a target terminal window, then `screenshot`
+   the terminal + `cat state/*.json` via Bash to verify.
+2. **Evolution (~10 turns):** CU-driving Claude sends coding prompts to the
+   target Claude Code session; observes state across turns; screenshots
+   the session picker (⌘K or similar) to confirm title visibility.
+3. **Controls chain:** CU-driving Claude runs
+   `freeze` → 2 turns → `explain` → `unfreeze` → `force` → `<anchor>` →
+   `explain`. Screenshot each step.
+4. **`/rename` nativo detection:** CU-driving Claude invokes native
+   `/rename "My custom title"`; verifies `manual_title_override` set in
+   state; subsequent turns don't overwrite.
+5. **Circuit breaker (optional):** try to force 3 real LLM failures
+   (temporarily unplug network, then restore). Verify `llm_disabled: true`
+   and that `/smart-rename force` resets. Skip if infeasible.
 
-2. **Evolution (~10 turns):** agent sends coding prompts; observes state across turns; screenshots session picker with title visible.
+Budget: **$10 USD cap** (same meter as Phase 9).
 
-3. **Controls chain:** `freeze` → 2 turns → `explain` → `unfreeze` → `force` → `<anchor>` → `explain`. Screenshot each step.
+- [ ] **Step 3: [USER] Run scenarios with Computer Use driving**
 
-4. **`/rename` nativo detection:** agent uses native `/rename`; verifies `manual_title_override` via state.
+The user runs scenarios in their primary (CU-enabled) Claude session. That
+Claude drives Claude Code in a separate terminal/app via
+`mcp__computer-use__*` tools. The user oversees, answers any confirmation
+prompts, and records observations (title quality, friction points,
+calibration suggestions — e.g., "`first_call_work_threshold` of 20 felt
+too eager for my usage pattern").
 
-5. **Circuit breaker (optional):** try to force 3 real LLM failures (e.g., unplug network briefly). If infeasible, skip.
-
-Record calibration suggestions (e.g., "first_call threshold of 20 feels too low for my patterns").
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: [AGENT] Commit report**
 
 ```bash
 git add docs/test-results/2026-04-14-computer-use.md
