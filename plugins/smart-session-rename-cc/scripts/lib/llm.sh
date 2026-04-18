@@ -66,6 +66,13 @@ llm_generate_title() {
   local model timeout_s
   model=$(config_get model)
   timeout_s=$(config_get llm_timeout_seconds)
+  # Guard: if config resolution returns a bogus model value (observed intermittently
+  # in some Claude Code Bash tool environments — root cause unknown), fall back to
+  # the hardcoded default. A valid model ID is at least 10 chars and contains "claude".
+  if [[ ${#model} -lt 10 || "$model" != *claude* ]]; then
+    [[ -n "${SMART_RENAME_DEBUG:-}" ]] && echo "[debug] model guard: got '$model', falling back to claude-haiku-4-5" >&2
+    model="claude-haiku-4-5"
+  fi
 
   local raw rc stderr_file=""
   # Capture stderr when debugging (normally suppressed to avoid polluting output)

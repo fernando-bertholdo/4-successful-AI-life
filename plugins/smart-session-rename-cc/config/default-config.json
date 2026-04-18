@@ -9,8 +9,8 @@
 
   "reattach_interval": 10,
   "circuit_breaker_threshold": 3,
-  "lock_stale_seconds": 60,
-  "llm_timeout_seconds": 25,
+  "lock_stale_seconds": 180,
+  "llm_timeout_seconds": 90,
 
   "log_level": "info",
   "max_clauses": 5,
