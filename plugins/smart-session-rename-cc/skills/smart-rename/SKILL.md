@@ -1,38 +1,43 @@
 ---
 name: smart-rename
-description: Manage the smart-session-rename plugin. Phase 1 prototype supports freeze/unfreeze only.
+description: Manage the smart-session-rename plugin — suggest, anchor, freeze, force, explain.
 ---
 
-# /smart-rename (Phase 1 prototype)
+# /smart-rename (v1.5)
 
-When the user invokes `/smart-rename freeze` or `/smart-rename unfreeze`, run the matching command via the Bash tool and report the output verbatim.
+When the user invokes `/smart-rename [args]`, run the matching command via the Bash tool and report the output verbatim. Pass `$CLAUDE_TRANSCRIPT_PATH` as the last argument.
 
-## How session id is determined
+## Subcommands
 
-Empirical finding (Phase 1.3 smoke test): `$CLAUDE_SESSION_ID` and `$CLAUDE_TRANSCRIPT_PATH` are NOT exposed as env vars when a skill invokes Bash. The CLI therefore derives the session id from `pwd -P`: it scans `~/.claude/projects/<encoded-cwd>/` for the most recently modified `.jsonl` and treats that as the active session.
-
-If the derivation fails, the CLI exits 1 with `ERROR: cannot determine session id` and prints what it tried.
-
-## Commands
-
-### `/smart-rename freeze`
-
+### `/smart-rename` — suggest (consumes 1 budget slot)
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh "" "$CLAUDE_TRANSCRIPT_PATH" "${CLAUDE_PROJECT_DIR:-$PWD}"
 ```
 
-### `/smart-rename unfreeze`
-
+### `/smart-rename <name>` — set domain anchor
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unfreeze
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh "<name>" "$CLAUDE_TRANSCRIPT_PATH"
 ```
 
-## Debug
-
-If something goes wrong, re-run with debug tracing:
-
+### `/smart-rename freeze` / `unfreeze`
 ```bash
-SMART_RENAME_DEBUG=1 ${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh freeze "$CLAUDE_TRANSCRIPT_PATH"
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unfreeze "$CLAUDE_TRANSCRIPT_PATH"
 ```
 
-Any other subcommand: reply "Not yet implemented (Phase 1 prototype)."
+### `/smart-rename force`
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh force "$CLAUDE_TRANSCRIPT_PATH"
+```
+
+### `/smart-rename explain`
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh explain "$CLAUDE_TRANSCRIPT_PATH"
+```
+
+### `/smart-rename unanchor`
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh unanchor "$CLAUDE_TRANSCRIPT_PATH"
+```
+
+If the CLI exits non-zero, report the error message verbatim. Do not retry automatically.
