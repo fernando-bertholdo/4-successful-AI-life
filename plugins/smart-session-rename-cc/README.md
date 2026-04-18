@@ -61,9 +61,20 @@ Every step fails closed: missing deps, read-only transcripts, or LLM errors neve
 
 ## Cost model
 
-Each LLM call in OAuth mode costs **~$0.10** because `claude -p` loads the full Claude Code context (~80k tokens of cache creation) before running your short prompt. The plugin budgets **6 calls per session** (≈$0.60/session) with **2 manual overflow slots** via `/smart-rename force`.
+Each LLM call in OAuth mode costs **~$0.30-0.60** (first-call observed at $0.61 with Haiku 4.5 in v1.5 Level 3 testing) because `claude -p` loads the full Claude Code context before running your short prompt. Subsequent calls in the same terminal should be cheaper due to prompt-cache hits. The plugin budgets **6 calls per session** (≈$2-4/session worst case) with **2 manual overflow slots** via `/smart-rename force`.
 
-Using `ANTHROPIC_API_KEY` with a `--bare`-style invocation would reduce cost by roughly 250× but isn't the default in v1.5 because it requires users to manage their own API keys and bypasses Claude Code's native plugin chain. See the design spec §1 for the full trade-off.
+Using `ANTHROPIC_API_KEY` with a `--bare`-style invocation would reduce cost by roughly 50-100× but isn't the default in v1.5 because it requires users to manage their own API keys and bypasses Claude Code's native plugin chain. See the design spec §1 for the full trade-off.
+
+### Where state and logs live
+
+Claude Code injects `CLAUDE_PLUGIN_DATA` at hook-invocation time, pointing to a per-plugin directory under `~/.claude/plugins/data/<pluginId>-<marketplaceId>/`. Exporting `CLAUDE_PLUGIN_DATA` in your shell has no effect — CC's value wins. Typical path:
+
+```
+~/.claude/plugins/data/claude-code-smart-session-rename-smart-session-rename-dev/
+├── state/<sessionId>.json
+├── logs/<sessionId>.jsonl
+└── config.json (optional overrides)
+```
 
 ---
 
