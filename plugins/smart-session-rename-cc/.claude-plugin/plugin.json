@@ -9,6 +9,5 @@
   "repository": "https://github.com/fe-bertholdo/claude-code-smart-session-rename",
   "license": "MIT",
   "keywords": ["session", "rename", "productivity", "hooks", "auto-name"],
-  "hooks": "./hooks/hooks.json",
   "skills": "./skills/"
 }
