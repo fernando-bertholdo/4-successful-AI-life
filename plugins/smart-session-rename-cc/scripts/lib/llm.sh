@@ -67,16 +67,27 @@ llm_generate_title() {
   model=$(config_get model)
   timeout_s=$(config_get llm_timeout_seconds)
 
-  local raw rc
+  local raw rc stderr_file=""
+  # Capture stderr when debugging (normally suppressed to avoid polluting output)
+  if [[ -n "${SMART_RENAME_DEBUG:-}" ]]; then
+    stderr_file="${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/llm-stderr.log"
+    echo "[debug] llm cmd: claude -p --model $model --output-format json --no-session-persistence --json-schema <schema> <prompt-len=${#prompt}>" >&2
+  fi
   raw=$(_llm_with_timeout "$timeout_s" claude -p \
     --model "$model" \
     --output-format json \
     --no-session-persistence \
     --json-schema "$_LLM_JSON_SCHEMA" \
-    "$prompt" 2>/dev/null)
+    "$prompt" 2>"${stderr_file:-/dev/null}")
   rc=$?
 
+  if [[ -n "$stderr_file" && -s "$stderr_file" ]]; then
+    echo "[debug] claude stderr:" >&2
+    head -20 "$stderr_file" >&2
+  fi
+
   if [[ $rc -ne 0 ]]; then
+    [[ -n "${SMART_RENAME_DEBUG:-}" ]] && echo "[debug] claude exit code: $rc" >&2
     echo '{"error":"call_failed"}'
     return 1
   fi
