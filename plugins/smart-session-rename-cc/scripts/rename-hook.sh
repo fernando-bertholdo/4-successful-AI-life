@@ -150,7 +150,8 @@ CTX=$(jq -nc \
 
 log_event info llm_call_start "$SESSION_ID" "$(echo "$STATE" | jq -c '{calls_made, overflow_used}')"
 
-LLM_OUTPUT=$(llm_generate_title "$CTX" || echo '{"error":"call_failed"}')
+LLM_OUTPUT=$(llm_generate_title "$CTX")
+[[ -z "$LLM_OUTPUT" ]] && LLM_OUTPUT='{"error":"call_failed"}'
 COST=$(echo "$LLM_OUTPUT" | jq -r '._cost_usd // 0')
 DURATION=$(echo "$LLM_OUTPUT" | jq -r '._duration_ms // 0')
 
