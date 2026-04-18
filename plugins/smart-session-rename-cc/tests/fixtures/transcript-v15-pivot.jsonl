@@ -1,0 +1,4 @@
+{"type":"user","message":{"role":"user","content":"Fix the JWT auth bug"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Looking at JWT logic."},{"type":"tool_use","id":"1","name":"Read","input":{"file_path":"src/auth/jwt.ts"}},{"type":"tool_use","id":"2","name":"Edit","input":{"file_path":"src/auth/jwt.ts","old_string":"x","new_string":"y"}}]}}
+{"type":"user","message":{"role":"user","content":"Actually, let's switch — build a CI workflow for deploying to Vercel instead"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Switching gears."},{"type":"tool_use","id":"3","name":"Write","input":{"file_path":".github/workflows/vercel.yml","content":"name: deploy"}},{"type":"tool_use","id":"4","name":"Bash","input":{"command":"git add"}}]}}
