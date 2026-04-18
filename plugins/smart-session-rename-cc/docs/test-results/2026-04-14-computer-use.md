@@ -24,25 +24,43 @@ The **primary session** (with Computer Use enabled) becomes the
 "CU-driving Claude" below. It drives interactions against a **target
 Claude Code session** running in a visible terminal window.
 
-### 2. Shared data root for cost meter
+### 2. Data path (no export needed)
+
+**Important:** CC overrides `CLAUDE_PLUGIN_DATA` at hook-invocation time. Exporting it in your shell has **no effect**. All plugin state/logs land at:
 
 ```bash
-export CLAUDE_PLUGIN_DATA="$HOME/.local/share/smart-session-rename/level4-$(date +%Y%m%d)"
-mkdir -p "$CLAUDE_PLUGIN_DATA"
+export PLUGIN_DATA="$HOME/.claude/plugins/data/claude-code-smart-session-rename-smart-session-rename-dev"
+ls "$PLUGIN_DATA"  # logs/ and state/
 ```
 
-Both the target session (where the hook fires) and any shell the user
-uses to inspect state should export the same `CLAUDE_PLUGIN_DATA`.
+To isolate Level 4 data from prior runs, either (a) record the starting
+cumulative cost before scenario 1 and subtract at the end, or (b)
+temporarily move the dir aside (`mv "$PLUGIN_DATA"
+"$PLUGIN_DATA.pre-level4"`) and let the plugin recreate it on first
+hook fire.
 
-### 3. Cost meter
+### 3. Cost meter (delta-based)
+
+Baseline before scenario 1:
 
 ```bash
-find "$CLAUDE_PLUGIN_DATA/logs" -name '*.jsonl' -exec \
-  jq -s 'map(select(.event == "llm_call_end")) | map(.cost_usd) | add // 0' {} \; \
-  | awk '{s+=$1} END {printf "Cumulative Level 4 cost: $%.4f / $10 cap\n", s}'
+PLUGIN_DATA="$HOME/.claude/plugins/data/claude-code-smart-session-rename-smart-session-rename-dev"
+BASELINE=$(find "$PLUGIN_DATA/logs" -name '*.jsonl' -exec \
+  jq -s 'map(select(.event=="llm_call_end")) | map(.cost_usd) | add // 0' {} \; \
+  | awk '{s+=$1} END {printf "%.4f", s+0}')
+echo "Baseline before Level 4: \$$BASELINE"
 ```
 
-Run after each scenario. **If cumulative >= $8, STOP and reassess.**
+After each scenario:
+
+```bash
+CUR=$(find "$PLUGIN_DATA/logs" -name '*.jsonl' -exec \
+  jq -s 'map(select(.event=="llm_call_end")) | map(.cost_usd) | add // 0' {} \; \
+  | awk '{s+=$1} END {printf "%.4f", s+0}')
+echo "Level 4 delta so far: \$$(echo "$CUR - $BASELINE" | bc) / \$10 cap"
+```
+
+**If delta >= $8, STOP and reassess.**
 
 ---
 
