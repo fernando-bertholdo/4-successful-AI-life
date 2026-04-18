@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/rename-hook.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/rename-hook.sh\"",
             "timeout": 120,
             "async": true
           }
