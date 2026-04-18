@@ -115,7 +115,7 @@ CUR_TITLE=$(echo "$STATE" | jq -r '.rendered_title // ""')
 if [[ "$DECISION" == "skip" ]]; then
   # Periodic re-attach
   if [[ -n "$CUR_TITLE" ]] && (( TURN_NUM % REATTACH_INTERVAL == 0 )); then
-    if writer_append_title "$TRANSCRIPT_PATH" "$CUR_TITLE"; then
+    if writer_append_title "$TRANSCRIPT_PATH" "$CUR_TITLE" "$SESSION_ID"; then
       log_event info title_reattached "$SESSION_ID" "$(jq -nc --arg t "$CUR_TITLE" '{title:$t}')"
     fi
   fi
@@ -188,7 +188,7 @@ case "$STATUS" in
   ok)
     TITLE=$(echo "$VALIDATED" | jq -r '.rendered_title')
     TS=$(echo "$VALIDATED" | jq -c '.title_struct')
-    if writer_append_title "$TRANSCRIPT_PATH" "$TITLE"; then
+    if writer_append_title "$TRANSCRIPT_PATH" "$TITLE" "$SESSION_ID"; then
       # Promote state only after writer confirms
       STATE=$(echo "$STATE" | jq --arg t "$TITLE" --argjson ts "$TS" --argjson tn "$TURN_NUM" '
         (.title_struct // null) as $prev_ts
