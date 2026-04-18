@@ -42,6 +42,15 @@ echo "-- title with quotes/newlines is properly JSON-encoded --"
 writer_append_title "$tmp" 'title with "quotes"'
 assert_eq "quoted" 'title with "quotes"' "$(writer_get_last_custom_title "$tmp")"
 
+echo "-- sessionId included when provided --"
+writer_append_title "$tmp" "with-sid" "sess-123"
+assert_eq "has sessionId" "sess-123" "$(tail -1 "$tmp" | jq -r '.sessionId')"
+assert_eq "customTitle with sid" "with-sid" "$(tail -1 "$tmp" | jq -r '.customTitle')"
+
+echo "-- sessionId absent when not provided --"
+writer_append_title "$tmp" "no-sid"
+assert_eq "no sessionId" "null" "$(tail -1 "$tmp" | jq -r '.sessionId')"
+
 rm -f "$tmp" "$empty_file"
 echo ""
 echo "Result: $PASS passed, $FAIL failed"

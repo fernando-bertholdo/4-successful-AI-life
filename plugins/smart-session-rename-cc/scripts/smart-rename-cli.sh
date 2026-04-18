@@ -116,7 +116,7 @@ cmd_anchor() {
   # transcript was provided, skip the write but still update state (the caller
   # is explicitly anchoring without wanting the JSONL rewritten).
   if [[ -n "$transcript" && -f "$transcript" ]]; then
-    if ! writer_append_title "$transcript" "$title"; then
+    if ! writer_append_title "$transcript" "$title" "$sid"; then
       echo "ERROR: could not append custom-title to transcript; aborting anchor (state unchanged)"
       return 1
     fi
