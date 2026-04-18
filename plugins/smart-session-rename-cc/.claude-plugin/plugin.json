@@ -1,6 +1,6 @@
 {
   "name": "claude-code-smart-session-rename",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Automatically names and renames Claude Code sessions based on conversation content",
   "author": {
     "name": "Fernando Bertholdo",
