@@ -101,6 +101,16 @@ cmd_force() {
 cmd_anchor() {
   local sid="$1" name="$2" transcript="$3"
   local st; st=$(state_load "$sid")
+
+  # Derive transcript from cwd when $CLAUDE_TRANSCRIPT_PATH is empty
+  # (same pattern as cmd_suggest — skills don't expose that env var).
+  if [[ -z "$transcript" || ! -f "$transcript" ]]; then
+    local encoded="$(_encode_cwd)"
+    local proj_dir="$HOME/.claude/projects/$encoded"
+    transcript="$(ls -t "$proj_dir"/*.jsonl 2>/dev/null | head -1)"
+    _dbg "cmd_anchor: transcript derived from cwd=$transcript"
+  fi
+
   # Build rendered_title: domain = anchor; clauses kept from title_struct if present
   local clauses n
   clauses=$(echo "$st" | jq -c '.title_struct.clauses // []')
@@ -112,14 +122,14 @@ cmd_anchor() {
     title="$name: $(echo "$clauses" | jq -r 'join(", ")')"
   fi
 
-  # R4: Write JSONL FIRST; only promote state if the write succeeded. If no
-  # transcript was provided, skip the write but still update state (the caller
-  # is explicitly anchoring without wanting the JSONL rewritten).
+  # R4: Write JSONL FIRST; only promote state if the write succeeded.
   if [[ -n "$transcript" && -f "$transcript" ]]; then
     if ! writer_append_title "$transcript" "$title" "$sid"; then
       echo "ERROR: could not append custom-title to transcript; aborting anchor (state unchanged)"
       return 1
     fi
+  else
+    _dbg "cmd_anchor: no transcript found, state updated but JSONL not written"
   fi
 
   state_save "$sid" "$(echo "$st" | jq --arg a "$name" --arg t "$title" '
