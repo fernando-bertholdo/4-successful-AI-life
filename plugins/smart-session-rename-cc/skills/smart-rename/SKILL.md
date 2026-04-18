@@ -10,6 +10,11 @@ When the user invokes `/smart-rename [args]`, run the matching command via the B
 ## Subcommands
 
 ### `/smart-rename` — suggest (consumes 1 budget slot)
+
+**IMPORTANT**: This command calls an inner `claude -p` process that takes 30-90 seconds to complete (the child process must initialize its own plugin stack + create prompt cache). You MUST:
+1. Run this Bash command in **foreground** (NOT background)
+2. Set the Bash tool **timeout to at least 120 seconds**
+
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/smart-rename-cli.sh "" "$CLAUDE_TRANSCRIPT_PATH" "${CLAUDE_PROJECT_DIR:-$PWD}"
 ```

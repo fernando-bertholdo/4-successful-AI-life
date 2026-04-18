@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # lib/config.sh — config loading with precedence: env > user file > defaults
-
-_CONFIG_LOADED=""
-declare -gA _CONFIG_VALUES
+#
+# Stateless implementation: each config_get call reads directly from JSON via jq.
+# No associative arrays (declare -gA was observed to corrupt values in some Claude
+# Code Bash tool environments — keys returned wrong values intermittently).
+# Cost: ~10ms per jq call × ~10 calls per hook invocation ≈ 100ms total. Acceptable.
 
 _config_env_var() {
   case "$1" in
@@ -21,38 +23,46 @@ _config_env_var() {
   esac
 }
 
-config_load() {
-  local defaults_file user_file
-  defaults_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/config/default-config.json"
-  user_file="${CLAUDE_PLUGIN_DATA:-}/config.json"
-
-  _CONFIG_VALUES=()
-
-  if [[ -f "$defaults_file" ]]; then
-    while IFS=$'\t' read -r key val; do
-      _CONFIG_VALUES["$key"]="$val"
-    done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$defaults_file" 2>/dev/null || true)
-  fi
-
-  if [[ -n "${CLAUDE_PLUGIN_DATA:-}" && -f "$user_file" ]]; then
-    while IFS=$'\t' read -r key val; do
-      _CONFIG_VALUES["$key"]="$val"
-    done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$user_file" 2>/dev/null || true)
-  fi
-
-  for key in "${!_CONFIG_VALUES[@]}"; do
-    local env_name
-    env_name="$(_config_env_var "$key")"
-    if [[ -n "$env_name" && -n "${!env_name:-}" ]]; then
-      _CONFIG_VALUES["$key"]="${!env_name}"
-    fi
-  done
-
-  _CONFIG_LOADED=1
+_config_defaults_file() {
+  echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/config/default-config.json"
 }
 
+# config_load is kept for API compatibility (tests call it to force env re-read).
+# With the stateless config_get, it's effectively a no-op — each config_get call
+# reads fresh from disk + env every time.
+config_load() {
+  # No-op: stateless config_get reads directly each time.
+  # Retained so existing code that calls config_load doesn't break.
+  true
+}
+
+# Precedence: env var > user config file > defaults file.
 config_get() {
   local key="$1"
-  [[ -z "$_CONFIG_LOADED" ]] && config_load
-  echo "${_CONFIG_VALUES[$key]:-}"
+
+  # 1. Check env override
+  local env_name
+  env_name="$(_config_env_var "$key")"
+  if [[ -n "$env_name" && -n "${!env_name:-}" ]]; then
+    echo "${!env_name}"
+    return 0
+  fi
+
+  # 2. Check user config file (CLAUDE_PLUGIN_DATA/config.json)
+  local user_file="${CLAUDE_PLUGIN_DATA:-}/config.json"
+  if [[ -n "${CLAUDE_PLUGIN_DATA:-}" && -f "$user_file" ]]; then
+    local val
+    val=$(jq -r --arg k "$key" '.[$k] // empty' "$user_file" 2>/dev/null)
+    if [[ -n "$val" ]]; then
+      echo "$val"
+      return 0
+    fi
+  fi
+
+  # 3. Fall back to defaults
+  local defaults_file
+  defaults_file="$(_config_defaults_file)"
+  if [[ -f "$defaults_file" ]]; then
+    jq -r --arg k "$key" '.[$k] // empty' "$defaults_file" 2>/dev/null
+  fi
 }

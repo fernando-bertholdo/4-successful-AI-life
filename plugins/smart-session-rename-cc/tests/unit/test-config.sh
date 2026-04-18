@@ -21,7 +21,7 @@ assert_eq "enabled default" "true" "$(config_get enabled)"
 assert_eq "model default" "claude-haiku-4-5" "$(config_get model)"
 assert_eq "budget default" "6" "$(config_get max_budget_calls)"
 assert_eq "first_threshold default" "20" "$(config_get first_call_work_threshold)"
-assert_eq "lock_stale_seconds default" "60" "$(config_get lock_stale_seconds)"
+assert_eq "lock_stale_seconds default" "180" "$(config_get lock_stale_seconds)"
 
 echo "-- env overrides --"
 export SMART_RENAME_BUDGET_CALLS=10
