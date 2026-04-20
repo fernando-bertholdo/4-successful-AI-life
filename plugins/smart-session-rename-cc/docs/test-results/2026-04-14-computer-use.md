@@ -1,5 +1,15 @@
 # Level 4 Computer Use Scenarios — smart-session-rename v1.5
 
+**Status (2026-04-20):** **Execution aborted mid-Scenario 3** after two non-blocking bugs surfaced that made Scenarios 3-5 unreliable to interpret. Scenarios 1 and 2 logic was manually validated via the operational data in `~/.claude/plugins/data/.../` (3-day organic usage: 110+ `llm_decision` events across 20+ sessions, 1 successful end-to-end rename at $0.6119). Computer Use automation of the workflow was **not exercised**; the manual path was used instead.
+
+Surfaced bugs (deferred to v1.5.1 — see CHANGELOG 1.5.0 § Known issues):
+1. Empty-state corruption in Stop hook (state files written as 1 byte).
+2. `/smart-rename force` state divergence — CLI and hook may read/write different `CLAUDE_PLUGIN_DATA` directories.
+
+This scaffold is retained for future execution once v1.5.1 lands.
+
+---
+
 **Purpose:** exercise the full skill surface (hook + subcommands + native
 `/rename` detection) through a secondary Claude Code session driven by
 Computer Use, simulating an end-user who controls titles primarily via
