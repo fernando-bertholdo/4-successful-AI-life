@@ -116,6 +116,45 @@ All seven commands run through the `/smart-rename` skill:
 
 ---
 
+## Supported workflow (v1.5)
+
+The surfaces below are **validated against real Claude Code sessions** over 3+ days of organic usage (110+ pre-filter decisions, 1 end-to-end LLM-generated title at $0.61).
+
+### Fully working
+
+- **Automatic renaming on significant work.** Pre-filter + work-score throttle + LLM call + title write. Validated end-to-end on a coding session (24 turns, crossed first-call threshold at turn 21, produced a plausible `domain: clauses` title).
+- **Pre-filter (cost control).** Pure Q&A, short sessions, and low-tool-use turns correctly skip the LLM entirely. In real use, >99% of hook invocations skip (110 skips : 1 call in the observed data).
+- **Multi-Stop idempotency.** Agentic turns that fire the Stop hook multiple times de-duplicate via `last_processed_signature`.
+- **`/smart-rename explain`.** Reads state and prints a human summary. Safe to invoke any time.
+- **`/smart-rename freeze` / `unfreeze`.** Pauses/resumes auto-rename; verified in integration tests.
+- **`/smart-rename <name>` (anchor).** Pin the domain, let clauses evolve.
+- **`/smart-rename unanchor`.** Clears a prior anchor.
+- **Native `/rename "..."` detection → `manual_title_override`.** Integration-tested; once override is set, the plugin stops renaming.
+- **Circuit breaker.** 3 consecutive LLM failures trip `llm_disabled: true`; auto-resets on the next successful call (or on `/smart-rename force`).
+
+### Working but with a surfaced caveat
+
+- **`/smart-rename force`.** Integration tests pass; real-world run during Level 4 exposed a state-divergence bug where the force flag set via CLI may not be consumed by the next Stop hook. Documented in CHANGELOG 1.5.0 § Known issues. Workaround: if force doesn't consume, inspect state via `/smart-rename explain`; if `force próximo turno` persists, the hook path diverged. Fixed plan: v1.5.1.
+- **`/smart-rename` (bare — suggest).** Integration-tested; not exercised in a public Level 3 run (costs 1 budget slot per invocation).
+
+### Surfaced issues (see CHANGELOG 1.5.0 § Known issues for details)
+
+- Some state files are written as 1-byte (empty `STATE` variable reaches `state_save`). `state_load` self-heals by treating them as corrupt and starting fresh, so no user-visible data loss beyond mid-session title evolution.
+- `/smart-rename force` state may not reach the hook under some `CLAUDE_PLUGIN_DATA` resolution paths.
+- `/reload-plugins` after editing `hooks.json` locally does NOT force a full re-registration; use `/plugin uninstall` + `/plugin install` from a fresh CC session for dev iteration on hook configs.
+
+### Expected user workflow
+
+1. Install via `/plugin` (marketplace type `directory` pointing at a local clone, OR GitHub marketplace once published).
+2. Enable the plugin (`/plugin` → Enable).
+3. Work normally in Claude Code. Don't export `CLAUDE_PLUGIN_DATA` — it's CC-managed.
+4. After ~20 score points of actual work (coding, tool use, substantive messages), your session title auto-generates. Subsequent evolutions require another ~40 points.
+5. Type `/smart-rename explain` whenever you want to see the current state.
+6. Type `/smart-rename freeze` to stop auto-renames; `/smart-rename <anchor>` to pin the domain.
+7. If you want a specific immutable title, use native `/rename "My title"` — the plugin detects it and backs off forever.
+
+---
+
 ## FAQ
 
 **Why is there a budget?**
