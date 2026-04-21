@@ -147,8 +147,22 @@ All safe to keep; safe to delete if desired.
 
 ---
 
+## Style cleanup opportunities (v1.5.1 or later)
+
+`shellcheck 0.11.0` run 2026-04-20 against `scripts/*.sh scripts/lib/*.sh tests/*.sh tests/unit/*.sh tests/integration/*.sh`. Zero errors, all findings advisory:
+
+- **SC1091** (~15x info): "Can't follow source" on `source "$SCRIPT_DIR/lib/*.sh"`. Non-issue; shellcheck needs `-x` to recurse. Fix: add `# shellcheck source=scripts/lib/config.sh` hints if desired.
+- **SC2155** (~30x warning): `local x=$(...)` masks the subshell's return value. Cosmetic — split into `local x; x=$(...)` when touching these lines.
+- **SC2015** (~25x info in test files): `A && B || C` pattern. Safe as written because the `B`/`C` branches wrap `((COUNTER++))` in `|| true`. Would need a dedicated test helper to refactor; low-value churn.
+- **SC2064** (1x warning, `smart-rename-cli.sh:59`): `trap "state_unlock $sid" EXIT` expands `$sid` at declaration time. That's actually the intent (capture current sid), but shellcheck can't know. Fix: `trap "state_unlock '$sid'" EXIT` to be explicit and silence the warning.
+- **SC2012** (3x info): `ls -t ... | head -1` for "newest file." Cosmetic; `find ... -printf '%T@ %p\n' | sort -n | tail -1` is the portable equivalent but noisier.
+- **SC2016** (1x info, `transcript.sh:65`): single-quoted sed regex — intentional.
+- **SC2329** (1x info): `_cleanup_exit` flagged as "never invoked"; false positive, it's a trap handler.
+
+None of these affect runtime. Addressing them is optional cleanup for a future minor/patch.
+
 ## Decision log
 
 - **Tagging v1.5.0 anyway:** core pipeline fully validated; bugs affect CLI subcommand paths that have integration-test coverage but real-world regression. Non-blocking.
-- **shellcheck gate not run:** `shellcheck` not installed on maintainer's machine (`brew install shellcheck` deferred per original handoff). Advisory only, does not block tag.
+- **Shellcheck gate run 2026-04-20:** installed via `brew install shellcheck`, full repo scan returned zero error-level findings. All reported items are info/warning style issues, catalogued above.
 - **Level 4 Scenarios 1, 2, 4, 5 not run:** Scenarios 3-5 depend on `/smart-rename force` working reliably. Organic operational data (110+ decisions, 1 real LLM rename) substitutes. Scaffold retained for v1.5.1 re-run.
