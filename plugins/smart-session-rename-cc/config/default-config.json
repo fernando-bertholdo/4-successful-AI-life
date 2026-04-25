@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "model": "claude-haiku-4-5",
+
+  "max_budget_calls": 6,
+  "overflow_manual_slots": 2,
+  "first_call_work_threshold": 20,
+  "ongoing_work_threshold": 40,
+
+  "reattach_interval": 10,
+  "circuit_breaker_threshold": 3,
+  "lock_stale_seconds": 180,
+  "llm_timeout_seconds": 90,
+
+  "log_level": "info",
+  "max_clauses": 5,
+  "max_domain_chars": 30,
+  "max_user_msg_chars": 500,
+  "max_assistant_chars": 500
+}

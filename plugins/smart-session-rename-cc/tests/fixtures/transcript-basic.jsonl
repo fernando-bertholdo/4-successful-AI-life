@@ -1,0 +1,2 @@
+{"role":"user","type":"human","content":"I need to refactor the authentication middleware to support OAuth2 tokens instead of session cookies"}
+{"role":"assistant","type":"text","content":"I'll help you refactor the authentication middleware..."}
