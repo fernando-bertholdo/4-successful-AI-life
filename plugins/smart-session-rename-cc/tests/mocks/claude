@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Mock claude CLI for tests.
+# Modes (controlled by env):
+#   MOCK_CLAUDE_MODE=success    (default)  → returns MOCK_CLAUDE_RESPONSE JSON
+#   MOCK_CLAUDE_MODE=fail       → non-zero exit, empty output
+#   MOCK_CLAUDE_MODE=timeout    → sleeps past the timeout to force timeout
+#   MOCK_CLAUDE_MODE=is_error   → returns result with is_error:true
+#   MOCK_CLAUDE_MODE=no_struct  → returns result without structured_output
+#   MOCK_CLAUDE_MODE=invalid    → returns invalid JSON on stdout
+
+case "${MOCK_CLAUDE_MODE:-success}" in
+  fail)
+    echo "mock: simulated failure" >&2
+    exit 1
+    ;;
+  timeout)
+    sleep 60
+    exit 0
+    ;;
+  is_error)
+    cat <<EOF
+[{"type":"result","is_error":true,"duration_ms":100,"total_cost_usd":0,"result":"rate limit"}]
+EOF
+    exit 0
+    ;;
+  no_struct)
+    cat <<EOF
+[{"type":"result","is_error":false,"duration_ms":100,"total_cost_usd":0.001}]
+EOF
+    exit 0
+    ;;
+  invalid)
+    echo "not json at all"
+    exit 0
+    ;;
+  success|*)
+    # NOTE: bash's ${var:-default} parser does NOT track nested braces in the
+    # default value, so a literal default containing `}` chars (like JSON)
+    # terminates the expansion early. Use explicit if/else with a quoted
+    # heredoc for the default to keep braces literal.
+    if [[ -n "${MOCK_CLAUDE_RESPONSE:-}" ]]; then
+      echo "$MOCK_CLAUDE_RESPONSE"
+    else
+      cat <<'EOF'
+[{"type":"result","is_error":false,"duration_ms":100,"total_cost_usd":0.001,"structured_output":{"domain":"test","clauses":["do thing"]}}]
+EOF
+    fi
+    ;;
+esac

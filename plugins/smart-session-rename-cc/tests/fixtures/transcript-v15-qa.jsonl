@@ -1,0 +1,2 @@
+{"type":"user","message":{"role":"user","content":"What does useEffect cleanup do in React?"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"The cleanup function in useEffect runs before the effect re-executes or when the component unmounts. It's used for clearing timers, canceling subscriptions, or removing event listeners."}]}}
