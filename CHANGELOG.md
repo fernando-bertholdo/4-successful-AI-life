@@ -7,6 +7,17 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [0.4.0] — 2026-04-25
+
+### Added
+- Second plugin: `smart-session-rename-cc` at `v1.5.0` (see [`plugins/smart-session-rename-cc/CHANGELOG.md`](./plugins/smart-session-rename-cc/CHANGELOG.md)). Imported with full git history (51 commits) via `git filter-repo` from the standalone `claude-code-smart-session-rename` repository, which has been archived as `smart-session-rename-cc-archive`.
+
+### Changed
+- README adds installation snippets and skill examples for `smart-session-rename-cc`.
+- Roadmap adds `smart-session-rename-cc` v1.5.1 (deferred bug fixes).
+
+---
+
 ## [0.3.0] — 2026-04-10
 
 ### Changed

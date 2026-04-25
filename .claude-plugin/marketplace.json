@@ -4,8 +4,8 @@
     "name": "Fernando Bertholdo"
   },
   "metadata": {
-    "description": "Curated plugins for AI-assisted work: UI/UX excellence, planning, and more.",
-    "version": "0.3.0"
+    "description": "Curated plugins for AI-assisted work: UI/UX excellence, session management, and more.",
+    "version": "0.4.0"
   },
   "plugins": [
     {
@@ -16,6 +16,16 @@
       "license": "MIT",
       "category": "design",
       "keywords": ["ui", "ux", "accessibility", "animation", "typography", "audit", "engagement", "microinteractions", "design-systems", "cro", "retention"],
+      "author": { "name": "Fernando Bertholdo" }
+    },
+    {
+      "name": "smart-session-rename-cc",
+      "source": "./plugins/smart-session-rename-cc",
+      "description": "Auto-name your Claude Code sessions. A Stop hook watches your conversation, scores work-density deterministically, and asks Haiku for a `domain: clauses` title when meaningful work has accumulated. Seven /smart-rename subcommands give you manual override, anchoring, freeze/force, and inspection.",
+      "version": "1.5.0",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["session", "rename", "productivity", "hooks", "auto-name", "claude-code"],
       "author": { "name": "Fernando Bertholdo" }
     }
   ]

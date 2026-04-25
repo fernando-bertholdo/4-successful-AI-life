@@ -1,12 +1,12 @@
 {
-  "name": "claude-code-smart-session-rename",
+  "name": "smart-session-rename-cc",
   "version": "1.5.0",
   "description": "Automatically names and renames Claude Code sessions based on conversation content",
   "author": {
     "name": "Fernando Bertholdo",
-    "url": "https://github.com/fe-bertholdo"
+    "url": "https://github.com/fernando-bertholdo"
   },
-  "repository": "https://github.com/fe-bertholdo/claude-code-smart-session-rename",
+  "repository": "https://github.com/fernando-bertholdo/4-successful-AI-life",
   "license": "MIT",
   "keywords": ["session", "rename", "productivity", "hooks", "auto-name"],
   "skills": "./skills/"
