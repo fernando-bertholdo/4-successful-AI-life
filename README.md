@@ -11,6 +11,7 @@ Curated plugins for AI-assisted work — focused on craft, rigor, and practical 
 | Plugin | Version | Description |
 |---|---|---|
 | [`ui-excellence`](./plugins/ui-excellence/) | `1.0.0-alpha.3` | 13 skills with triage coordinator for UI/UX craft: visual design, typography, accessibility, usability audits, CRO, microinteractions, and engagement loops. |
+| [`smart-session-rename-cc`](./plugins/smart-session-rename-cc/) | `1.5.0` | Auto-name your Claude Code sessions. Stop hook + work-score throttle + Haiku-generated `domain: clauses` titles, with seven `/smart-rename` subcommands for manual override. |
 
 More plugins are planned — see the [roadmap](#roadmap) below.
 
@@ -27,6 +28,7 @@ Inside a Claude Code session, register the marketplace and install the plugin yo
 ```
 /plugin marketplace add fernando-bertholdo/4-successful-AI-life
 /plugin install ui-excellence@4-successful-ai-life
+/plugin install smart-session-rename-cc@4-successful-ai-life
 /reload-plugins
 ```
 
@@ -37,6 +39,9 @@ After reload, skills become invocable under the plugin namespace:
 /ui-excellence:visual-polish
 /ui-excellence:web-standards
 /ui-excellence:accessibility
+/smart-rename                  # bare — suggest a title now
+/smart-rename explain          # show current state snapshot
+/smart-rename freeze           # pause auto-rename
 ```
 
 ### Option 2 — From a local clone (recommended for development)
@@ -53,6 +58,7 @@ Then, inside a Claude Code session launched from the clone directory:
 ```
 /plugin marketplace add ./
 /plugin install ui-excellence@4-successful-ai-life
+/plugin install smart-session-rename-cc@4-successful-ai-life
 /reload-plugins
 ```
 
@@ -83,7 +89,8 @@ To auto-install the plugin in a project, add to `.claude/settings.json`:
     }
   },
   "enabledPlugins": {
-    "ui-excellence@4-successful-ai-life": true
+    "ui-excellence@4-successful-ai-life": true,
+    "smart-session-rename-cc@4-successful-ai-life": true
   }
 }
 ```
@@ -102,18 +109,24 @@ Claude Code will prompt you to trust the marketplace on first open, then keep th
 ├── LICENSE                    ← MIT (repository level)
 ├── CHANGELOG.md               ← marketplace release history
 └── plugins/
-    └── ui-excellence/         ← first plugin
+    ├── ui-excellence/             ← UI/UX skill bundle
+    │   ├── .claude-plugin/
+    │   │   └── plugin.json        ← plugin manifest with skills array
+    │   ├── README.md
+    │   ├── LICENSE
+    │   ├── CHANGELOG.md
+    │   └── skills/
+    └── smart-session-rename-cc/   ← Stop-hook auto-renamer
         ├── .claude-plugin/
-        │   └── plugin.json    ← plugin manifest with skills array
-        ├── README.md          ← plugin docs
-        ├── LICENSE            ← MIT (plugin level)
-        ├── CHANGELOG.md       ← plugin release history
-        └── skills/
-            └── foundations/   ← current v1.0.0-alpha.1 scope
-                ├── animation-motion/
-                ├── visual-polish/
-                ├── web-standards/
-                └── accessibility/
+        │   └── plugin.json
+        ├── hooks/hooks.json       ← Stop hook registration
+        ├── scripts/               ← rename-hook + smart-rename-cli + lib/
+        ├── skills/smart-rename/   ← /smart-rename skill router
+        ├── tests/                 ← unit + integration suites
+        ├── docs/
+        ├── README.md
+        ├── LICENSE
+        └── CHANGELOG.md
 ```
 
 Each plugin is fully self-contained under `plugins/<name>/` and has its own manifest, docs, license, and changelog.
@@ -123,6 +136,7 @@ Each plugin is fully self-contained under `plugins/<name>/` and has its own mani
 ## Roadmap
 
 - **`ui-excellence` v1.0.0** — Expand foundations (4 skills) with adopted [wondelai/skills](https://github.com/wondelai/skills) content (8 skills) plus a coordinator with routing logic and path-targeting. See project-level planning in the consumer repos.
+- **`smart-session-rename-cc` v1.5.1** — Fix two CLI-path bugs surfaced during Level 4 testing (state empty-write under degenerate transcripts; `/smart-rename force` state divergence). See `plugins/smart-session-rename-cc/docs/superpowers/handoff/2026-04-20-known-issues.md` for the investigation notes.
 - **Future plugins** — `planning-suite`, `sync-toolkit`, `design-sprint`, and other focused bundles extracted from long-running workflows.
 
 ---
