@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session management, and more.",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "plugins": [
     {
@@ -26,6 +26,16 @@
       "license": "MIT",
       "category": "productivity",
       "keywords": ["session", "rename", "productivity", "hooks", "auto-name", "claude-code"],
+      "author": { "name": "Fernando Bertholdo" }
+    },
+    {
+      "name": "prompt-master",
+      "source": "./plugins/prompt-master",
+      "description": "Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Vendored from nidhinjs/prompt-master via git subtree, kept in sync via weekly GitHub Action.",
+      "version": "1.0.0+upstream-1.6.0",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["prompt", "prompt-engineering", "ai", "llm", "vendored", "upstream-sync"],
       "author": { "name": "Fernando Bertholdo" }
     }
   ]

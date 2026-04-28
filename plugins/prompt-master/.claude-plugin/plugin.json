@@ -1,0 +1,10 @@
+{
+  "name": "prompt-master",
+  "version": "1.0.0+upstream-1.6.0",
+  "description": "Generates optimized prompts for any AI tool. Vendored from nidhinjs/prompt-master with optional local patches.",
+  "author": { "name": "Fernando Bertholdo" },
+  "license": "MIT",
+  "skills": [
+    "./upstream/"
+  ]
+}
