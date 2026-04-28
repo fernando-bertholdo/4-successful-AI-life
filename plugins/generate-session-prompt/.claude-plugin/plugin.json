@@ -1,0 +1,12 @@
+{
+  "name": "generate-session-prompt",
+  "version": "1.0.0+upstream-4.0.0",
+  "description": "Gerar prompt para retomada de desenvolvimento em nova sessão. Use quando sessão >150k tokens, ao retomar trabalho após pausa, ao trocar de ferramenta, ou em mudança de contexto. Aceita argumento de detalhe (brief, standard, detailed). Funciona em qualquer projeto — modo opinionated quando há `.planning/` na raiz, modo genérico caso contrário. Vendored from fernando-bertholdo/tech-product-template.",
+  "author": {
+    "name": "Fernando Bertholdo"
+  },
+  "license": "MIT",
+  "skills": [
+    "./upstream/"
+  ]
+}
