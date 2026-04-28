@@ -152,3 +152,9 @@ Individual plugins may carry additional attribution in their own LICENSE files w
 ## Contributing
 
 This marketplace is currently maintained for personal and project-specific use. External contributions are not actively solicited, but issues and discussion are welcome on the [GitHub issue tracker](https://github.com/fernando-bertholdo/4-successful-AI-life/issues).
+
+---
+
+## Internal — Promoting skills from `tech-product-template`
+
+Skills are developed in the private `tech-product-template` repo (Tier 1) and promoted to this marketplace (Tier 2) via sparse-checkout sync. See [`docs/promotion-runbook.md`](./docs/promotion-runbook.md) for the architecture model, one-time PAT setup, and the `scripts/promote-skill.sh` workflow.
