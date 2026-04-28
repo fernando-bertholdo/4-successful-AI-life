@@ -1,0 +1,98 @@
+name: Sync prompt-master upstream
+
+# ─── Gatilhos ───────────────────────────────────────────────────────────
+# Quando este workflow roda. Pode ter múltiplos gatilhos no mesmo workflow.
+on:
+  schedule:
+    # Cron syntax: minuto hora dia-mês mês dia-semana
+    # '0 9 * * 1' = toda segunda-feira às 09:00 UTC.
+    # Cron do GH Actions sempre roda em UTC; ajuste se quiser outro horário.
+    - cron: '0 9 * * 1'
+
+  # Habilita o botão "Run workflow" na aba Actions do GitHub —
+  # essencial para testar e para forçar uma sync fora do horário.
+  workflow_dispatch: {}
+
+# ─── Permissões ─────────────────────────────────────────────────────────
+# Princípio do menor privilégio: o GITHUB_TOKEN injetado no job só pode
+# o que está listado aqui. Sem isto, o workflow falha ao tentar abrir PR.
+permissions:
+  contents: write          # commitar e criar branches
+  pull-requests: write     # abrir o PR de sync
+
+jobs:
+  sync:
+    # Runner: VM Linux efêmera fornecida pelo GitHub. Vem com git, node,
+    # python, gh CLI etc. pré-instalados.
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clonar nosso próprio repo dentro do runner.
+      #    fetch-depth: 0 = histórico completo (subtree precisa do
+      #    ancestral comum entre nosso repo e o upstream para fazer merge).
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Configurar identidade git para os commits que o subtree criar.
+      #    O ID 41898282 é a conta oficial do bot github-actions —
+      #    usar este formato faz o GitHub renderizar o avatar do bot.
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # 3. Tentar pull do subtree. Detectar se o HEAD mudou (= sync teve
+      #    efeito) ou não (= upstream não tem commits novos).
+      #    set -euo pipefail = falha rápido em qualquer erro de comando.
+      - name: Pull subtree from upstream
+        id: pull
+        run: |
+          set -euo pipefail
+          BEFORE=$(git rev-parse HEAD)
+
+          git subtree pull \
+            --prefix=plugins/prompt-master/upstream \
+            https://github.com/nidhinjs/prompt-master.git main \
+            --squash \
+            -m "chore(prompt-master): sync upstream"
+
+          AFTER=$(git rev-parse HEAD)
+
+          if [ "$BEFORE" = "$AFTER" ]; then
+            echo "Nenhuma mudança no upstream desde a última sync."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            UPSTREAM_SHA=$(git ls-remote https://github.com/nidhinjs/prompt-master.git main | cut -f1)
+            echo "Upstream avançou para $UPSTREAM_SHA."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "upstream_sha=$UPSTREAM_SHA" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 4. Se o subtree pull mudou alguma coisa, abrir PR.
+      #    peter-evans/create-pull-request lê o working tree atual,
+      #    cria/atualiza um branch dedicado, faz push e abre/atualiza o PR.
+      #    Se o branch chore/sync-prompt-master já existir (PR pendente),
+      #    a action atualiza ele em vez de criar outro.
+      - name: Open sync PR
+        if: steps.pull.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/sync-prompt-master
+          delete-branch: true
+          title: "chore(prompt-master): sync upstream"
+          body: |
+            Sync automático de [`nidhinjs/prompt-master`](https://github.com/nidhinjs/prompt-master)
+            para `plugins/prompt-master/upstream/`.
+
+            **Upstream HEAD:** `${{ steps.pull.outputs.upstream_sha }}`
+
+            ### Checklist antes de mergeear
+            - [ ] Revisar o diff em `plugins/prompt-master/upstream/`.
+            - [ ] Se houver patches locais (sentinelas `LOCAL-PATCH:start`), confirmar que ainda fazem sentido.
+            - [ ] Atualizar `plugins/prompt-master/CHANGELOG.md` com a nova metadata `+upstream-X.Y.Z`.
+            - [ ] Atualizar `version` em `plugins/prompt-master/.claude-plugin/plugin.json`.
+          labels: |
+            automated
+            prompt-master
