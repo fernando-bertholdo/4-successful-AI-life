@@ -1,0 +1,143 @@
+name: "[reusable] Sync skill from tech-product-template"
+
+# Reusable workflow — não roda sozinho. É invocado por outros workflows
+# via `uses: ./.github/workflows/_sync-skill-from-template.yml`.
+on:
+  workflow_call:
+    inputs:
+      skill_name:
+        description: 'Skill name (used for path construction and PR title)'
+        required: true
+        type: string
+      plugin_path:
+        description: 'Plugin path inside marketplace. Default: plugins/<skill_name>'
+        required: false
+        type: string
+        default: ''
+      skill_path_in_template:
+        description: 'Path to skill inside template repo. Default: .claude/skills/<skill_name>'
+        required: false
+        type: string
+        default: ''
+      upstream_repo:
+        description: 'Upstream repo (owner/name). Default: fernando-bertholdo/tech-product-template'
+        required: false
+        type: string
+        default: 'fernando-bertholdo/tech-product-template'
+      upstream_ref:
+        description: 'Branch or tag to sync from. Default: main'
+        required: false
+        type: string
+        default: 'main'
+    secrets:
+      UPSTREAM_TOKEN:
+        description: 'Fine-grained PAT with Contents:Read on the upstream repo'
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout marketplace
+        uses: actions/checkout@v4
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Sparse-checkout = clone que só baixa os arquivos do path que pedimos.
+      # Combinado com --filter=blob:none, evita baixar conteúdo de blobs
+      # que não interessam — útil quando o repo upstream é grande e a gente
+      # só quer um subdiretório (uma skill).
+      - name: Sparse-checkout skill from upstream
+        id: pull
+        env:
+          UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
+          SKILL_NAME: ${{ inputs.skill_name }}
+          UPSTREAM_REPO: ${{ inputs.upstream_repo }}
+          UPSTREAM_REF: ${{ inputs.upstream_ref }}
+        run: |
+          set -euo pipefail
+
+          # Defaults derivados do skill_name se não vieram explicitamente.
+          PLUGIN_PATH="${{ inputs.plugin_path }}"
+          SKILL_PATH="${{ inputs.skill_path_in_template }}"
+          [ -z "$PLUGIN_PATH" ] && PLUGIN_PATH="plugins/${SKILL_NAME}"
+          [ -z "$SKILL_PATH" ] && SKILL_PATH=".claude/skills/${SKILL_NAME}"
+
+          echo "plugin_path=$PLUGIN_PATH" >> "$GITHUB_OUTPUT"
+          echo "skill_path=$SKILL_PATH" >> "$GITHUB_OUTPUT"
+
+          TMP=$(mktemp -d)
+          # x-access-token = scheme do GitHub para autenticar HTTPS com tokens.
+          # O token vai na URL mas em variável de ambiente — não é logado.
+          git clone \
+            --depth=1 \
+            --filter=blob:none \
+            --sparse \
+            --branch="$UPSTREAM_REF" \
+            "https://x-access-token:${UPSTREAM_TOKEN}@github.com/${UPSTREAM_REPO}.git" \
+            "$TMP"
+
+          (cd "$TMP" && git sparse-checkout set "$SKILL_PATH")
+
+          if [ ! -d "$TMP/$SKILL_PATH" ]; then
+            echo "::error::Path '$SKILL_PATH' não existe em $UPSTREAM_REPO@$UPSTREAM_REF"
+            exit 1
+          fi
+
+          UPSTREAM_SHA=$(cd "$TMP" && git rev-parse HEAD)
+          UPSTREAM_SHORT=$(cd "$TMP" && git rev-parse --short HEAD)
+
+          DEST="${PLUGIN_PATH}/upstream"
+          mkdir -p "$DEST"
+
+          # rsync --delete remove arquivos que sumiram do upstream.
+          # Ignora .claude-plugin/ caso esteja dentro da skill (defesa extra).
+          rsync -a --delete \
+            --exclude='.git' \
+            "$TMP/$SKILL_PATH/" "$DEST/"
+
+          # Detectar mudanças no working tree.
+          if git diff --quiet HEAD -- "$DEST" && [ -z "$(git status --porcelain "$DEST")" ]; then
+            echo "Nenhuma mudança em $SKILL_NAME desde a última sync."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Mudanças detectadas. Upstream HEAD: $UPSTREAM_SHA"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "upstream_sha=$UPSTREAM_SHA" >> "$GITHUB_OUTPUT"
+            echo "upstream_short=$UPSTREAM_SHORT" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open sync PR
+        if: steps.pull.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/sync-${{ inputs.skill_name }}
+          delete-branch: true
+          commit-message: |
+            chore(${{ inputs.skill_name }}): sync from ${{ inputs.upstream_repo }} @ ${{ steps.pull.outputs.upstream_short }}
+          title: "chore(${{ inputs.skill_name }}): sync from ${{ inputs.upstream_repo }}"
+          body: |
+            Sync automático de `${{ steps.pull.outputs.skill_path }}` em
+            [`${{ inputs.upstream_repo }}`](https://github.com/${{ inputs.upstream_repo }})
+            (ref `${{ inputs.upstream_ref }}`) para `${{ steps.pull.outputs.plugin_path }}/upstream/`.
+
+            **Upstream HEAD:** `${{ steps.pull.outputs.upstream_short }}`
+            (`${{ steps.pull.outputs.upstream_sha }}`)
+
+            ### Checklist antes de mergeear
+            - [ ] Revisar o diff em `${{ steps.pull.outputs.plugin_path }}/upstream/`.
+            - [ ] Confirmar que blocos `LOCAL-PATCH:start` (se houver) não foram corrompidos.
+            - [ ] Atualizar `${{ steps.pull.outputs.plugin_path }}/CHANGELOG.md` com a nova metadata `+upstream-X.Y.Z`.
+            - [ ] Atualizar `version` em `${{ steps.pull.outputs.plugin_path }}/.claude-plugin/plugin.json`.
+            - [ ] Mergear com **`--merge`**, nunca squash (preserva histórico de syncs).
+          labels: |
+            automated
+            ${{ inputs.skill_name }}
