@@ -1,0 +1,17 @@
+name: Sync generate-session-prompt
+
+# Trigger fininho — delega toda a lógica ao reusable workflow.
+# Para outras skills, copie este arquivo, troque o skill_name e o cron.
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'      # toda segunda 09:00 UTC
+  workflow_dispatch: {}      # botão "Run workflow" manual
+
+jobs:
+  sync:
+    uses: ./.github/workflows/_sync-skill-from-template.yml
+    with:
+      skill_name: generate-session-prompt
+    secrets:
+      UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
