@@ -7,6 +7,14 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [0.5.0] — 2026-04-27
+
+### Added
+- Third plugin: `prompt-master` at `v1.0.0+upstream-1.6.0` (see [`plugins/prompt-master/CHANGELOG.md`](./plugins/prompt-master/CHANGELOG.md)). Vendored from upstream [`nidhinjs/prompt-master`](https://github.com/nidhinjs/prompt-master) via `git subtree` into `plugins/prompt-master/upstream/`. The wrapper uses semver build metadata (`+upstream-X.Y.Z`) to track which upstream snapshot each release embeds.
+- GitHub Actions workflow `.github/workflows/sync-prompt-master.yml` for weekly automated upstream sync — runs Mondays 09:00 UTC and opens a PR when the upstream advances.
+
+---
+
 ## [0.4.0] — 2026-04-25
 
 ### Added
