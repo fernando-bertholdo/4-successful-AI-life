@@ -7,6 +7,17 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [0.6.0] — 2026-04-28
+
+### Added
+- Fourth plugin: `generate-session-prompt` at `v1.0.0+upstream-4.0.0` (see [`plugins/generate-session-prompt/CHANGELOG.md`](./plugins/generate-session-prompt/CHANGELOG.md)). Promoted from the private `tech-product-template` repo via the new `scripts/promote-skill.sh` bootstrap. Skill ships with dual-mode behavior (`MODE:opinionated-initiative` for projects with `.planning/`, `MODE:generic` otherwise), making it useful in any project.
+- `.github/workflows/sync-generate-session-prompt.yml` — trigger workflow that delegates to the reusable `_sync-skill-from-template.yml` for weekly automated upstream sync.
+
+### Notes
+- The first sync execution requires `UPSTREAM_TOKEN` secret (fine-grained PAT with `Contents: Read` on `tech-product-template`) to be configured per `docs/promotion-runbook.md`. Until then, the plugin works (initial vendor was done locally) but the weekly automated sync workflow will fail.
+
+---
+
 ## [0.5.0] — 2026-04-27
 
 ### Added
