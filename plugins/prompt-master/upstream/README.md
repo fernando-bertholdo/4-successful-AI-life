@@ -1,4 +1,4 @@
-![](https://s6.imgcdn.dev/YvLVug.png)
+![](https://i.postimg.cc/kG03s7tk/prompt-banner.png)
 
 <br/>
 
