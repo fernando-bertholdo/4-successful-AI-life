@@ -16,25 +16,44 @@ transcript_parse_current_turn() {
   local file_size
   file_size=$(wc -c < "$path" | tr -d ' ')
 
-  local total_turns last_user_msg
-  total_turns=$(jq -s 'map(select(.type == "user")) | length' "$path" 2>/dev/null || echo 0)
-  last_user_msg=$(jq -rs '
-    map(select(.type == "user")) | last // {} | .message.content
-    | if type == "string" then .
+  # CC injects synthetic pseudo-user-messages around slash-commands and platform
+  # events (the content is a literal string like "<local-command-caveat>...",
+  # "<command-name>/model</command-name>", "<system-reminder>...", etc.). These
+  # entries have type:"user" in the JSONL but are not user intent. Treat them as
+  # transparent so user_msg, turn count, and the assistant-slice anchor all
+  # reference the most recent REAL user prompt.
+  local jq_helpers='
+    def extract_user_text:
+      if type == "string" then .
       elif type == "array" then
         [.[] | select(.type == "text") | .text] | join(" ")
-      else "" end
+      else "" end;
+    def is_real_user_text:
+      (gsub("^\\s+|\\s+$"; "")) as $s
+      | $s != "" and ($s | test("^<[a-z][a-z0-9-]*>") | not);
+    def is_real_user_msg:
+      .type == "user"
+      and (.message.content | extract_user_text | is_real_user_text);
+  '
+
+  local total_turns last_user_msg
+  total_turns=$(jq -s "$jq_helpers"'
+    [.[] | select(is_real_user_msg)] | length
+  ' "$path" 2>/dev/null || echo 0)
+  last_user_msg=$(jq -rs "$jq_helpers"'
+    [.[] | select(is_real_user_msg) | .message.content | extract_user_text] | last // ""
   ' "$path" 2>/dev/null || echo "")
 
   local user_word_count
-  user_word_count=$(echo "$last_user_msg" | tr -s '[:space:]' '\n' | grep -c . 2>/dev/null || echo 0)
+  user_word_count=$(printf '%s' "$last_user_msg" | wc -w | tr -d ' ')
 
-  # All assistant blocks after the last user message
+  # All assistant blocks after the last REAL user message (synthetics are skipped
+  # when finding the slice anchor — otherwise a trailing synthetic user message
+  # would clip the assistant content from this turn down to nothing).
   local assistant_content
-  assistant_content=$(jq -s '
+  assistant_content=$(jq -s "$jq_helpers"'
     . as $all
-    | (reduce range(0; $all | length) as $i (-1;
-        if $all[$i].type == "user" then $i else . end)) as $lu
+    | ([range(0; $all | length) | . as $i | select($all[$i] | is_real_user_msg)] | last // -1) as $lu
     | $all[($lu+1):] | map(select(.type == "assistant"))
   ' "$path" 2>/dev/null || echo '[]')
 

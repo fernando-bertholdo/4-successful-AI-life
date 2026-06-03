@@ -66,15 +66,26 @@ fi
 STATE="$(state_load "$SESSION_ID")"
 
 # --- 3. Detect /rename nativo → manual_title_override (not manual_anchor) ---
+# Guard against CC's own auto-titles (when the first user message is a synthetic
+# slash-command wrapper, CC may write something like "<local-command-caveat>...
+# (Branch 2)" as the session title). Without this filter, the unfamiliar title
+# is mistaken for a /rename nativo and frozen as manual_title_override, bypassing
+# all validation. We tombstone the spurious title in last_plugin_written_title so
+# the same title isn't re-flagged on every Stop hook.
 LAST_JSONL_TITLE="$(writer_get_last_custom_title "$TRANSCRIPT_PATH")"
 LAST_PLUGIN_TITLE="$(echo "$STATE" | jq -r '.last_plugin_written_title // ""')"
 if [[ -n "$LAST_JSONL_TITLE" && "$LAST_JSONL_TITLE" != "$LAST_PLUGIN_TITLE" ]]; then
-  STATE=$(echo "$STATE" | jq --arg t "$LAST_JSONL_TITLE" '
-    .manual_title_override = $t
-    | .rendered_title = $t
-    | .last_plugin_written_title = $t
-  ')
-  log_event info manual_rename_detected "$SESSION_ID" "$(jq -nc --arg t "$LAST_JSONL_TITLE" '{new_title:$t}')"
+  if writer_is_spurious_auto_title "$LAST_JSONL_TITLE"; then
+    STATE=$(echo "$STATE" | jq --arg t "$LAST_JSONL_TITLE" '.last_plugin_written_title = $t')
+    log_event warn spurious_custom_title_ignored "$SESSION_ID" "$(jq -nc --arg t "$LAST_JSONL_TITLE" '{ignored_title:$t}')"
+  else
+    STATE=$(echo "$STATE" | jq --arg t "$LAST_JSONL_TITLE" '
+      .manual_title_override = $t
+      | .rendered_title = $t
+      | .last_plugin_written_title = $t
+    ')
+    log_event info manual_rename_detected "$SESSION_ID" "$(jq -nc --arg t "$LAST_JSONL_TITLE" '{new_title:$t}')"
+  fi
 fi
 
 # --- 4. Parse transcript (with cwd) ---
