@@ -12,6 +12,30 @@ _LLM_JSON_SCHEMA='{
   "additionalProperties":false
 }'
 
+# Echo NODE_OPTIONS with any `--require=<path>` token dropped when the path no
+# longer exists. Terminal wrappers (notably cmux) inject a preload .cjs into
+# $TMPDIR via NODE_OPTIONS; macOS occasionally evicts $TMPDIR mid-session and
+# every Node child then crashes on startup with MODULE_NOT_FOUND before our
+# prompt is even seen. Stripping only the broken `--require` keeps unrelated
+# legitimate flags (e.g., --max-old-space-size) intact.
+_sanitized_node_options() {
+  local opts="${NODE_OPTIONS:-}"
+  [[ -z "$opts" ]] && return 0
+  local out="" tok path
+  for tok in $opts; do
+    case "$tok" in
+      --require=*)
+        path="${tok#--require=}"
+        [[ -f "$path" ]] && out+="${out:+ }$tok"
+        ;;
+      *)
+        out+="${out:+ }$tok"
+        ;;
+    esac
+  done
+  printf '%s' "$out"
+}
+
 # Picks timeout command: timeout | gtimeout | perl-based | none (no-op)
 _llm_timeout_wrapper() {
   local seconds="$1"
@@ -80,7 +104,9 @@ llm_generate_title() {
     stderr_file="${CLAUDE_PLUGIN_DATA:-/tmp/smart-session-rename}/llm-stderr.log"
     echo "[debug] llm cmd: claude -p --model $model --output-format json --no-session-persistence --json-schema <schema> <prompt-len=${#prompt}>" >&2
   fi
-  raw=$(_llm_with_timeout "$timeout_s" claude -p \
+  local sanitized_node_options
+  sanitized_node_options="$(_sanitized_node_options)"
+  raw=$(NODE_OPTIONS="$sanitized_node_options" _llm_with_timeout "$timeout_s" claude -p \
     --model "$model" \
     --output-format json \
     --no-session-persistence \

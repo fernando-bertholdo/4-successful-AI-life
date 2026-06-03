@@ -19,3 +19,17 @@ writer_get_last_custom_title() {
   [[ ! -r "$transcript" ]] && { echo ""; return 0; }
   jq -rs '[.[] | select(.type == "custom-title")] | last.customTitle // empty' "$transcript" 2>/dev/null
 }
+
+# True (rc 0) when the title looks like a CC-generated auto-title rather than a real
+# /rename nativo. Claude Code names sessions from the first user message in the JSONL,
+# and synthetic pseudo-user messages (slash-command wrappers, system reminders, task
+# notifications) leak through as titles like "<local-command-caveat>... (Branch 2)".
+# Without this guard, rename-hook.sh promotes such titles to manual_title_override and
+# bypasses every validation step, freezing the session under a junk name.
+writer_is_spurious_auto_title() {
+  local t="$1"
+  [[ -z "$t" ]] && return 1
+  [[ "$t" == "<"* ]] && return 0
+  (( ${#t} > 200 )) && return 0
+  return 1
+}

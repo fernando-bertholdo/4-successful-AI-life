@@ -7,6 +7,13 @@
 #   MOCK_CLAUDE_MODE=is_error   → returns result with is_error:true
 #   MOCK_CLAUDE_MODE=no_struct  → returns result without structured_output
 #   MOCK_CLAUDE_MODE=invalid    → returns invalid JSON on stdout
+#
+# When MOCK_CLAUDE_ENV_DUMP is set to a path, the mock writes a single line with
+# the literal NODE_OPTIONS value it observed at invocation time. Tests use this
+# to confirm that callers strip broken `--require=<missing>` entries before exec.
+if [[ -n "${MOCK_CLAUDE_ENV_DUMP:-}" ]]; then
+  printf 'NODE_OPTIONS=%s\n' "${NODE_OPTIONS-}" > "$MOCK_CLAUDE_ENV_DUMP"
+fi
 
 case "${MOCK_CLAUDE_MODE:-success}" in
   fail)
