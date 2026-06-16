@@ -96,7 +96,7 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
    - Ler .planning/README.md para identificar tipo (milestone / detour / patch)
    - Se milestone → localizar .planning/milestones/MX.X-nome/
    - Se detour → localizar .planning/detours/<nome>/
-   - Se patch → verificar .planning/patches.md
+   - Se patch → verificar .planning/patches/{slug}/plan.md
    - Se avulso (sem vínculo) → verificar .planning/scratch/
 
 2. Coletar estado atual
