@@ -19,6 +19,7 @@ on:
 permissions:
   contents: write          # commitar e criar branches
   pull-requests: write     # abrir o PR de sync
+  issues: write            # abrir issue se o sync falhar
 
 jobs:
   sync:
@@ -96,3 +97,52 @@ jobs:
           labels: |
             automated
             prompt-master
+
+      # 5. Se algum step anterior falhou, abrir (ou comentar em) issue de alerta.
+      #    Dedup por título: enquanto uma issue [sync-failure] estiver OPEN,
+      #    novas falhas viram comentários — evita spam quando o cron acorda
+      #    semanas seguidas com o mesmo problema.
+      - name: Open or update failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKILL_NAME: prompt-master
+          WORKFLOW_FILE: sync-prompt-master.yml
+        run: |
+          set -euo pipefail
+          TITLE="[sync-failure] ${SKILL_NAME}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          NOW=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+          EXISTING=$(gh issue list --search "${TITLE} in:title" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Issue #${EXISTING} já aberta. Adicionando comentário."
+            gh issue comment "$EXISTING" --body "Nova falha em ${NOW}. Run: ${RUN_URL}"
+          else
+            echo "Criando nova issue de falha."
+            gh issue create --title "$TITLE" --label "automated,sync-failure,${SKILL_NAME}" --body "$(cat <<EOF
+          O workflow de sync de \`${SKILL_NAME}\` falhou em ${NOW}.
+
+          **Run:** ${RUN_URL}
+          **Workflow:** \`.github/workflows/${WORKFLOW_FILE}\`
+          **Trigger:** ${{ github.event_name }}
+
+          ### Possíveis causas
+          - PAT \`UPSTREAM_TOKEN\` expirou (rotação anual — checar Settings → Personal access tokens) — se o upstream for privado
+          - Repo upstream foi movido, renomeado, ou tornado privado
+          - Skill removida ou renomeada no upstream
+          - Conflito entre patches locais (sentinelas \`LOCAL-PATCH:start\`) e mudanças upstream
+          - Mudança no formato do upstream que quebrou o subtree/sparse-checkout
+          - Repo config bloqueando bot de abrir PRs (\`gh api -X PUT repos/.../actions/permissions/workflow -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true\`)
+
+          ### O que fazer
+          1. Inspecione os logs em ${RUN_URL}
+          2. Corrija a causa raiz
+          3. Re-rode manualmente: \`gh workflow run ${WORKFLOW_FILE}\`
+          4. Quando rodar verde, feche esta issue
+
+          **Importante:** enquanto esta issue estiver aberta, novas falhas viram comentários (não issues novas). Feche-a só depois que o problema for resolvido.
+          EOF
+          )"
+          fi
