@@ -7,6 +7,19 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [0.6.1] — 2026-06-16
+
+### Changed
+- `prompt-master` bumped to `v1.0.0+upstream-1.7.0`. Upstream advanced `1.6.0` → `1.7.0`: Opus 4.7/4.8 compatibility (version-aware routing for Claude 4.x), NLP security hardening, sections compressed below 450 lines, new Template M for Opus 4.7 Task Brief, patterns 36-37 for Opus 4.7 prompt failures, MiniMax M3 routing default. Plugin description tightened to reflect the new restrictive activation contract: skill **only activates on explicit prompt-engineering requests**, not for general conversation or coding tasks. See [`plugins/prompt-master/CHANGELOG.md`](./plugins/prompt-master/CHANGELOG.md).
+- `generate-session-prompt` bumped to `v1.0.1+upstream-4.0.0`. Sync of upstream commit `da4b05c`: textual path correction in the `MODE:opinionated-initiative` collection procedure (`.planning/patches.md` → `.planning/patches/{slug}/plan.md`), reflecting reorganization of the patches structure in `tech-product-template`. Upstream semver unchanged. See [`plugins/generate-session-prompt/CHANGELOG.md`](./plugins/generate-session-prompt/CHANGELOG.md).
+
+### Infrastructure
+- Both sync workflows (`sync-prompt-master.yml` and `_sync-skill-from-template.yml`) now open an auto-deduplicated `[sync-failure] <skill>` issue when the workflow fails — alerting that's loud enough to catch silent failures. While an issue is OPEN, subsequent failures append comments instead of creating duplicates.
+- Repo setting `default_workflow_permissions` changed from `read` to `write`, and `can_approve_pull_request_reviews` enabled, so the `peter-evans/create-pull-request` action can actually open sync PRs. Previous setting silently broke both sync workflows for ~7 weeks.
+- `UPSTREAM_TOKEN` secret configured (fine-grained PAT with `Contents: Read` on `tech-product-template`) so the sparse-checkout from the private upstream can authenticate.
+
+---
+
 ## [0.6.0] — 2026-04-28
 
 ### Added
