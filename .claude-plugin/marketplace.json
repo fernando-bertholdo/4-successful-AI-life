@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session management, and more.",
-    "version": "0.6.0"
+    "version": "0.6.1"
   },
   "plugins": [
     {
@@ -31,8 +31,8 @@
     {
       "name": "prompt-master",
       "source": "./plugins/prompt-master",
-      "description": "Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Vendored from nidhinjs/prompt-master via git subtree, kept in sync via weekly GitHub Action.",
-      "version": "1.0.0+upstream-1.6.0",
+      "description": "Generates optimized prompts for AI tools (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests — not for general conversation or coding tasks. Vendored from nidhinjs/prompt-master via git subtree, kept in sync via weekly GitHub Action.",
+      "version": "1.0.0+upstream-1.7.0",
       "license": "MIT",
       "category": "productivity",
       "keywords": ["prompt", "prompt-engineering", "ai", "llm", "vendored", "upstream-sync"],
@@ -42,7 +42,7 @@
       "name": "generate-session-prompt",
       "source": "./plugins/generate-session-prompt",
       "description": "Generate a handoff prompt to resume development work in a new session. Use when sessions exceed ~150k tokens, when resuming after a pause, when switching tools, or on context shifts. Accepts a detail level (brief, standard, detailed). Auto-detects mode: opinionated when `.planning/` exists in the project root, generic otherwise.",
-      "version": "1.0.0+upstream-4.0.0",
+      "version": "1.0.1+upstream-4.0.0",
       "license": "MIT",
       "category": "productivity",
       "keywords": ["session", "handoff", "prompt", "context", "continuity", "resume", "tool-switch", "vendored", "upstream-sync"],
