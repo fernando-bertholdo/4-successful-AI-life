@@ -7,6 +7,16 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
+## [Unreleased]
+
+### Documentation
+- README synced with the catalog: the **Available Plugins** table, both install blocks, the `settings.json` example, and the **Structure** tree now cover all four plugins (`prompt-master` and `generate-session-prompt` were previously absent). Root files (`CLAUDE.md`, `.github/workflows/`, `docs/`, `scripts/`) added to the structure tree.
+- New [`CLAUDE.md`](./CLAUDE.md) — canonical maintainer/agent context: native vs. vendored plugins, the `+upstream-X.Y.Z` versioning table, local-patch sentinel rules, sync-workflow notes, and an anti-drift checklist of every touchpoint to update when a plugin is added or bumped. Resolves the dead `/CLAUDE.md` reference in `plugins/generate-session-prompt/README.md`.
+- `marketplace.json`: corrected the `ui-excellence` description from "12 skills" to "13 skills with triage coordinator" (matching `plugin.json` and `plugins/ui-excellence/README.md`); broadened `metadata.description` to reflect all four plugin domains.
+- `plugins/ui-excellence/README.md`: fixed a stale `v1.0.0-alpha.2 — 12 skills` section heading left behind during the `alpha.3` update.
+
+---
+
 ## [0.6.1] — 2026-06-16
 
 ### Changed

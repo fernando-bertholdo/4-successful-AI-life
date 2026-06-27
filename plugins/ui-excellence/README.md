@@ -19,7 +19,7 @@ The plugin is designed for two modes of use:
 
 ---
 
-## Skills (`v1.0.0-alpha.2` — 12 skills)
+## Skills (12 specialists + 1 [triage coordinator](#coordinator))
 
 ### Foundations (original)
 
