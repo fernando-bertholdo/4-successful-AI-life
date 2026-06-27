@@ -20,7 +20,7 @@ local** e deve seguir as regras abaixo.
 Formato: `MAJOR.MINOR.PATCH+upstream-X.Y.Z` (semver puro do wrapper +
 build metadata identificando o snapshot do upstream vendorizado).
 
-Veja `/CLAUDE.md` na raiz do marketplace para a tabela completa de bumps.
+Veja [`CLAUDE.md`](../../CLAUDE.md) na raiz do marketplace para a tabela completa de bumps.
 
 ## Patches locais
 

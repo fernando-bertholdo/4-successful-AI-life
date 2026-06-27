@@ -4,14 +4,14 @@
     "name": "Fernando Bertholdo"
   },
   "metadata": {
-    "description": "Curated plugins for AI-assisted work: UI/UX excellence, session management, and more.",
+    "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, and prompt engineering.",
     "version": "0.6.1"
   },
   "plugins": [
     {
       "name": "ui-excellence",
       "source": "./plugins/ui-excellence",
-      "description": "Comprehensive UI/UX skills for web interfaces — 12 skills spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
+      "description": "Comprehensive UI/UX skills for web interfaces — 13 skills with triage coordinator spanning visual design, typography, accessibility, usability audits, conversion optimization, microinteractions, and engagement loops.",
       "version": "1.0.0-alpha.3",
       "license": "MIT",
       "category": "design",
