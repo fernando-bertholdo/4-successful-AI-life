@@ -10,6 +10,7 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Documentation
+- Added a procedurally-generated hero/social banner (`assets/og-banner.png`, 1280×640, TouchDesigner-style flow-field + node network) embedded at the top of the README and intended for the GitHub social-preview image. The generator (`assets/banner.html`, seeded canvas) is committed for reproducibility.
 - README redesigned for public promotion and discoverability: centered hero with shields.io badges (the `marketplace` version badge reads `$.metadata.version` dynamically from `marketplace.json`, so it never needs manual updates), a 30-second **Quick Start**, a plugins catalog table backed by per-plugin collapsible `<details>` cards with usage examples, and collapsible secondary install paths. Primary keyword "Claude Code plugin marketplace" surfaced in the hero for SEO.
 - New [`CONTRIBUTING.md`](./CONTRIBUTING.md) — moved the maintainer-facing material out of the README: repository structure tree, native vs. vendored plugins, the Tier 1 → Tier 2 promotion summary, and cross-links to `docs/promotion-runbook.md` and `CLAUDE.md`.
 - Repository metadata (GitHub About + 16 discovery topics: `claude-code`, `claude-code-plugins`, `claude-code-marketplace`, `claude-code-skills`, …) set for indexing by directories such as claudemarketplaces.com and search.
