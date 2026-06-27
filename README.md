@@ -1,8 +1,10 @@
 <div align="center">
 
+<img src="./assets/og-banner.png" alt="4 Successful AI Life — a curated Claude Code plugin marketplace for AI-assisted work" width="840">
+
 # 4 Successful AI Life
 
-### A curated **Claude Code plugin marketplace** — opinionated, production-ready skills for AI-assisted work
+**A curated [Claude Code](https://code.claude.com) plugin marketplace — opinionated, production-ready skills for AI-assisted work.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Marketplace](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffernando-bertholdo%2F4-successful-AI-life%2Fmain%2F.claude-plugin%2Fmarketplace.json&query=%24.metadata.version&label=marketplace&prefix=v&color=8A2BE2)](./.claude-plugin/marketplace.json)
