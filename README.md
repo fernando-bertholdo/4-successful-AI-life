@@ -1,31 +1,120 @@
+<div align="center">
+
 # 4 Successful AI Life
 
-Curated plugins for AI-assisted work — focused on craft, rigor, and practical excellence.
+### A curated **Claude Code plugin marketplace** — opinionated, production-ready skills for AI-assisted work
 
-> A personal marketplace of Claude Code plugins by [Fernando Bertholdo](https://github.com/fernando-bertholdo).
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Marketplace](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffernando-bertholdo%2F4-successful-AI-life%2Fmain%2F.claude-plugin%2Fmarketplace.json&query=%24.metadata.version&label=marketplace&prefix=v&color=8A2BE2)](./.claude-plugin/marketplace.json)
+[![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-D97757.svg)](https://code.claude.com)
+
+[Quick Start](#-quick-start) · [Plugins](#-plugins) · [Installation](#-installation) · [Roadmap](#-roadmap) · [Maintainer docs](#-contributing--maintainer-docs)
+
+</div>
 
 ---
 
-## Available Plugins
+A personal marketplace of [Claude Code](https://code.claude.com) plugins by [Fernando Bertholdo](https://github.com/fernando-bertholdo), focused on craft, rigor, and practical excellence. Every plugin is self-contained, documented, and installable in seconds through Claude Code's native plugin system.
 
-| Plugin | Version | Description |
+## 🚀 Quick Start
+
+Inside any Claude Code session:
+
+```
+/plugin marketplace add fernando-bertholdo/4-successful-AI-life
+/plugin install ui-excellence@4-successful-ai-life
+/reload-plugins
+```
+
+Swap `ui-excellence` for any plugin in the [catalog below](#-plugins) — or install them all. Other install paths (local clone, single-plugin test, permanent opt-in) are in [Installation](#-installation).
+
+## 🧩 Plugins
+
+| Plugin | Version | What it does |
 |---|---|---|
-| [`ui-excellence`](./plugins/ui-excellence/) | `1.0.0-alpha.3` | 13 skills with triage coordinator for UI/UX craft: visual design, typography, accessibility, usability audits, CRO, microinteractions, and engagement loops. |
-| [`smart-session-rename-cc`](./plugins/smart-session-rename-cc/) | `1.5.0` | Auto-name your Claude Code sessions. Stop hook + work-score throttle + Haiku-generated `domain: clauses` titles, with seven `/smart-rename` subcommands for manual override. |
-| [`prompt-master`](./plugins/prompt-master/) | `1.0.0+upstream-1.7.0` | Generates optimized prompts for AI tools (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. Vendored from [`nidhinjs/prompt-master`](https://github.com/nidhinjs/prompt-master), kept in sync weekly via GitHub Action. |
-| [`generate-session-prompt`](./plugins/generate-session-prompt/) | `1.0.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. Dual-mode: opinionated when `.planning/` exists, generic otherwise. Vendored from `tech-product-template`, synced weekly. |
+| [**ui-excellence**](./plugins/ui-excellence/) | `1.0.0-alpha.3` | UI/UX skill bundle with a triage coordinator — visual design, typography, accessibility, usability audits, CRO, microinteractions, and engagement loops. |
+| [**smart-session-rename-cc**](./plugins/smart-session-rename-cc/) | `1.5.0` | Auto-names your Claude Code sessions from the work you actually do, via a Stop hook + a Haiku-generated title. |
+| [**prompt-master**](./plugins/prompt-master/) | `1.0.0+upstream-1.7.0` | Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. |
+| [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.0.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
 
-More plugins are planned — see the [roadmap](#roadmap) below.
+<details>
+<summary><b>🎨 ui-excellence</b> — UI/UX craft, framework-agnostic</summary>
 
----
+<br>
 
-## Installing Plugins
+13 skills (12 specialists + 1 triage coordinator) for building and auditing web interfaces, grouped into **Foundations** (`animation-motion`, `visual-polish`, `web-standards`, `accessibility`), **Systems** (`refactoring`, `typography`), **Audit** (`heuristics`, `cro`), **Interaction** (`microinteractions`), and **Behavior** (`hooked`, `retention`, `copy`).
 
-There are three ways to install plugins from this marketplace, depending on your use case.
+Invoke any skill directly when you need targeted guidance:
 
-### Option 1 — From GitHub (recommended for normal use)
+```
+/ui-excellence:visual-polish      # spacing, shadows, optical alignment
+/ui-excellence:accessibility      # WCAG 2.1 AA — keyboard, ARIA, contrast
+/ui-excellence:heuristics         # Nielsen + Krug usability audit
+/ui-excellence:cro                # conversion-rate optimization audit
+```
 
-Inside a Claude Code session, register the marketplace and install the plugin you want:
+…or let the `_coordinator` triage your task and route to the right specialist. → [Plugin README](./plugins/ui-excellence/README.md)
+
+</details>
+
+<details>
+<summary><b>✍️ smart-session-rename-cc</b> — never hunt through <code>quirky-blue-elephant</code> again</summary>
+
+<br>
+
+A Stop hook scores work-density deterministically and asks Haiku for a structured `domain: clause` title once meaningful work has accumulated — so a random `quirky-blue-elephant` becomes `auth: add rate limiting, tests`. It stays quiet during Q&A and only spends a call when real code is happening.
+
+Seven `/smart-rename` subcommands keep you in control:
+
+```
+/smart-rename            # suggest a title now
+/smart-rename explain    # show the current state snapshot
+/smart-rename <name>     # anchor a domain (e.g. /smart-rename billing)
+/smart-rename freeze     # pause auto-rename  (unfreeze to resume)
+/smart-rename force      # override the throttle / reset the circuit breaker
+/smart-rename unanchor   # clear the domain anchor
+```
+
+→ [Plugin README](./plugins/smart-session-rename-cc/README.md)
+
+</details>
+
+<details>
+<summary><b>💬 prompt-master</b> — optimized prompts for any AI tool</summary>
+
+<br>
+
+Model-invoked — no slash command. It activates automatically when you explicitly ask Claude to write, fix, improve, or adapt a prompt for a specific AI tool, and stays out of the way during general conversation or coding. Just ask:
+
+> "Improve this Midjourney prompt: a cabin in the woods at dusk…"
+>
+> "Write a system prompt for a coding agent that reviews pull requests."
+
+Vendored from [`nidhinjs/prompt-master`](https://github.com/nidhinjs/prompt-master) and synced weekly. → [Plugin README](./plugins/prompt-master/README.md)
+
+</details>
+
+<details>
+<summary><b>🔄 generate-session-prompt</b> — resume work without losing context</summary>
+
+<br>
+
+Generates a structured handoff prompt so you can pick up in a fresh session after a long run, a pause, or a tool switch. Dual-mode: **opinionated** when a `.planning/` directory exists in the project root, **generic** otherwise — so it's useful in any repo.
+
+```
+/generate-session-prompt            # mode auto-detected
+/generate-session-prompt detailed   # detail level: brief | standard | detailed
+```
+
+Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/tech-product-template) and synced weekly. → [Plugin README](./plugins/generate-session-prompt/README.md)
+
+</details>
+
+## 📦 Installation
+
+### Option 1 — From GitHub (recommended)
+
+Register the marketplace and install the plugins you want, inside a Claude Code session:
 
 ```
 /plugin marketplace add fernando-bertholdo/4-successful-AI-life
@@ -36,25 +125,14 @@ Inside a Claude Code session, register the marketplace and install the plugin yo
 /reload-plugins
 ```
 
-After reload, skills become invocable under the plugin namespace:
+After reload, skills are invocable under their plugin namespace (`/ui-excellence:accessibility`, `/smart-rename`, `/generate-session-prompt`). `prompt-master` is model-invoked and needs no command — just ask Claude to work on a prompt.
 
-```
-/ui-excellence:animation-motion
-/ui-excellence:visual-polish
-/ui-excellence:web-standards
-/ui-excellence:accessibility
-/smart-rename                  # bare — suggest a title now
-/smart-rename explain          # show current state snapshot
-/smart-rename freeze           # pause auto-rename
-/generate-session-prompt           # handoff prompt, mode auto-detected
-/generate-session-prompt detailed  # detailed variant (brief | standard | detailed)
-```
+<details>
+<summary><b>Option 2 — From a local clone</b> (for development)</summary>
 
-`prompt-master` is model-invoked: it activates automatically when you explicitly ask Claude to write, fix, improve, or adapt a prompt for a specific AI tool — no slash command needed.
+<br>
 
-### Option 2 — From a local clone (recommended for development)
-
-Clone this repository and add the local path as a marketplace:
+Clone the repository and add the local path as a marketplace:
 
 ```bash
 git clone https://github.com/fernando-bertholdo/4-successful-AI-life.git
@@ -66,27 +144,34 @@ Then, inside a Claude Code session launched from the clone directory:
 ```
 /plugin marketplace add ./
 /plugin install ui-excellence@4-successful-ai-life
-/plugin install smart-session-rename-cc@4-successful-ai-life
-/plugin install prompt-master@4-successful-ai-life
-/plugin install generate-session-prompt@4-successful-ai-life
 /reload-plugins
 ```
 
-This mode is useful when you want to hack on a plugin locally before pushing changes.
+Useful when you want to hack on a plugin locally before pushing changes.
 
-### Option 3 — Via `--plugin-dir` (quick single-plugin test)
+</details>
 
-Bypass the marketplace entirely and load a single plugin directly:
+<details>
+<summary><b>Option 3 — Single-plugin test via <code>--plugin-dir</code></b></summary>
+
+<br>
+
+Bypass the marketplace entirely and load one plugin directly:
 
 ```bash
 claude --plugin-dir ./plugins/ui-excellence
 ```
 
-This mode is handy for validating a plugin in isolation without touching your global marketplace registry.
+Handy for validating a plugin in isolation without touching your global marketplace registry.
 
-### Permanent opt-in via `settings.json`
+</details>
 
-To auto-install the plugin in a project, add to `.claude/settings.json`:
+<details>
+<summary><b>Permanent opt-in via <code>settings.json</code></b></summary>
+
+<br>
+
+To auto-install in a project, add to `.claude/settings.json`:
 
 ```json
 {
@@ -107,87 +192,31 @@ To auto-install the plugin in a project, add to `.claude/settings.json`:
 }
 ```
 
-Claude Code will prompt you to trust the marketplace on first open, then keep the plugin available across sessions.
+Claude Code prompts you to trust the marketplace on first open, then keeps the plugins available across sessions.
+
+</details>
+
+## 🗺️ Roadmap
+
+- **`ui-excellence` v1.0.0** — graduate from `alpha`: finalize the coordinator's path-aware auto-loading and integration cleanup.
+- **`smart-session-rename-cc` v1.5.1** — fix two CLI-path bugs surfaced during Level 4 testing (state empty-write under degenerate transcripts; `/smart-rename force` state divergence).
+- **Future plugins** — focused bundles (planning, sync, design-sprint workflows) extracted from long-running real-world use.
+
+## 📄 License
+
+MIT — see [LICENSE](./LICENSE). Individual plugins may carry additional attribution in their own `LICENSE` files when they incorporate third-party content.
+
+## 🤝 Contributing & maintainer docs
+
+This marketplace is maintained for personal and project-specific use. External contributions aren't actively solicited, but issues and discussion are welcome on the [issue tracker](https://github.com/fernando-bertholdo/4-successful-AI-life/issues).
+
+- **How plugins are built, vendored, versioned, and synced** → [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- **Repo conventions & the anti-drift checklist** → [`CLAUDE.md`](./CLAUDE.md)
 
 ---
 
-## Structure
+<div align="center">
 
-```
-4-successful-AI-life/
-├── .claude-plugin/
-│   └── marketplace.json       ← marketplace manifest (catalog source of truth)
-├── .github/workflows/         ← weekly upstream-sync workflows (vendored plugins)
-├── README.md                  ← this file
-├── CLAUDE.md                  ← maintainer & agent context (conventions, anti-drift checklist)
-├── LICENSE                    ← MIT (repository level)
-├── CHANGELOG.md               ← marketplace release history
-├── docs/promotion-runbook.md  ← Tier 1 → Tier 2 promotion workflow
-├── scripts/promote-skill.sh   ← bootstrap a vendored plugin from the template
-└── plugins/
-    ├── ui-excellence/             ← UI/UX skill bundle
-    │   ├── .claude-plugin/
-    │   │   └── plugin.json        ← plugin manifest with skills array
-    │   ├── README.md
-    │   ├── LICENSE
-    │   ├── CHANGELOG.md
-    │   └── skills/
-    ├── smart-session-rename-cc/   ← Stop-hook auto-renamer
-    │   ├── .claude-plugin/
-    │   │   └── plugin.json
-    │   ├── hooks/hooks.json       ← Stop hook registration
-    │   ├── scripts/               ← rename-hook + smart-rename-cli + lib/
-    │   ├── skills/smart-rename/   ← /smart-rename skill router
-    │   ├── tests/                 ← unit + integration suites
-    │   ├── docs/
-    │   ├── README.md
-    │   ├── LICENSE
-    │   └── CHANGELOG.md
-    ├── prompt-master/             ← vendored prompt-engineering skill
-    │   ├── .claude-plugin/
-    │   │   └── plugin.json
-    │   ├── upstream/              ← git-subtree mirror of nidhinjs/prompt-master
-    │   │   ├── SKILL.md
-    │   │   └── references/
-    │   ├── README.md              ← vendoring + local-patch rules
-    │   └── CHANGELOG.md
-    └── generate-session-prompt/   ← vendored session-handoff skill
-        ├── .claude-plugin/
-        │   └── plugin.json
-        ├── upstream/              ← sparse-checkout mirror of tech-product-template
-        │   └── SKILL.md
-        ├── README.md
-        └── CHANGELOG.md
-```
+If a plugin here saves you time, a ⭐ helps others discover the marketplace.
 
-Each plugin is fully self-contained under `plugins/<name>/` and has its own manifest, docs, license, and changelog. The two vendored plugins (`prompt-master`, `generate-session-prompt`) keep their upstream source under `upstream/` and are refreshed weekly by the sync workflows in [`.github/workflows/`](./.github/workflows/).
-
----
-
-## Roadmap
-
-- **`ui-excellence` v1.0.0** — Expand foundations (4 skills) with adopted [wondelai/skills](https://github.com/wondelai/skills) content (8 skills) plus a coordinator with routing logic and path-targeting. See project-level planning in the consumer repos.
-- **`smart-session-rename-cc` v1.5.1** — Fix two CLI-path bugs surfaced during Level 4 testing (state empty-write under degenerate transcripts; `/smart-rename force` state divergence). See `plugins/smart-session-rename-cc/docs/superpowers/handoff/2026-04-20-known-issues.md` for the investigation notes.
-- **Future plugins** — `planning-suite`, `sync-toolkit`, `design-sprint`, and other focused bundles extracted from long-running workflows.
-
----
-
-## License
-
-MIT — see [LICENSE](./LICENSE).
-
-Individual plugins may carry additional attribution in their own LICENSE files when they incorporate third-party content.
-
----
-
-## Contributing
-
-This marketplace is currently maintained for personal and project-specific use. External contributions are not actively solicited, but issues and discussion are welcome on the [GitHub issue tracker](https://github.com/fernando-bertholdo/4-successful-AI-life/issues).
-
----
-
-## Internal — Promoting skills from `tech-product-template`
-
-Skills are developed in the private `tech-product-template` repo (Tier 1) and promoted to this marketplace (Tier 2) via sparse-checkout sync. See [`docs/promotion-runbook.md`](./docs/promotion-runbook.md) for the architecture model, one-time PAT setup, and the `scripts/promote-skill.sh` workflow.
-
-For maintenance conventions — native vs. vendored plugins, the `+upstream-X.Y.Z` versioning scheme, local-patch sentinels, and the anti-drift checklist to follow when adding or bumping a plugin — see [`CLAUDE.md`](./CLAUDE.md).
+</div>
