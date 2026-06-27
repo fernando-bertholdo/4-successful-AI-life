@@ -58,6 +58,15 @@ future `subtree pull` / sparse-checkout sync can find and re-apply it:
 
 Document every patch in that plugin's own `CHANGELOG.md` (separate from the upstream changelog).
 
+Sentinel blocks survive the weekly sync automatically: `_sync-skill-from-template.yml` runs
+[`scripts/reapply-local-patches.py`](./scripts/reapply-local-patches.py) right after the
+`rsync --delete`, which re-injects every `LOCAL-PATCH` block from the committed (HEAD) file at its
+original anchor. So a sync where the upstream is unchanged produces **no** PR (the patch is restored
+byte-for-byte), and a real upstream change surfaces as a PR containing only that change plus the
+re-applied patch. The script only adds our own blocks; it never edits upstream content. If the
+upstream rewrites the region around a patch's anchor, the script falls back to inserting near the
+top and emits a `::warning::` — that's the one case needing a human to reposition the block.
+
 ## Sync workflows
 
 Weekly automated upstream sync lives in [`.github/workflows/`](./.github/workflows/):
