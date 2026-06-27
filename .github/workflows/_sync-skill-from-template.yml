@@ -105,6 +105,13 @@ jobs:
             --exclude='.git' \
             "$TMP/$SKILL_PATH/" "$DEST/"
 
+          # Re-aplicar blocos LOCAL-PATCH que o rsync acabou de sobrescrever.
+          # O script lê as sentinelas <!-- LOCAL-PATCH:start id=... --> da versão
+          # commitada (HEAD) e re-injeta cada bloco no arquivo recém-sincronizado.
+          # Só adiciona nossos blocos — nunca toca conteúdo do upstream. Se não
+          # houver patches, é no-op (caso da maioria dos plugins vendored).
+          python3 scripts/reapply-local-patches.py "$DEST"
+
           # Detectar mudanças no working tree.
           if git diff --quiet HEAD -- "$DEST" && [ -z "$(git status --porcelain "$DEST")" ]; then
             echo "Nenhuma mudança em $SKILL_NAME desde a última sync."
@@ -135,7 +142,7 @@ jobs:
 
             ### Checklist antes de mergeear
             - [ ] Revisar o diff em `${{ steps.pull.outputs.plugin_path }}/upstream/`.
-            - [ ] Confirmar que blocos `LOCAL-PATCH:start` (se houver) não foram corrompidos.
+            - [ ] Confirmar que os blocos `LOCAL-PATCH` foram re-aplicados corretamente (automático via `scripts/reapply-local-patches.py`; conferir posição se o upstream mexeu na região da âncora).
             - [ ] Atualizar `${{ steps.pull.outputs.plugin_path }}/CHANGELOG.md` com a nova metadata `+upstream-X.Y.Z`.
             - [ ] Atualizar `version` em `${{ steps.pull.outputs.plugin_path }}/.claude-plugin/plugin.json`.
             - [ ] Mergear com **`--merge`**, nunca squash (preserva histórico de syncs).
