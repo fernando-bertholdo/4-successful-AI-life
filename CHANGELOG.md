@@ -7,7 +7,10 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
-## [Unreleased]
+## [0.7.0] — 2026-06-27
+
+### Added
+- Fifth plugin: `enhanced-planning` at `v1.0.0+upstream-2.0.0` (see [`plugins/enhanced-planning/CHANGELOG.md`](./plugins/enhanced-planning/CHANGELOG.md)). Promoted from the private `tech-product-template` (upstream `v2.0.0`, SHA `da4b05c`) via `scripts/promote-skill.sh`. Adds structural guardrails to implementation plans — human checkpoints, risk registry, named guardrails, decision locks, multi-session continuity protocol, and a Codex review pass; complements `writing-plans`. A `standalone-usage` local patch (one `LOCAL-PATCH` block) makes it usable outside the template's milestone/detour framework; the upstream body is otherwise unchanged so weekly syncs stay clean. `.github/workflows/sync-enhanced-planning.yml` added for automated upstream sync, and the marketplace version was bumped `0.6.1` → `0.7.0`.
 
 ### Documentation
 - Added a procedurally-generated hero/social banner (`assets/og-banner.png`, 1280×640, TouchDesigner-style flow-field + node network) embedded at the top of the README and intended for the GitHub social-preview image. The generator (`assets/banner.html`, seeded canvas) is committed for reproducibility.

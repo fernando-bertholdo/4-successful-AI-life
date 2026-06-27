@@ -4,8 +4,8 @@
     "name": "Fernando Bertholdo"
   },
   "metadata": {
-    "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, and prompt engineering.",
-    "version": "0.6.1"
+    "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
+    "version": "0.7.0"
   },
   "plugins": [
     {
@@ -46,6 +46,16 @@
       "license": "MIT",
       "category": "productivity",
       "keywords": ["session", "handoff", "prompt", "context", "continuity", "resume", "tool-switch", "vendored", "upstream-sync"],
+      "author": { "name": "Fernando Bertholdo" }
+    },
+    {
+      "name": "enhanced-planning",
+      "source": "./plugins/enhanced-planning",
+      "description": "Adds structural guardrails to implementation plans — human checkpoints, risk registry, named guardrails, decision locks, multi-session protocol, and Codex review. Complements (does not replace) writing-plans. Works standalone; pairs with /codex:rescue. Vendored from tech-product-template, synced weekly.",
+      "version": "1.0.0+upstream-2.0.0",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["planning", "plans", "guardrails", "implementation", "risk-management", "multi-session", "claude-code", "vendored", "upstream-sync"],
       "author": { "name": "Fernando Bertholdo" }
     }
   ]

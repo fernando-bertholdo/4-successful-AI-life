@@ -38,6 +38,7 @@ Swap `ui-excellence` for any plugin in the [catalog below](#-plugins) — or ins
 | [**smart-session-rename-cc**](./plugins/smart-session-rename-cc/) | `1.5.0` | Auto-names your Claude Code sessions from the work you actually do, via a Stop hook + a Haiku-generated title. |
 | [**prompt-master**](./plugins/prompt-master/) | `1.0.0+upstream-1.7.0` | Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. |
 | [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.0.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
+| [**enhanced-planning**](./plugins/enhanced-planning/) | `1.0.0+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
 
 <details>
 <summary><b>🎨 ui-excellence</b> — UI/UX craft, framework-agnostic</summary>
@@ -112,6 +113,26 @@ Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/te
 
 </details>
 
+<details>
+<summary><b>🧭 enhanced-planning</b> — structural guardrails for implementation plans</summary>
+
+<br>
+
+Adds structural guardrails to a plan *before* you write it: human checkpoints, a risk registry, named guardrails (`G-*`), decision locks, a multi-session continuity protocol, and a Codex review pass. It complements `writing-plans` (superpowers) — `enhanced-planning` shapes the plan's structure, then `writing-plans` fills in the content.
+
+Use it when a task spans 3+ PRs or multiple sessions, touches stakeholder-visible output, or risks drift between components.
+
+```
+enhanced-planning checkout-v2     # guardrails for a unit of work
+enhanced-planning                 # guardrails, no specific initiative
+```
+
+It originates from a milestone/detour planning framework but works standalone — a "Standalone usage" preamble in the skill maps the jargon and marks companion skills as optional. Pairs with `writing-plans` and `/codex:rescue`.
+
+Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/tech-product-template) and synced weekly. → [Plugin README](./plugins/enhanced-planning/README.md)
+
+</details>
+
 ## 📦 Installation
 
 ### Option 1 — From GitHub (recommended)
@@ -124,10 +145,11 @@ Register the marketplace and install the plugins you want, inside a Claude Code 
 /plugin install smart-session-rename-cc@4-successful-ai-life
 /plugin install prompt-master@4-successful-ai-life
 /plugin install generate-session-prompt@4-successful-ai-life
+/plugin install enhanced-planning@4-successful-ai-life
 /reload-plugins
 ```
 
-After reload, skills are invocable under their plugin namespace (`/ui-excellence:accessibility`, `/smart-rename`, `/generate-session-prompt`). `prompt-master` is model-invoked and needs no command — just ask Claude to work on a prompt.
+After reload, skills are invocable under their plugin namespace (`/ui-excellence:accessibility`, `/smart-rename`, `/generate-session-prompt`, `/enhanced-planning`). `prompt-master` is model-invoked and needs no command — just ask Claude to work on a prompt.
 
 <details>
 <summary><b>Option 2 — From a local clone</b> (for development)</summary>
@@ -189,7 +211,8 @@ To auto-install in a project, add to `.claude/settings.json`:
     "ui-excellence@4-successful-ai-life": true,
     "smart-session-rename-cc@4-successful-ai-life": true,
     "prompt-master@4-successful-ai-life": true,
-    "generate-session-prompt@4-successful-ai-life": true
+    "generate-session-prompt@4-successful-ai-life": true,
+    "enhanced-planning@4-successful-ai-life": true
   }
 }
 ```
