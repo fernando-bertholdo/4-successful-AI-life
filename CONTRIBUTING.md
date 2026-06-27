@@ -41,9 +41,13 @@ here, and where the deeper conventions live. For day-to-day maintenance conventi
     │   ├── .claude-plugin/plugin.json
     │   ├── upstream/              ← git-subtree mirror of nidhinjs/prompt-master
     │   ├── README.md · CHANGELOG.md
-    └── generate-session-prompt/   ← vendored session-handoff skill
+    ├── generate-session-prompt/   ← vendored session-handoff skill
+    │   ├── .claude-plugin/plugin.json
+    │   ├── upstream/              ← sparse-checkout mirror of tech-product-template
+    │   ├── README.md · CHANGELOG.md
+    └── enhanced-planning/         ← vendored planning-guardrails skill
         ├── .claude-plugin/plugin.json
-        ├── upstream/              ← sparse-checkout mirror of tech-product-template
+        ├── upstream/              ← SKILL.md + references/ (LOCAL-PATCH: standalone-usage)
         ├── README.md · CHANGELOG.md
 ```
 

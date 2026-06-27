@@ -1,0 +1,12 @@
+{
+  "name": "enhanced-planning",
+  "version": "1.0.0+upstream-2.0.0",
+  "description": "Adds structural guardrails to implementation plans — human checkpoints, risk registry, named guardrails, decision locks, multi-session protocol, and Codex review. Complements (does not replace) writing-plans. Vendored from fernando-bertholdo/tech-product-template.",
+  "author": {
+    "name": "Fernando Bertholdo"
+  },
+  "license": "MIT",
+  "skills": [
+    "./upstream/"
+  ]
+}
