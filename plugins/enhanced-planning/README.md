@@ -13,7 +13,7 @@ e a distribui via este marketplace.
 > **Uso standalone:** este skill nasceu num framework de planejamento por
 > milestones/detours, mas funciona fora dele. Um patch local `standalone-usage`
 > no topo do `upstream/SKILL.md` explica como mapear o jargão e quais skills-companion
-> são opcionais. Pareia com `writing-plans` (do [superpowers](https://github.com/obra/superpowers)) e `/codex:rescue` (plugin Codex).
+> são opcionais. Pareia com `writing-plans` (do [superpowers](https://github.com/obra/superpowers)) e [`/codex:rescue`](https://github.com/openai/codex-plugin-cc) (plugin oficial do Codex pra Claude Code, da OpenAI).
 
 O conteúdo da skill vive em `upstream/` e é puxado via sparse-checkout pelo
 workflow `.github/workflows/sync-enhanced-planning.yml`. Não edite arquivos em

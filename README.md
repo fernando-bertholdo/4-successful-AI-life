@@ -133,7 +133,7 @@ Use it when a task spans 3+ PRs or multiple sessions, touches stakeholder-visibl
 /enhanced-planning                # guardrails, no specific label
 ```
 
-It originates from a milestone/detour planning framework but works standalone — a "Standalone usage" preamble in the skill maps the jargon and marks companion skills as optional. Pairs with `writing-plans` and `/codex:rescue`.
+It originates from a milestone/detour planning framework but works standalone — a "Standalone usage" preamble in the skill maps the jargon and marks companion skills as optional. Pairs with `writing-plans` and [`/codex:rescue`](https://github.com/openai/codex-plugin-cc) (OpenAI's official Codex plugin for Claude Code).
 
 Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/tech-product-template) and synced weekly. → [Plugin README](./plugins/enhanced-planning/README.md)
 
