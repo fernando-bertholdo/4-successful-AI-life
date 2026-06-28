@@ -51,6 +51,8 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 
 13 skills (12 specialists + 1 triage coordinator) for building and auditing web interfaces, grouped into **Foundations** (`animation-motion`, `visual-polish`, `web-standards`, `accessibility`), **Systems** (`refactoring`, `typography`), **Audit** (`heuristics`, `cro`), **Interaction** (`microinteractions`), and **Behavior** (`hooked`, `retention`, `copy`).
 
+Foundations are original; the Systems, Audit, Interaction, and Behavior groups are adapted from [`wondelai/skills`](https://github.com/wondelai/skills) (MIT, with attribution — see the [plugin LICENSE](./plugins/ui-excellence/LICENSE)).
+
 Invoke any skill directly when you need targeted guidance:
 
 ```
@@ -122,7 +124,7 @@ Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/te
 
 <br>
 
-Adds structural guardrails to a plan *before* you write it: human checkpoints, a risk registry, named guardrails (`G-*`), decision locks, a multi-session continuity protocol, and a Codex review pass. It complements `writing-plans` (superpowers) — `enhanced-planning` shapes the plan's structure, then `writing-plans` fills in the content.
+Adds structural guardrails to a plan *before* you write it: human checkpoints, a risk registry, named guardrails (`G-*`), decision locks, a multi-session continuity protocol, and a Codex review pass. It complements `writing-plans` (from [superpowers](https://github.com/obra/superpowers)) — `enhanced-planning` shapes the plan's structure, then `writing-plans` fills in the content.
 
 Use it when a task spans 3+ PRs or multiple sessions, touches stakeholder-visible output, or risks drift between components.
 
