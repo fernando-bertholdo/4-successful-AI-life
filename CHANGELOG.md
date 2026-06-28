@@ -12,6 +12,9 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 ### Infrastructure
 - Local `LOCAL-PATCH` blocks now survive the weekly upstream sync automatically. `_sync-skill-from-template.yml` runs the new [`scripts/reapply-local-patches.py`](./scripts/reapply-local-patches.py) right after `rsync --delete`, re-injecting each sentinel block from the committed (HEAD) file at its anchor. This prevents the spurious "patch removed" PR that would otherwise fire on the first sync of a patched plugin (e.g. `enhanced-planning`): a sync with no upstream change now produces no PR (the patch is restored byte-for-byte), and a real upstream change surfaces only that change plus the re-applied patch. The script only adds our own blocks, never edits upstream content, and is a no-op for patch-free plugins. Validated locally (no-change, real-change, and idempotency cases).
 
+### Documentation
+- README polish: **Quick Start** now installs the full set (it previously singled out `ui-excellence`) and carries the invocation note; the redundant GitHub "Option 1" was folded into Quick Start so **Installation** lists only the alternative methods; the `enhanced-planning` card commands gained their `/` prefix; and the roadmap now lists `planning-suite` as the next step around the already-shipped `enhanced-planning`.
+
 ## [0.7.0] — 2026-06-27
 
 ### Added
