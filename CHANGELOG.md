@@ -14,7 +14,7 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ### Documentation
 - README polish: **Quick Start** now installs the full set (it previously singled out `ui-excellence`) and carries the invocation note; the redundant GitHub "Option 1" was folded into Quick Start so **Installation** lists only the alternative methods; the `enhanced-planning` card commands gained their `/` prefix; and the roadmap now lists `planning-suite` as the next step around the already-shipped `enhanced-planning`.
-- Added upstream-origin reference links in the README plugin cards: `ui-excellence` now credits and links [`wondelai/skills`](https://github.com/wondelai/skills) (source of its Systems/Audit/Interaction/Behavior groups, with the LICENSE attribution), and `enhanced-planning` links [superpowers](https://github.com/obra/superpowers) (home of the `writing-plans` skill it complements). Same superpowers link added to the `enhanced-planning` plugin README.
+- Added upstream-origin reference links in the README plugin cards: `ui-excellence` now credits and links [`wondelai/skills`](https://github.com/wondelai/skills) (source of its Systems/Audit/Interaction/Behavior groups, with the LICENSE attribution), and `enhanced-planning` links [superpowers](https://github.com/obra/superpowers) (home of the `writing-plans` skill it complements). Same superpowers link added to the `enhanced-planning` plugin README. `/codex:rescue` links the official [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) (confirmed via the local marketplace registry and the repo's own `marketplace.json`).
 
 ## [0.7.0] — 2026-06-27
 
