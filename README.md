@@ -20,15 +20,19 @@ A personal marketplace of [Claude Code](https://code.claude.com) plugins by [Fer
 
 ## 🚀 Quick Start
 
-Inside any Claude Code session:
+Inside any Claude Code session, add the marketplace and install the plugins you want:
 
 ```
 /plugin marketplace add fernando-bertholdo/4-successful-AI-life
 /plugin install ui-excellence@4-successful-ai-life
+/plugin install smart-session-rename-cc@4-successful-ai-life
+/plugin install prompt-master@4-successful-ai-life
+/plugin install generate-session-prompt@4-successful-ai-life
+/plugin install enhanced-planning@4-successful-ai-life
 /reload-plugins
 ```
 
-Swap `ui-excellence` for any plugin in the [catalog below](#-plugins) — or install them all. Other install paths (local clone, single-plugin test, permanent opt-in) are in [Installation](#-installation).
+Drop any line you don't want — every plugin is independent. After reload, skills are invocable as slash commands (`/ui-excellence:accessibility`, `/smart-rename`, `/generate-session-prompt`, `/enhanced-planning`); `prompt-master` is model-invoked and needs no command — just ask Claude to work on a prompt. Other install paths (local clone, single-plugin test, permanent opt-in) are in [Installation](#-installation).
 
 ## 🧩 Plugins
 
@@ -123,8 +127,8 @@ Adds structural guardrails to a plan *before* you write it: human checkpoints, a
 Use it when a task spans 3+ PRs or multiple sessions, touches stakeholder-visible output, or risks drift between components.
 
 ```
-enhanced-planning checkout-v2     # guardrails for a unit of work
-enhanced-planning                 # guardrails, no specific initiative
+/enhanced-planning checkout-v2    # guardrails for a unit of work
+/enhanced-planning                # guardrails, no specific label
 ```
 
 It originates from a milestone/detour planning framework but works standalone — a "Standalone usage" preamble in the skill maps the jargon and marks companion skills as optional. Pairs with `writing-plans` and `/codex:rescue`.
@@ -135,24 +139,10 @@ Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/te
 
 ## 📦 Installation
 
-### Option 1 — From GitHub (recommended)
-
-Register the marketplace and install the plugins you want, inside a Claude Code session:
-
-```
-/plugin marketplace add fernando-bertholdo/4-successful-AI-life
-/plugin install ui-excellence@4-successful-ai-life
-/plugin install smart-session-rename-cc@4-successful-ai-life
-/plugin install prompt-master@4-successful-ai-life
-/plugin install generate-session-prompt@4-successful-ai-life
-/plugin install enhanced-planning@4-successful-ai-life
-/reload-plugins
-```
-
-After reload, skills are invocable under their plugin namespace (`/ui-excellence:accessibility`, `/smart-rename`, `/generate-session-prompt`, `/enhanced-planning`). `prompt-master` is model-invoked and needs no command — just ask Claude to work on a prompt.
+The [Quick Start](#-quick-start) above is the recommended path — install from GitHub. Other ways to install:
 
 <details>
-<summary><b>Option 2 — From a local clone</b> (for development)</summary>
+<summary><b>From a local clone</b> (for development)</summary>
 
 <br>
 
@@ -176,7 +166,7 @@ Useful when you want to hack on a plugin locally before pushing changes.
 </details>
 
 <details>
-<summary><b>Option 3 — Single-plugin test via <code>--plugin-dir</code></b></summary>
+<summary><b>Single-plugin test via <code>--plugin-dir</code></b></summary>
 
 <br>
 
@@ -225,7 +215,8 @@ Claude Code prompts you to trust the marketplace on first open, then keeps the p
 
 - **`ui-excellence` v1.0.0** — graduate from `alpha`: finalize the coordinator's path-aware auto-loading and integration cleanup.
 - **`smart-session-rename-cc` v1.5.1** — fix two CLI-path bugs surfaced during Level 4 testing (state empty-write under degenerate transcripts; `/smart-rename force` state divergence).
-- **Future plugins** — focused bundles (planning, sync, design-sprint workflows) extracted from long-running real-world use.
+- **`planning-suite`** — bundle the milestone/detour planning family (`init-milestone`, `validate-dor`/`dod`, `archive-initiative`, …) around the already-shipped `enhanced-planning`, so its companion-skill references resolve within one plugin.
+- **Future plugins** — focused bundles (sync, design-sprint workflows) extracted from long-running real-world use.
 
 ## 📄 License
 
