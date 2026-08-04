@@ -15,8 +15,22 @@
       "version": "1.0.0-alpha.3",
       "license": "MIT",
       "category": "design",
-      "keywords": ["ui", "ux", "accessibility", "animation", "typography", "audit", "engagement", "microinteractions", "design-systems", "cro", "retention"],
-      "author": { "name": "Fernando Bertholdo" }
+      "keywords": [
+        "ui",
+        "ux",
+        "accessibility",
+        "animation",
+        "typography",
+        "audit",
+        "engagement",
+        "microinteractions",
+        "design-systems",
+        "cro",
+        "retention"
+      ],
+      "author": {
+        "name": "Fernando Bertholdo"
+      }
     },
     {
       "name": "smart-session-rename-cc",
@@ -25,8 +39,17 @@
       "version": "1.5.0",
       "license": "MIT",
       "category": "productivity",
-      "keywords": ["session", "rename", "productivity", "hooks", "auto-name", "claude-code"],
-      "author": { "name": "Fernando Bertholdo" }
+      "keywords": [
+        "session",
+        "rename",
+        "productivity",
+        "hooks",
+        "auto-name",
+        "claude-code"
+      ],
+      "author": {
+        "name": "Fernando Bertholdo"
+      }
     },
     {
       "name": "prompt-master",
@@ -35,8 +58,17 @@
       "version": "1.0.0+upstream-1.7.0",
       "license": "MIT",
       "category": "productivity",
-      "keywords": ["prompt", "prompt-engineering", "ai", "llm", "vendored", "upstream-sync"],
-      "author": { "name": "Fernando Bertholdo" }
+      "keywords": [
+        "prompt",
+        "prompt-engineering",
+        "ai",
+        "llm",
+        "vendored",
+        "upstream-sync"
+      ],
+      "author": {
+        "name": "Fernando Bertholdo"
+      }
     },
     {
       "name": "generate-session-prompt",
@@ -45,8 +77,20 @@
       "version": "1.0.1+upstream-4.0.0",
       "license": "MIT",
       "category": "productivity",
-      "keywords": ["session", "handoff", "prompt", "context", "continuity", "resume", "tool-switch", "vendored", "upstream-sync"],
-      "author": { "name": "Fernando Bertholdo" }
+      "keywords": [
+        "session",
+        "handoff",
+        "prompt",
+        "context",
+        "continuity",
+        "resume",
+        "tool-switch",
+        "vendored",
+        "upstream-sync"
+      ],
+      "author": {
+        "name": "Fernando Bertholdo"
+      }
     },
     {
       "name": "enhanced-planning",
@@ -55,8 +99,35 @@
       "version": "1.0.0+upstream-2.0.0",
       "license": "MIT",
       "category": "productivity",
-      "keywords": ["planning", "plans", "guardrails", "implementation", "risk-management", "multi-session", "claude-code", "vendored", "upstream-sync"],
-      "author": { "name": "Fernando Bertholdo" }
+      "keywords": [
+        "planning",
+        "plans",
+        "guardrails",
+        "implementation",
+        "risk-management",
+        "multi-session",
+        "claude-code",
+        "vendored",
+        "upstream-sync"
+      ],
+      "author": {
+        "name": "Fernando Bertholdo"
+      }
+    },
+    {
+      "name": "cmux-hibernate",
+      "source": "./plugins/cmux-hibernate",
+      "description": "Hibernate and restore Claude Code sessions across cmux workspaces, freeing memory without losing your environment.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "cmux",
+        "session",
+        "restore",
+        "hibernate",
+        "memory"
+      ]
     }
   ]
 }
