@@ -12,10 +12,17 @@ sessao passa a gravar sob outro id. Por isso ele entra por ultimo e apenas
 preenche lacunas.
 """
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple
+import json
 import os
 import re
+import shutil
 import subprocess
+import time
+
+STALE_DAYS = 7
+RAIZ_PROJETOS = Path.home() / ".claude" / "projects"
 
 
 @dataclass
@@ -171,3 +178,106 @@ def detectar_duplicatas(mapa: Dict[str, dict]) -> List[str]:
     for info in mapa.values():
         contagem[info["sessao"]] = contagem.get(info["sessao"], 0) + 1
     return sorted(s for s, n in contagem.items() if n > 1)
+
+
+def localizar_transcript(sessao: str, raiz: Path = RAIZ_PROJETOS) -> Optional[Path]:
+    """Acha o .jsonl da sessao em qualquer slug de projeto.
+
+    O slug do diretorio deriva do caminho e pode divergir do cwd atual depois de
+    um symlink. Por isso a busca e' por session id, nunca por nome de projeto.
+    """
+    try:
+        achados = sorted(raiz.glob("*/" + sessao + ".jsonl"),
+                         key=lambda p: p.stat().st_mtime, reverse=True)
+    except OSError:
+        return None
+    return achados[0] if achados else None
+
+
+def cwd_do_transcript(caminho: Path) -> Optional[str]:
+    """Le o cwd gravado dentro do transcript — a fonte que nao mente."""
+    try:
+        with caminho.open(errors="ignore") as fh:
+            for i, linha in enumerate(fh):
+                if i > 40:
+                    break
+                try:
+                    obj = json.loads(linha)
+                except ValueError:
+                    continue
+                if obj.get("cwd"):
+                    return obj["cwd"]
+    except OSError:
+        return None
+    return None
+
+
+def marcar_estagnadas(estado: Estado, agora: float, stale_days: int = STALE_DAYS) -> None:
+    limite = agora - stale_days * 86400
+    for *_, aba in estado.todas_abas():
+        if aba.transcript and aba.transcript.get("mtime", 0) < limite:
+            aba.estagnada = True
+
+
+def cmux_bin() -> str:
+    do_env = os.environ.get("CMUX_BUNDLED_CLI_PATH")
+    if do_env and os.path.exists(do_env):
+        return do_env
+    padrao = "/Applications/cmux.app/Contents/Resources/bin/cmux"
+    if os.path.exists(padrao):
+        return padrao
+    achado = shutil.which("cmux")
+    if not achado:
+        raise RuntimeError("cmux nao encontrado: abra o cmux ou defina CMUX_BUNDLED_CLI_PATH")
+    return achado
+
+
+def rodar_cmux(*args: str) -> str:
+    env = dict(os.environ, CMUX_QUIET="1")
+    r = subprocess.run([cmux_bin(), *args], capture_output=True, text=True,
+                       env=env, timeout=30)
+    return r.stdout
+
+
+def _ps_eww() -> str:
+    """Uma linha por processo claude, com o environment anexado."""
+    base = subprocess.run(["ps", "-A", "-ww", "-o", "pid=,command="],
+                          capture_output=True, text=True).stdout
+    linhas = []
+    for linha in base.splitlines():
+        if "/.local/bin/claude" not in linha or " daemon run" in linha:
+            continue
+        if "grep " in linha:
+            continue
+        pid = linha.split()[0]
+        env = subprocess.run(["ps", "eww", "-o", "command=", "-p", pid],
+                             capture_output=True, text=True).stdout.replace("\n", " ")
+        linhas.append(pid + " " + env)
+    return "\n".join(linhas)
+
+
+def ler_estado(raiz_projetos: Path = RAIZ_PROJETOS) -> Estado:
+    """Estado real agora: estrutura do cmux + vinculos vindos dos processos."""
+    estado = Estado(janelas=parse_tree(rodar_cmux("tree", "--all", "--id-format", "both")))
+    mapa = parse_processos(_ps_eww())
+
+    cwds: Dict[str, str] = {}
+    for info in mapa.values():
+        cwd = resolver_cwd(info["pid"])
+        if cwd:
+            cwds[info["pid"]] = cwd
+    aplicar_processos(estado, mapa, cwds)
+
+    for *_, aba in estado.todas_abas():
+        if not aba.sessao:
+            continue
+        caminho = localizar_transcript(aba.sessao, raiz_projetos)
+        if caminho:
+            st = caminho.stat()
+            aba.transcript = {"path": str(caminho), "kb": st.st_size // 1024,
+                              "mtime": st.st_mtime}
+            if not aba.cwd:
+                aba.cwd = cwd_do_transcript(caminho)
+
+    marcar_estagnadas(estado, agora=time.time())
+    return estado
