@@ -12,8 +12,10 @@ sessao passa a gravar sob outro id. Por isso ele entra por ultimo e apenas
 preenche lacunas.
 """
 from dataclasses import dataclass, field
-from typing import Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
+import os
 import re
+import subprocess
 
 
 @dataclass
@@ -105,3 +107,67 @@ def parse_tree(texto: str) -> List[Janela]:
                 url=url.group(1) if url else None,
             ))
     return janelas
+
+
+_RE_SESSAO = re.compile(r"--(?:resume|session-id)\s+([0-9a-f-]{36})")
+_RE_SURFACE = re.compile(r"CMUX_SURFACE_ID=([0-9A-F-]{36})")
+
+
+def parse_processos(saida_ps: str) -> Dict[str, dict]:
+    """Mapeia surface_uuid -> {sessao, pid} a partir de `ps eww` com env anexado.
+
+    Ignora processos auxiliares (daemon, bg-pty-host, bg-spare): eles herdam
+    CMUX_SURFACE_ID e roubariam a aba da sessao real.
+    """
+    mapa: Dict[str, dict] = {}
+    for linha in saida_ps.splitlines():
+        if "/.local/bin/claude" not in linha:
+            continue
+        if " daemon run" in linha or "bg-pty-host" in linha or "bg-spare" in linha:
+            continue
+        m_sess = _RE_SESSAO.search(linha)
+        m_surf = _RE_SURFACE.search(linha)
+        if not (m_sess and m_surf):
+            continue
+        mapa[m_surf.group(1)] = {"sessao": m_sess.group(1), "pid": linha.split()[0]}
+    return mapa
+
+
+def resolver_cwd(pid: str) -> Optional[str]:
+    """Diretorio real do processo, com o symlink ja resolvido pelo kernel."""
+    try:
+        saida = subprocess.run(
+            ["lsof", "-a", "-p", pid, "-d", "cwd", "-Fn"],
+            capture_output=True, text=True, timeout=10,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    for linha in saida.splitlines():
+        if linha.startswith("n"):
+            return os.path.realpath(linha[1:])
+    return None
+
+
+def aplicar_processos(estado: Estado, mapa: Dict[str, dict], cwds: Dict[str, str]) -> None:
+    """Sobrescreve o vinculo com o que o processo diz. Fato vence intencao."""
+    for *_, aba in estado.todas_abas():
+        info = mapa.get(aba.uuid)
+        if not info:
+            continue
+        aba.sessao = info["sessao"]
+        aba.fonte = "processo"
+        cwd = cwds.get(info["pid"])
+        if cwd:
+            aba.cwd = cwd
+
+
+def detectar_duplicatas(mapa: Dict[str, dict]) -> List[str]:
+    """Sessoes presentes em mais de uma aba — estado anomalo.
+
+    Nao desarmar nem subir essas: escrever binding em duas abas para a mesma
+    sessao produziria instancias competindo pelo mesmo transcript.
+    """
+    contagem: Dict[str, int] = {}
+    for info in mapa.values():
+        contagem[info["sessao"]] = contagem.get(info["sessao"], 0) + 1
+    return sorted(s for s, n in contagem.items() if n > 1)
