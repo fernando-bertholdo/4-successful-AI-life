@@ -1,0 +1,13 @@
+{
+  "name": "cmux-hibernate",
+  "version": "0.1.0",
+  "description": "Hibernate and restore Claude Code sessions across cmux workspaces, freeing memory without losing your environment",
+  "author": {
+    "name": "Fernando Bertholdo",
+    "url": "https://github.com/fernando-bertholdo"
+  },
+  "repository": "https://github.com/fernando-bertholdo/4-successful-AI-life",
+  "license": "MIT",
+  "keywords": ["cmux", "session", "restore", "hibernate", "memory", "workspace"],
+  "skills": "./skills/"
+}

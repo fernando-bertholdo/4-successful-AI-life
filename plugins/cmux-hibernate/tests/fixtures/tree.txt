@@ -1,0 +1,66 @@
+window window:1 A0000000-0000-4000-8000-000000000000
+├── workspace workspace:1 A0000001-0000-4000-8000-000000000001 "workspace 0" [selected]
+│   └── pane pane:1 A0000002-0000-4000-8000-000000000002 [focused]
+│       ├── surface surface:2 A0000003-0000-4000-8000-000000000003 [terminal] "✳ tarefa 1" [selected] tty=ttys002
+│       ├── surface surface:3 A0000004-0000-4000-8000-000000000004 [terminal] "✳ tarefa 2" tty=ttys014
+│       ├── surface surface:4 A0000005-0000-4000-8000-000000000005 [terminal] "✳ tarefa 3" tty=ttys035
+│       └── surface surface:5 A0000006-0000-4000-8000-000000000006 [terminal] "✳ tarefa 4" tty=ttys036
+└── workspace workspace:2 A0000007-0000-4000-8000-000000000007 "workspace 5"
+    ├── pane pane:2 A0000008-0000-4000-8000-000000000008 [focused]
+    │   ├── surface surface:6 A0000009-0000-4000-8000-000000000009 [terminal] "✳ tarefa 6" tty=ttys027
+    │   ├── surface surface:7 A000000A-0000-4000-8000-00000000000A [terminal] "✳ tarefa 7" [selected] tty=ttys017
+    │   └── surface surface:8 A000000B-0000-4000-8000-00000000000B [terminal] "✳ tarefa 8" tty=ttys034
+    └── pane pane:3 A000000C-0000-4000-8000-00000000000C
+        └── surface surface:9 A000000D-0000-4000-8000-00000000000D [browser] "workspace 9" [selected] https://claude.ai/code/artifact/50000000-0000-4000-8000-000000000000
+window window:3 A000000E-0000-4000-8000-00000000000E [current] ◀ active
+├── workspace workspace:14 A000000F-0000-4000-8000-00000000000F "workspace 10" [selected] ◀ active
+│   └── pane pane:18 A0000010-0000-4000-8000-000000000010 [focused] ◀ active
+│       └── surface surface:59 A0000011-0000-4000-8000-000000000011 [terminal] "✳ tarefa 11" [selected] ◀ active tty=ttys023
+├── workspace workspace:10 A0000012-0000-4000-8000-000000000012 "workspace 12"
+│   └── pane pane:11 A0000013-0000-4000-8000-000000000013 [focused]
+│       ├── surface surface:32 A0000014-0000-4000-8000-000000000014 [terminal] "workspace 13" [selected] tty=ttys034
+│       ├── surface surface:45 A0000015-0000-4000-8000-000000000015 [terminal] "✳ tarefa 14" tty=ttys015
+│       └── surface surface:34 A0000016-0000-4000-8000-000000000016 [terminal] "✳ tarefa 15" tty=ttys033
+├── workspace workspace:9 A0000017-0000-4000-8000-000000000017 "workspace 16"
+│   └── pane pane:10 A0000018-0000-4000-8000-000000000018 [focused]
+│       ├── surface surface:27 A0000019-0000-4000-8000-000000000019 [terminal] "✳ tarefa 17" tty=ttys021
+│       ├── surface surface:28 A000001A-0000-4000-8000-00000000001A [terminal] "✳ tarefa 18" [selected] tty=ttys022
+│       ├── surface surface:30 A000001B-0000-4000-8000-00000000001B [terminal] "✳ tarefa 19" tty=ttys024
+│       ├── surface surface:43 A000001C-0000-4000-8000-00000000001C [terminal] "✳ tarefa 20" tty=ttys039
+│       ├── surface surface:42 A000001D-0000-4000-8000-00000000001D [terminal] "✳ tarefa 21" tty=ttys038
+│       └── surface surface:31 A000001E-0000-4000-8000-00000000001E [terminal] "✳ tarefa 22" tty=ttys004
+└── workspace workspace:8 A000001F-0000-4000-8000-00000000001F "workspace 23"
+    └── pane pane:9 A0000020-0000-4000-8000-000000000020 [focused]
+        ├── surface surface:22 A0000021-0000-4000-8000-000000000021 [terminal] "workspace 24" tty=ttys011
+        ├── surface surface:23 A0000022-0000-4000-8000-000000000022 [terminal] "✳ tarefa 25" tty=ttys028
+        ├── surface surface:24 A0000023-0000-4000-8000-000000000023 [terminal] "✳ tarefa 26" tty=ttys032
+        └── surface surface:26 A0000024-0000-4000-8000-000000000024 [terminal] "✳ tarefa 27" [selected] tty=ttys014
+window window:2 A0000025-0000-4000-8000-000000000025
+├── workspace workspace:3 A0000026-0000-4000-8000-000000000026 "workspace 28" [selected]
+│   └── pane pane:4 A0000027-0000-4000-8000-000000000027 [focused]
+│       ├── surface surface:10 A0000028-0000-4000-8000-000000000028 [terminal] "dev@devbox:~/projects/proj-x" tty=ttys032
+│       ├── surface surface:11 A0000029-0000-4000-8000-000000000029 [terminal] "✳ tarefa 29" tty=ttys006
+│       ├── surface surface:12 A000002A-0000-4000-8000-00000000002A [terminal] "⠐ tarefa 30" [selected] ◀ here tty=ttys042
+│       └── surface surface:13 A000002B-0000-4000-8000-00000000002B [terminal] "workspace 31" tty=ttys008
+├── workspace workspace:4 A000002C-0000-4000-8000-00000000002C "workspace 32"
+│   └── pane pane:5 A000002D-0000-4000-8000-00000000002D [focused]
+│       ├── surface surface:16 A000002E-0000-4000-8000-00000000002E [terminal] "✳ tarefa 33" tty=ttys045
+│       ├── surface surface:53 A000002F-0000-4000-8000-00000000002F [terminal] "✳ tarefa 34" tty=ttys021
+│       ├── surface surface:58 A0000030-0000-4000-8000-000000000030 [terminal] "✳ tarefa 35" [selected] tty=ttys012
+│       ├── surface surface:52 A0000031-0000-4000-8000-000000000031 [terminal] "✳ tarefa 36" tty=ttys020
+│       ├── surface surface:41 A0000032-0000-4000-8000-000000000032 [terminal] "✳ tarefa 37" tty=ttys037
+│       └── surface surface:48 A0000033-0000-4000-8000-000000000033 [terminal] "✳ tarefa 38" tty=ttys002
+├── workspace workspace:5 A0000034-0000-4000-8000-000000000034 "workspace 39"
+│   └── pane pane:6 A0000035-0000-4000-8000-000000000035 [focused]
+│       └── surface surface:18 A0000036-0000-4000-8000-000000000036 [terminal] "✳ tarefa 40" [selected] tty=ttys001
+├── workspace workspace:6 A0000037-0000-4000-8000-000000000037 "workspace 41"
+│   └── pane pane:7 A0000038-0000-4000-8000-000000000038 [focused]
+│       ├── surface surface:19 A0000039-0000-4000-8000-000000000039 [terminal] "✳ tarefa 42" tty=ttys026
+│       └── surface surface:20 A000003A-0000-4000-8000-00000000003A [terminal] "✳ tarefa 43" [selected] tty=ttys005
+└── workspace workspace:7 A000003B-0000-4000-8000-00000000003B "workspace 44"
+    └── pane pane:8 A000003C-0000-4000-8000-00000000003C [focused]
+        └── surface surface:21 A000003D-0000-4000-8000-00000000003D [terminal] "dev@devbox:~/projects/proj-x" [selected] tty=ttys034
+window window:4 A000003E-0000-4000-8000-00000000003E
+└── workspace workspace:13 A000003F-0000-4000-8000-00000000003F "workspace 45" [selected]
+    └── pane pane:15 A0000040-0000-4000-8000-000000000040 [focused]
+        └── surface surface:40 A0000041-0000-4000-8000-000000000041 [terminal] "✳ tarefa 46" [selected] tty=ttys004
