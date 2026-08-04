@@ -140,6 +140,59 @@ def parse_processos(saida_ps: str) -> Dict[str, dict]:
     return mapa
 
 
+def surfaces_com_processo(saida_ps: str) -> Dict[str, str]:
+    """surface_uuid -> pid de TODO processo claude com aba, tenha ou nao id no argv.
+
+    O cmux retoma por titulo quando a sessao foi renomeada
+    (`--resume meu-titulo` em vez de `--resume <uuid>`), e nesses casos o id
+    nao aparece na linha de comando. Estes sao os candidatos a complemento
+    pelo binding.
+    """
+    vivos: Dict[str, str] = {}
+    for linha in saida_ps.splitlines():
+        if "/.local/bin/claude" not in linha:
+            continue
+        if " daemon run" in linha or "bg-pty-host" in linha or "bg-spare" in linha:
+            continue
+        m_surf = _RE_SURFACE.search(linha)
+        if m_surf:
+            vivos[m_surf.group(1)] = linha.split()[0]
+    return vivos
+
+
+def binding_de(janela: str, workspace: str, surface: str) -> Optional[dict]:
+    """Le o resumeBinding de uma aba. Intencao, nao fato — usar so' como complemento."""
+    try:
+        dados = json.loads(rodar_cmux(
+            "surface", "resume", "get", "--json",
+            "--window", janela, "--workspace", workspace, "--surface", surface))
+    except (ValueError, RuntimeError):
+        return None
+    b = dados.get("resume_binding")
+    return b if b and b.get("kind") == "claude" else None
+
+
+def complementar_por_binding(estado: Estado, vivos: Dict[str, str]) -> int:
+    """Preenche abas que tem processo vivo mas cujo id nao apareceu no argv.
+
+    Marca fonte='binding' para deixar explicito que o dado e' menos confiavel
+    que o dos processos.
+    """
+    preenchidas = 0
+    for janela, ws, _pane, aba in estado.todas_abas():
+        if aba.sessao or aba.uuid not in vivos:
+            continue
+        b = binding_de(janela.uuid, ws.uuid, aba.uuid)
+        if not b or not b.get("checkpoint_id"):
+            continue
+        aba.sessao = b["checkpoint_id"]
+        aba.fonte = "binding"
+        if not aba.cwd:
+            aba.cwd = resolver_cwd(vivos[aba.uuid]) or b.get("cwd")
+        preenchidas += 1
+    return preenchidas
+
+
 def resolver_cwd(pid: str) -> Optional[str]:
     """Diretorio real do processo, com o symlink ja resolvido pelo kernel."""
     try:
@@ -259,7 +312,8 @@ def _ps_eww() -> str:
 def ler_estado(raiz_projetos: Path = RAIZ_PROJETOS) -> Estado:
     """Estado real agora: estrutura do cmux + vinculos vindos dos processos."""
     estado = Estado(janelas=parse_tree(rodar_cmux("tree", "--all", "--id-format", "both")))
-    mapa = parse_processos(_ps_eww())
+    saida_ps = _ps_eww()
+    mapa = parse_processos(saida_ps)
 
     cwds: Dict[str, str] = {}
     for info in mapa.values():
@@ -267,6 +321,10 @@ def ler_estado(raiz_projetos: Path = RAIZ_PROJETOS) -> Estado:
         if cwd:
             cwds[info["pid"]] = cwd
     aplicar_processos(estado, mapa, cwds)
+
+    # Abas com processo vivo cujo id nao apareceu no argv (retomadas por titulo):
+    # o binding e' o unico caminho, e fica marcado como tal.
+    complementar_por_binding(estado, surfaces_com_processo(saida_ps))
 
     for *_, aba in estado.todas_abas():
         if not aba.sessao:

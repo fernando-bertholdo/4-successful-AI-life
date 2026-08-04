@@ -70,3 +70,26 @@ class TestProcessos(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRetomadaPorTitulo(unittest.TestCase):
+    """O cmux retoma por titulo quando a sessao foi renomeada, e ai o id nao
+    aparece no argv. Sem isso, a aba fica invisivel ao snapshot."""
+
+    LINHA = ("3149 /Users/x/.local/bin/claude --dangerously-skip-permissions "
+             "--resume meu-titulo: com espacos e dois pontos "
+             "CMUX_SURFACE_ID=3A237047-5F4A-4A93-8805-FCB87453FE44")
+
+    def test_parse_processos_nao_reconhece(self):
+        self.assertEqual(parse_processos(self.LINHA), {})
+
+    def test_surfaces_com_processo_reconhece(self):
+        from lib.cmux_state import surfaces_com_processo
+        vivos = surfaces_com_processo(self.LINHA)
+        self.assertEqual(vivos, {"3A237047-5F4A-4A93-8805-FCB87453FE44": "3149"})
+
+    def test_surfaces_com_processo_ignora_daemon(self):
+        from lib.cmux_state import surfaces_com_processo
+        linha = ("1 /Users/x/.local/bin/claude daemon run "
+                 "CMUX_SURFACE_ID=AAAAAAAA-1111-2222-3333-444444444444")
+        self.assertEqual(surfaces_com_processo(linha), {})
