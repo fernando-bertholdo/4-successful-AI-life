@@ -173,7 +173,7 @@ Opções: `--snapshot <path>` (usa um snapshot específico em vez do mais recent
       "panes": [{ "uuid": "...", "abas": [{
         "uuid": "...", "ref": "surface:27", "tipo": "terminal",
         "titulo": "cloud-migration: execute PR-0 baseline proof",
-        "sessao": "4f8b05f3-...", "cwd": "/Users/.../Lass/projeto-alfa",
+        "sessao": "4f8b05f3-...", "cwd": "/Users/dev/projects/projeto-alfa",
         "fonte": "processo",
         "transcript": { "path": "...jsonl", "kb": 21312, "mtime": "2026-08-04T09:11:02" },
         "estagnada": false

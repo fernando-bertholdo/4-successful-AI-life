@@ -13,7 +13,9 @@ o sentido.
 Uso: python3 sanitize.py
 """
 from pathlib import Path
+import getpass
 import re
+import socket
 
 DIR = Path(__file__).resolve().parent
 RAW = DIR / ".raw"
@@ -98,14 +100,19 @@ def main():
         texto = RE_TITULO.sub(
             lambda m: '"{}"'.format(sanitizar_titulo(m.group(1), rotulos)), texto)
         texto = RE_PATH.sub(lambda m: substituir_caminho(m, paths), texto)
-        # varredura final: nenhum vestigio de identidade real
-        texto = texto.replace("dev", "dev").replace("devbox", "devbox")
+        # varredura final: usuario e host da maquina, lidos do ambiente para nao
+        # ficarem hardcoded num repositorio publico
+        texto = texto.replace(getpass.getuser(), "dev")
+        host = socket.gethostname().split(".")[0]
+        texto = texto.replace(host, "devbox")
+        if host.endswith("-MacBook") or "-" in host:
+            texto = texto.replace(host.split("-")[0], "dev")
 
         (DIR / nome).write_text(texto)
         print("  {} -> {} linhas".format(nome, len(texto.splitlines())))
 
     print("\nfixtures sanitizadas. Confira antes de commitar:")
-    print("  grep -iE 'fernando|lass|ftb-|Documents' {}/*.txt".format(DIR))
+    print("  grep -inE \"$(whoami)|$(hostname -s)|/Documents/\" {}/*.txt".format(DIR))
 
 
 if __name__ == "__main__":
