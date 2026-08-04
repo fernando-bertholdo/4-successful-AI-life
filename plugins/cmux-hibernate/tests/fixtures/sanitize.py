@@ -49,6 +49,19 @@ def caminho(i):
     return "/Users/dev/projects/proj-{}".format(i)
 
 
+# Caminhos estruturais: identificam o binario e a arvore de dados do Claude Code.
+# Nao carregam informacao sensivel e os parsers dependem deles — preservar.
+ESTRUTURAIS = (".local/bin/claude", ".local/share/claude", ".claude/")
+
+
+def substituir_caminho(m, mapa):
+    original = m.group(0)
+    if any(marca in original for marca in ESTRUTURAIS):
+        # troca so o nome do usuario, mantendo o resto do caminho intacto
+        return re.sub(r"^/Users/[A-Za-z0-9_.-]+", "/Users/dev", original)
+    return mapa.de(original)
+
+
 def sanitizar_titulo(texto, mapa_ws):
     """Preserva o formato do titulo, troca o conteudo."""
     if not texto:
@@ -84,7 +97,7 @@ def main():
         texto = RE_UUID_MIN.sub(lambda m: mino.de(m.group(0)), texto)
         texto = RE_TITULO.sub(
             lambda m: '"{}"'.format(sanitizar_titulo(m.group(1), rotulos)), texto)
-        texto = RE_PATH.sub(lambda m: paths.de(m.group(0)), texto)
+        texto = RE_PATH.sub(lambda m: substituir_caminho(m, paths), texto)
         # varredura final: nenhum vestigio de identidade real
         texto = texto.replace("dev", "dev").replace("devbox", "devbox")
 
