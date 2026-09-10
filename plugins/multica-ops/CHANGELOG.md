@@ -7,6 +7,26 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.1] — 2026-09-10
+
+### Added
+
+- **What wakes an agent when you comment.** The reference documents the `mention://` links but
+  not the implicit routing, which is the expensive surprise: a plain comment with no mention can
+  start a run. Verified against Multica's product documentation and the server's comment-routing
+  code — a first token of `/note` (case-insensitive) suppresses every trigger including explicit
+  mentions; `@all` cancels the assignee fallback and never reaches agents; otherwise routing
+  follows the discussion, with a top-level comment falling back to the issue's agent assignee (a
+  squad's leader), while a plain reply to a member's comment does not; the fallback **fires in
+  any status, closed issues included**; and it is skipped when the assignee has no runtime, is
+  archived, cannot be invoked by the author, or already holds a pending run that consecutive
+  comments coalesce into.
+- Stated plainly that `issue comment add` has **no `--no-start`** — the flag exists only on
+  `issue status`, `issue assign` and `issue update`. A widely-repeated search-engine answer
+  claims otherwise.
+
+---
+
 ## [0.2.0] — 2026-09-10
 
 ### Changed

@@ -1,6 +1,6 @@
 {
   "name": "multica-ops",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "The layer around the official multica-cli skill — desktop-app binary discovery, the bridged Cowork/claude.ai route, shell and JSON shapes that bite, platform limits, and how to work a board governed by a repository that versions its Multica configuration.",
   "author": {
     "name": "Fernando Bertholdo",

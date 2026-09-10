@@ -44,7 +44,7 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 | [**prompt-master**](./plugins/prompt-master/) | `1.0.0+upstream-1.7.0` | Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. |
 | [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.0.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
 | [**enhanced-planning**](./plugins/enhanced-planning/) | `1.0.0+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
-| [**multica-ops**](./plugins/multica-ops/) | `0.2.0` | Companion to Multica's official CLI skill — desktop-app binary discovery, the bridged-session route, the shapes and limits the reference omits, and the constraints of a governed board. |
+| [**multica-ops**](./plugins/multica-ops/) | `0.2.1` | Companion to Multica's official CLI skill — desktop-app binary discovery, the bridged-session route, the shapes and limits the reference omits, and the constraints of a governed board. |
 
 <details>
 <summary><b>🎨 ui-excellence</b> — UI/UX craft, framework-agnostic</summary>

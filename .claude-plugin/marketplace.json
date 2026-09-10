@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
-    "version": "0.8.1"
+    "version": "0.8.2"
   },
   "plugins": [
     {
@@ -133,7 +133,7 @@
       "name": "multica-ops",
       "source": "./plugins/multica-ops",
       "description": "Companion to the official multica-cli skill, not a replacement: where the binary hides in a desktop-app install, how to reach it from a bridged Cowork/claude.ai session, the shell and JSON shapes the reference does not state, the platform limits, and the constraints of working a board governed by a repository that versions its Multica configuration.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "license": "MIT",
       "category": "productivity",
       "keywords": [

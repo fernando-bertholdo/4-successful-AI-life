@@ -110,7 +110,39 @@ Measured on v0.4.42, against reference v1.1.0:
   portable choice (stdin mangles non-ASCII on Windows) — on macOS, stdin sidesteps the
   working-directory restriction and leaves no file to clean up.
 
-## 5. Platform limits worth knowing before you promise something
+## 5. What wakes an agent when you comment
+
+The reference covers the `mention://` links. It does not cover the **implicit** routing, and
+that is what costs money by accident: a plain comment carrying no mention at all can start a
+run. These rules come from Multica's own product documentation and the server's comment-routing
+code, not from inference.
+
+- A comment whose **first whitespace-delimited token is `/note`** (case-insensitive) triggers
+  nothing at all — mentions inside it included, because the check runs before mentions are
+  parsed. It posts as an ordinary comment and the token stays in the body. This is the
+  one-command way to write on an issue without waking anyone.
+- `@all` notifies every member and switches off the assignee fallback for that comment. It does
+  not reach agents: agents have no inbox.
+- With neither of those, routing follows the discussion: a reply to an agent's comment goes to
+  that agent; a reply inside a discussion an agent already joined stays with that agent; a
+  **top-level** comment matching neither goes to the issue's **agent assignee** (the leader,
+  when the assignee is a squad). A plain reply to a *member's* comment does not fall back to the
+  assignee. Any explicit mention — including of a member — cancels the fallback.
+- **The assignee fallback fires in any status, closed issues included.** Comments are
+  conversational and follow-up questions on finished work are expected behaviour. A terminal
+  status is not a safe place to write.
+- It is skipped when the assignee has no runtime, is archived, you cannot invoke it, or it
+  already holds a pending run on that issue — consecutive comments coalesce into the waiting run
+  rather than starting a second one.
+- `issue comment add` has **no `--no-start`**. That flag exists on `issue status`, `issue assign`
+  and `issue update`, and nowhere else. Anything claiming otherwise — including a confident
+  answer from a search engine — is wrong; `--help` settles it in one second.
+
+So the recipe for commenting on an agent-assigned issue without starting a run is a `/note`
+prefix, not an unassign-comment-reassign dance. The dance works, but it mutates ownership for
+the duration and is not needed.
+
+## 6. Platform limits worth knowing before you promise something
 
 - **Workspace isolation is real.** An agent running in one workspace cannot read another; only
   a human profile's CLI sees more than one. Cross-workspace search, dependencies and any
@@ -130,7 +162,7 @@ Measured on v0.4.42, against reference v1.1.0:
   `--subscriber`. Sub-hourly expressions are writable; whether the server honours a given
   granularity is a test, not a promise.
 
-## 6. When a repository governs the board
+## 7. When a repository governs the board
 
 A team running Multica seriously keeps its agent instructions, workspace skills, workspace
 context and project descriptions **versioned in a repository** and pushes them to the server
@@ -173,7 +205,7 @@ Before writing anything into such a repo, ask yourself the two questions it exis
 does this change behaviour on the server (then it needs a deployment, tracked), and does it
 assume an agent can see a workspace it cannot?
 
-## 7. Conduct on the board
+## 8. Conduct on the board
 
 The reference covers the mechanics of side effects. These are the habits around them:
 
