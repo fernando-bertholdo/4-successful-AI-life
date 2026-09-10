@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
-    "version": "0.7.0"
+    "version": "0.8.0"
   },
   "plugins": [
     {
@@ -128,6 +128,26 @@
         "hibernate",
         "memory"
       ]
+    },
+    {
+      "name": "multica-ops",
+      "source": "./plugins/multica-ops",
+      "description": "Operate a Multica board from Claude Code — where the CLI lives, how to discover profiles and workspace ids instead of hardcoding them, safe defaults (--no-start, no comments on unscoped issues, promotion and deploy left to a human), and the measured CLI/shell gotchas that have produced real defects.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "multica",
+        "board",
+        "issues",
+        "cli",
+        "agents",
+        "project-management",
+        "claude-code"
+      ],
+      "author": {
+        "name": "Fernando Bertholdo"
+      }
     }
   ]
 }

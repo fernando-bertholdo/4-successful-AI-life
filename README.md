@@ -29,6 +29,7 @@ Inside any Claude Code session, add the marketplace and install the plugins you 
 /plugin install prompt-master@4-successful-ai-life
 /plugin install generate-session-prompt@4-successful-ai-life
 /plugin install enhanced-planning@4-successful-ai-life
+/plugin install multica-ops@4-successful-ai-life
 /reload-plugins
 ```
 
@@ -43,6 +44,7 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 | [**prompt-master**](./plugins/prompt-master/) | `1.0.0+upstream-1.7.0` | Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. |
 | [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.0.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
 | [**enhanced-planning**](./plugins/enhanced-planning/) | `1.0.0+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
+| [**multica-ops**](./plugins/multica-ops/) | `0.1.0` | Operating manual for a Multica board — CLI discovery, safe defaults, and the measured gotchas. Ships no board-specific ids. |
 
 <details>
 <summary><b>🎨 ui-excellence</b> — UI/UX craft, framework-agnostic</summary>
@@ -139,6 +141,23 @@ Vendored from [`tech-product-template`](https://github.com/fernando-bertholdo/te
 
 </details>
 
+<details>
+<summary><b>🗂️ multica-ops</b> — talk to a Multica board without breaking it</summary>
+
+<br>
+
+[Multica](https://multica.ai) ships its CLI inside the desktop app, off `PATH`, with output shapes that are not what you would guess and commands that dispatch agent runs as a side effect. This skill is what a session should read first.
+
+It covers where the binary is, how to discover the profile and workspace ids at runtime instead of hardcoding them, the two routes (direct from Claude Code, or through the desktop bridge from Cowork/claude.ai), and safe defaults — `--no-start` on every status change, no comments on unscoped issues, promotion and deploy reserved for a human.
+
+```
+/multica-ops:board
+```
+
+Nothing board-specific ships in the plugin: no workspace ids, no project names, no machine paths. Point `MULTICA_PLAYBOOK` at the repository that versions your Multica configuration and the skill defers to its manifests and deploy tooling. → [Plugin README](./plugins/multica-ops/README.md)
+
+</details>
+
 ## 📦 Installation
 
 The [Quick Start](#-quick-start) above is the recommended path — install from GitHub. Other ways to install:
@@ -204,7 +223,8 @@ To auto-install in a project, add to `.claude/settings.json`:
     "smart-session-rename-cc@4-successful-ai-life": true,
     "prompt-master@4-successful-ai-life": true,
     "generate-session-prompt@4-successful-ai-life": true,
-    "enhanced-planning@4-successful-ai-life": true
+    "enhanced-planning@4-successful-ai-life": true,
+    "multica-ops@4-successful-ai-life": true
   }
 }
 ```
