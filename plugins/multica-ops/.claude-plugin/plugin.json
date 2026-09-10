@@ -1,0 +1,13 @@
+{
+  "name": "multica-ops",
+  "version": "0.1.0",
+  "description": "Operate a Multica board from Claude Code — safe defaults, discovery instead of hardcoded ids, and the measured CLI and shell gotchas that cost real sessions.",
+  "author": {
+    "name": "Fernando Bertholdo",
+    "url": "https://github.com/fernando-bertholdo"
+  },
+  "repository": "https://github.com/fernando-bertholdo/4-successful-AI-life",
+  "license": "MIT",
+  "keywords": ["multica", "board", "issues", "cli", "agents", "project-management", "claude-code"],
+  "skills": "./skills/"
+}
