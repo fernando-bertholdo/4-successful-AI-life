@@ -7,6 +7,17 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.3] — 2026-09-19
+
+### Fixed
+
+- The pre-merge note in §8 quoted "53 s" from a hand-off document; the primary sources
+  (`gh pr view --json mergedAt`, `issue runs`, the issues' `created_at`) give 2 s from the
+  merge to the conductor's next run and 150 s to the first follow-up issue. Corrected — the
+  same day the plugin started telling sessions to measure before they write a number.
+
+---
+
 ## [0.2.2] — 2026-09-19
 
 ### Added
@@ -20,8 +31,8 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   covers neither command substitution nor a Python heredoc.
 - **Pre-merge check for a human-conducted PR:** `issue runs` and `issue timeline` on the issue
   the PR closes, because an agent conductor may be alive on the same PR — on 18/09/2026 a human session
-  merged while the conductor agent was still running review rounds, and the agent's next
-  round landed 53 s after the merge and opened two follow-up issues.
+  merged while the conductor agent was still running review rounds; its next run started 2 s
+  after the merge and opened two follow-up issues 150 s after it.
 - **`/note` addresses nothing to anyone.** §5 already said it wakes no one; §8 now says the
   other half: a pending item that lives only in a `/note` is written to nobody, and goes to a
   checkbox with a `verify:` in the description or to an issue of its own.
