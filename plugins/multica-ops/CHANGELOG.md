@@ -7,6 +7,18 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.4] — 2026-09-19
+
+### Fixed
+
+- 0.2.3 replaced "53 s" with "2 s", and the 2 s was a different event: the stage barrier
+  waking the conductor, on another issue. Measured at the source: barrier at 2 s, verdict at
+  52 s (53 s from the merge commit), follow-up issues at 150 s and 158 s. Both facts now
+  stand, each with its event — the lesson being that a reviewer's correction is a claim to
+  verify, not a fact to apply.
+
+---
+
 ## [0.2.3] — 2026-09-19
 
 ### Fixed
@@ -31,8 +43,9 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   covers neither command substitution nor a Python heredoc.
 - **Pre-merge check for a human-conducted PR:** `issue runs` and `issue timeline` on the issue
   the PR closes, because an agent conductor may be alive on the same PR — on 18/09/2026 a human session
-  merged while the conductor agent was still running review rounds; its next run started 2 s
-  after the merge and opened two follow-up issues 150 s after it.
+  merged while the conductor agent was still running review rounds; the stage barrier woke it
+  2 s after the merge, the verdict 52 s after, and it opened two follow-up issues at 150 s and
+  158 s.
 - **`/note` addresses nothing to anyone.** §5 already said it wakes no one; §8 now says the
   other half: a pending item that lives only in a `/note` is written to nobody, and goes to a
   checkbox with a `verify:` in the description or to an issue of its own.
