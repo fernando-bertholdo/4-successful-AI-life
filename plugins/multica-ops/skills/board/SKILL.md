@@ -239,9 +239,10 @@ The reference covers the mechanics of side effects. These are the habits around 
   a review round nobody asked for, a conductor about to merge — and two conductors on one PR
   is how a merge lands under the human's login with no record of who decided it. On
   18/09/2026 a human session merged a PR while the conductor agent was still running review
-  rounds on it. The stage barrier woke the conductor 2 s after the merge with no mention at
-  all; the review verdict landed 52 s after the merge and woke it again; it opened two
-  follow-up issues at 150 s and 158 s, from a verdict that was no longer its to act on
+  rounds on it. The stage barrier woke the conductor 2 s after the merge — by the platform's
+  own mention in a `system` comment, not by anyone's verdict; the review verdict landed 52 s
+  after the merge and woke it again; it opened two follow-up issues at 150 s and 158 s, from
+  a verdict that was no longer its to act on
   (measured at the source on 19/09/2026: the PR's `mergedAt`, `issue comment list` on the
   two issues involved, the issues' `created_at`).
 - **`/note` writes without waking anyone, and that is all it does: it addresses nothing to

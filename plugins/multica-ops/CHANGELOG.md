@@ -7,6 +7,17 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.5] — 2026-09-19
+
+### Fixed
+
+- The stage barrier does not wake the conductor "with no mention at all": the barrier
+  comment is posted by the platform (`author_type: system`) and opens with a mention of the
+  conductor. What the verdict's author cannot control is the platform's mention — which is
+  why removing your own mention is not enough. Measured on the same issue as 0.2.4.
+
+---
+
 ## [0.2.4] — 2026-09-19
 
 ### Fixed
