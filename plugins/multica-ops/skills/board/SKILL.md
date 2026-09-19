@@ -45,7 +45,8 @@ P="${MULTICA_PROFILE:-<one of those>}"
 ```
 
 Record the version next to any claim you make about the surface. The CLI ships changes almost
-daily; everything measured below held on **v0.4.42**.
+daily; everything measured below held on **v0.4.42**, and the control-character note in §4 on
+**v0.4.44**.
 
 ## 2. Two routes, and only one is direct
 
@@ -95,8 +96,16 @@ Measured on v0.4.42, against reference v1.1.0:
 - `issue children --output json` returns `{stages, total, unstaged}`, not an array. Iterate
   `.stages[]` and check `(.unstaged|length) == 0`; a bare `.[]` walks three heterogeneous
   values without erroring.
-- `issue comment list` returns a bare list, not `{comments: […]}`, and bodies can carry raw
-  control characters — strip them before parsing.
+- `issue comment list` returns a bare list, not `{comments: […]}`.
+- **Any string field a person typed can carry raw control characters** — a comment body, an
+  issue description, an agent's instructions — and a strict JSON parser fails on the first
+  one. It is intermittent, which is worse than constant: measured on v0.4.44, five outputs
+  (`issue get`, `issue list`, `issue comment list`, `agent get`, `project get`) parsed
+  strictly, and the sessions of 18–19/09/2026 hit bodies that did not. Parse leniently by
+  default, because it costs nothing on clean output and a strict parser dying on the one
+  body that carries a control character, in the middle of a batch, is what breaks a chain:
+  `json.loads(raw, strict=False)` in Python, or strip `[\x00-\x08\x0b\x0c\x0e-\x1f]`
+  before a strict parser or before `jq`.
 - `autopilot get` wraps its payload in `{"autopilot": {…}}`; the other `get` commands do not.
 - `status_category` collapses custom review statuses together; only `.status` separates them,
   and `status_name` comes back empty for custom statuses inside `children`.
@@ -185,7 +194,10 @@ otherwise:
    name the file, and stop. If the repo ships a deploy script, its dry-run is yours to use and
    its apply mode is not.
 3. **Ids come from the manifest, never from memory or from a listing you skimmed.** The
-   manifest is generated from the server and diffable; that is the point of it.
+   manifest is generated from the server and diffable; that is the point of it. Read it by
+   the key it actually uses: agents and skills are keyed by `name:`, projects and autopilots
+   by **`title:`** — a `grep 'name: <project>'` finds nothing and says so, which is the good
+   case; the bad case is reaching for a listing instead, or for memory.
 4. **Measure drift before you claim state.** If the repo ships a drift check, run it and read
    its exit code as state, not as failure — "differs" is the normal condition before a
    deployment.
@@ -216,3 +228,21 @@ The reference covers the mechanics of side effects. These are the habits around 
   `issue timeline`. When a session acts, leave a dated note saying so.
 - Never create a registry object — agent, skill, project, autopilot — casually. It will appear
   in no manifest and no drift check will see it.
+- **A write to the board never shares a command chain with a step that can fail.** Verify
+  first — the id resolves, the file exists, the status is what you expect — and then write,
+  as a command of its own. `|| true` on a probe is fine; `|| true` on the write, or a write
+  that runs because the probe before it "succeeded" with garbage, is how a note lands on the
+  wrong issue. In zsh, `set -e` does not cover a command substitution nor a Python heredoc:
+  guard those with an explicit `|| exit 1`.
+- **Before merging a PR that a human session conducted, read `issue runs <ID>` and
+  `issue timeline <ID>` on the issue it closes.** An agent run may be alive on the same PR —
+  a review round nobody asked for, a conductor about to merge — and two conductors on one PR
+  is how a merge lands under the human's login with no record of who decided it. On
+  18/09/2026 a human session merged a PR while the conductor agent was still running review
+  rounds on it; the agent's next round landed 53 s after the merge and opened two follow-up
+  issues the human had not asked for.
+- **`/note` writes without waking anyone, and that is all it does: it addresses nothing to
+  anyone.** A pending item, a follow-up or a correction that lives only in a `/note` is
+  written to nobody — the same failure as a comment on an unscoped item, from the other
+  side. Anything that must be done goes where it will be found: a checkbox with a `verify:`
+  in the issue description, or an issue of its own.

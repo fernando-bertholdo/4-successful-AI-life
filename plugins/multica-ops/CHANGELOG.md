@@ -7,6 +7,27 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.2] — 2026-09-19
+
+### Added
+
+- **The recipes the sessions of 18–19/09/2026 had to discover by failing.** Measured on CLI
+  v0.4.44. Any string field a person typed can carry a raw control character, intermittently
+  (five outputs parsed strictly on the day; earlier sessions hit bodies that did not), so the
+  default is a lenient parse — `json.loads(raw, strict=False)` — rather than a strict one that
+  dies mid-batch. The playbook manifest keys projects and autopilots by `title:`, not `name:`.
+  A board write never shares a command chain with a step that can fail, and in zsh `set -e`
+  covers neither command substitution nor a Python heredoc.
+- **Pre-merge check for a human-conducted PR:** `issue runs` and `issue timeline` on the issue
+  the PR closes, because an agent conductor may be alive on the same PR — on 18/09/2026 a human session
+  merged while the conductor agent was still running review rounds, and the agent's next
+  round landed 53 s after the merge and opened two follow-up issues.
+- **`/note` addresses nothing to anyone.** §5 already said it wakes no one; §8 now says the
+  other half: a pending item that lives only in a `/note` is written to nobody, and goes to a
+  checkbox with a `verify:` in the description or to an issue of its own.
+
+---
+
 ## [0.2.1] — 2026-09-10
 
 ### Added
