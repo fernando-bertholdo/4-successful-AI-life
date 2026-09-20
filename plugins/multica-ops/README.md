@@ -2,7 +2,7 @@
 
 **The layer around [Multica](https://multica.ai)'s official CLI skill — the environment, the shapes, the limits, and the governance.**
 
-Version `0.2.5` · 1 skill · native plugin
+Version `0.2.6` · 1 skill · native plugin
 
 ---
 

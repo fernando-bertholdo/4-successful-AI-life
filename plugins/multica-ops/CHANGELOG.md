@@ -7,6 +7,37 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.6] — 2026-09-20
+
+### Added
+
+- §3: **braces when a variable is followed by anything.** `git show $TB:path` looks up the
+  variable `$TB:path`, not `$TB` — measured 20/09/2026, it produced the nonexistent ref
+  `tech-676-2-17-1k-changelog-local.sh`. Write `"${TB}:path"`.
+- §3: **`tr` pads instead of failing when the sets differ in length.** `tr 'A-Z-' 'a-z'` maps
+  `-` to `z`, so `LAS-114` becomes `lasz114`. On 20/09/2026 this pointed 17 evidence commands at
+  filenames that did not exist and produced 17 false FAIL, one step before they would have been
+  written to seven issues — the concrete argument for §8's rule that a board write never shares
+  a chain with a step that can fail.
+- §4: **an issue's parent is `parent_issue_id`, not `parent_id`.** `parent_id` is real on a
+  *comment*, so reading it on an issue returns `None` rather than erroring and the session
+  concludes the issue is top-level. Measured against LAS-69, which is stage 3 under LAS-40.
+- §5: **reply routing inherits the thread root.** A reply to a member's comment is safe only
+  when the root carries no agent mention; under a root that names an agent, that agent is
+  enqueued even when both comments are a human's and neither mentions anyone. Measured
+  19/09/2026 on CLI v0.4.44: five such replies started five extra Reviewer runs and duplicated
+  a review round.
+
+### Changed
+
+- §3: the pipeline-exit note now carries the measured case (an `&&` chain continued past a gate
+  harness that had printed 4 FAIL, because the exit read was `tail`'s) and the recipe —
+  `OUT="$(cmd 2>&1)"; RC=$?` before any filter, or `set -o pipefail`.
+- §1: the provenance note now separates what was measured on v0.4.42 from what was measured on
+  v0.4.44 between 19 and 20/09/2026.
+
+---
+
 ## [0.2.5] — 2026-09-19
 
 ### Fixed

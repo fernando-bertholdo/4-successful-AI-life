@@ -45,8 +45,9 @@ P="${MULTICA_PROFILE:-<one of those>}"
 ```
 
 Record the version next to any claim you make about the surface. The CLI ships changes almost
-daily; everything measured below held on **v0.4.42**, and the control-character note in §4 on
-**v0.4.44**.
+daily; the output shapes in §4 were first measured on **v0.4.42**, and everything added since —
+the control-character note, the `parent_issue_id` note, the reply-routing rule in §5 — on
+**v0.4.44**, between 19 and 20/09/2026.
 
 ## 2. Two routes, and only one is direct
 
@@ -78,7 +79,23 @@ Mostly zsh, the macOS default:
 - zsh arrays are **1-indexed**: `${A[0]}` is empty, which is how an issue gets created with a
   blank field.
 - `pipestatus` is lowercase, and `EXIT=$?` after a pipeline measures the *last* command:
-  `bash script | tail` gives you `tail`'s exit code.
+  `bash script | tail` gives you `tail`'s exit code. This is not theoretical: on 20/09/2026 an
+  `&&` chain continued past a gate harness that had just printed 4 FAIL, because the exit read
+  was `tail`'s. Capture first, then test — `OUT="$(cmd 2>&1)"; RC=$?` before any filter — or
+  `set -o pipefail`. Reading a gate's verdict out of a pipeline is how a session tells the board
+  something passed when it did not.
+- **Expand a variable with braces when anything follows it.** `git show $TB:path` appends the
+  path to the *variable name*, so zsh looks up `$TB:path` — measured on 20/09/2026, it produced
+  the nonexistent ref `tech-676-2-17-1k-changelog-local.sh` and a confusing "not found".
+  Write `git show "${TB}:path"`.
+- **`tr` with sets of different lengths does not error — it pads.** `tr 'A-Z-' 'a-z'` has 27
+  source characters and 26 destination ones, so the extra one (`-`) maps to the last destination
+  character: `LAS-114` becomes `lasz114`. On 20/09/2026 this silently pointed 17 evidence
+  commands at filenames that did not exist and produced **17 false FAIL**, one step before they
+  would have been written to seven issues. Keep the sets the same length, or delete in a pass of
+  its own (`tr -d '-'`). The general shape — a shell builtin that mangles instead of failing —
+  is the argument for §8's rule that a board write never shares a chain with a step that can
+  fail.
 - Agent shells often abort on the first non-zero exit. Guard commands whose non-zero exit is a
   normal outcome — a drift check that exits 1 on "differs" — with `|| true` or `set +e`.
 - BSD grep has no `\s` (use `[[:space:]]`), and `--include=*.md` needs quoting in zsh.
@@ -107,6 +124,12 @@ Measured on v0.4.42, against reference v1.1.0:
   `json.loads(raw, strict=False)` in Python, or strip `[\x00-\x08\x0b\x0c\x0e-\x1f]`
   before a strict parser or before `jq`.
 - `autopilot get` wraps its payload in `{"autopilot": {…}}`; the other `get` commands do not.
+- **An issue's parent is `parent_issue_id`, not `parent_id`.** `parent_id` is a real field — on a
+  *comment*, where it marks the thread — so a parser that reaches for it on an issue gets `None`
+  instead of an error, and the session concludes the issue is top-level. Measured on 20/09/2026
+  against LAS-69, which reads as parentless through `parent_id` and is in fact stage 3 under
+  LAS-40. When a field comes back empty and the answer matters, print the object's keys before
+  believing the absence.
 - `status_category` collapses custom review statuses together; only `.status` separates them,
   and `status_name` comes back empty for custom statuses inside `children`.
 - `trigger_comment_id` exists only on runs of `kind: comment`. A `direct` run carries
@@ -137,6 +160,16 @@ code, not from inference.
   **top-level** comment matching neither goes to the issue's **agent assignee** (the leader,
   when the assignee is a squad). A plain reply to a *member's* comment does not fall back to the
   assignee. Any explicit mention — including of a member — cancels the fallback.
+- **"A reply to a member's comment is safe" holds only when the root carries no agent mention.**
+  A thread inherits its root: reply inside a discussion whose *root text* mentions an agent, and
+  that agent is enqueued — even when both the root and your reply were written by a member, and
+  even when your reply mentions nobody. Measured on 19/09/2026 (CLI v0.4.44): five replies by the
+  same human to their own comments, under roots that named the Adversarial Reviewer, started five
+  extra Reviewer runs and duplicated a whole review round. Before replying in a thread, read the
+  root. To amend or complete a review request already posted, start the comment with `/note`; if
+  it genuinely needs to wake someone, post a fresh top-level request with the right head and
+  cancel the wrong run with `issue cancel-task <run-id>` first. Either way, confirm with
+  `issue runs` afterwards — the queue, not your intent, is the record.
 - **The assignee fallback fires in any status, closed issues included.** Comments are
   conversational and follow-up questions on finished work are expected behaviour. A terminal
   status is not a safe place to write.
