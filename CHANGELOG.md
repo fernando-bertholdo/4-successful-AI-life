@@ -10,6 +10,7 @@ and this marketplace adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Changed
+- `multica-ops` `0.2.6` → `0.2.7` (marketplace `0.8.7` → `0.8.8`): four traps a full day of board operation surfaced — an unquoted heredoc splicing command output into a comment, `--summary` truncating a verification read, the cursor line before `--thread` JSON, and `waiting_local_directory` as a live run status that a busy-state allow-list reports as idle. See [`plugins/multica-ops/CHANGELOG.md`](./plugins/multica-ops/CHANGELOG.md).
 - `multica-ops` `0.2.5` → `0.2.6` (marketplace `0.8.6` → `0.8.7`): four shell and shape traps that mangle instead of failing — `${VAR}:path` braces in `git show`, `tr` padding an unequal destination set (17 false FAIL one step before a board write), `parent_issue_id` versus `parent_id` on an issue, and reply routing inheriting an agent mention from the thread root. See [`plugins/multica-ops/CHANGELOG.md`](./plugins/multica-ops/CHANGELOG.md).
 - `multica-ops` `0.2.4` → `0.2.5` (marketplace `0.8.5` → `0.8.6`): the stage barrier wakes the conductor by the platform's own `system` mention, not "with no mention at all".
 - `multica-ops` `0.2.3` → `0.2.4` (marketplace `0.8.4` → `0.8.5`): the timing note in §8 measured at the source — stage barrier at 2 s, verdict at 52 s, follow-up issues at 150 s and 158 s; 0.2.3 had applied a reviewer's correction without checking it.

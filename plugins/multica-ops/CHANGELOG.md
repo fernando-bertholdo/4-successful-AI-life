@@ -7,6 +7,27 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.7] — 2026-09-20
+
+### Added
+
+- §3: **an unquoted heredoc executes backticks**, and prose about the shell is full of them. A
+  board comment written with `<<EOF` whose text *mentioned* `` `git ls-files` `` shipped with 440
+  lines of repository listing spliced into it (measured 20/09/2026); the two sibling comments in
+  the same batch were clean only because they named no commands. Use `<<'EOF'`.
+- §4: **`--summary` truncates the body to ~200 characters, and `--output json` does not turn it
+  off.** Harmless while scanning threads; wrong when the read is used to *verify what you wrote*.
+  The same comment measured 201 characters with the flag and 2431 without — a session can
+  conclude its own write was truncated and "fix" a comment that was already complete.
+- §4: **`issue comment list --thread` prints a `Next reply cursor:` line before the JSON**, so a
+  strict parser dies on character 1 and the error reads as malformed JSON rather than a prefix.
+- §5: **a run is not idle just because its status is not `queued`/`running`/`pending`.**
+  `waiting_local_directory` is live — runs against the same repository serialise behind it.
+  Decide liveness by a deny-list of terminal states and treat anything unrecognised as alive;
+  "no run is alive" is the precondition for merging.
+
+---
+
 ## [0.2.6] — 2026-09-20
 
 ### Added

@@ -96,6 +96,14 @@ Mostly zsh, the macOS default:
   its own (`tr -d '-'`). The general shape — a shell builtin that mangles instead of failing —
   is the argument for §8's rule that a board write never shares a chain with a step that can
   fail.
+- **An unquoted heredoc executes backticks, and prose about the shell is full of them.** Writing
+  a board comment with `<<EOF` — unquoted, because you need to interpolate a SHA — makes every
+  `` `command` `` in the body a command substitution. On 20/09/2026 a comment whose text
+  *mentioned* `` `git ls-files` `` as the name of a tool shipped with **440 lines of repository
+  listing** spliced into it, and the two sibling comments in the same batch were clean only
+  because they happened to name no commands. Use `<<'EOF'` and substitute the variable parts
+  afterwards, or build the file in Python. The rule generalises: the moment a body talks *about*
+  shell, the heredoc must be quoted.
 - Agent shells often abort on the first non-zero exit. Guard commands whose non-zero exit is a
   normal outcome — a drift check that exits 1 on "differs" — with `|| true` or `set +e`.
 - BSD grep has no `\s` (use `[[:space:]]`), and `--include=*.md` needs quoting in zsh.
@@ -124,6 +132,18 @@ Measured on v0.4.42, against reference v1.1.0:
   `json.loads(raw, strict=False)` in Python, or strip `[\x00-\x08\x0b\x0c\x0e-\x1f]`
   before a strict parser or before `jq`.
 - `autopilot get` wraps its payload in `{"autopilot": {…}}`; the other `get` commands do not.
+- **`--summary` truncates the body to roughly 200 characters, silently.** It is a display
+  affordance on `issue comment list`, and `--output json` does not turn it off: the JSON carries
+  the shortened string with a trailing `…`. Measured on 20/09/2026 — the same comment reads 201
+  characters with `--summary` and 2431 without. Harmless while you are scanning threads, which
+  is what the flag is for; wrong the moment you use that read to **verify what you wrote**. A
+  session that posts a long comment and then measures it with `--summary` concludes it was
+  truncated on the way out, and "fixes" a comment that was already complete. Verify writes with
+  a read that has no `--summary`.
+- **`issue comment list --thread` prints a cursor line before the JSON.** `Next reply cursor:
+  --before … --before-id …` lands on stdout ahead of the array, so a strict parser dies on
+  character 1 and the error looks like malformed JSON rather than a prefix. Strip to the first
+  `[` (`sed -n '/^\[/,$p'`) before parsing.
 - **An issue's parent is `parent_issue_id`, not `parent_id`.** `parent_id` is a real field — on a
   *comment*, where it marks the thread — so a parser that reaches for it on an issue gets `None`
   instead of an error, and the session concludes the issue is top-level. Measured on 20/09/2026
@@ -173,6 +193,15 @@ code, not from inference.
 - **The assignee fallback fires in any status, closed issues included.** Comments are
   conversational and follow-up questions on finished work are expected behaviour. A terminal
   status is not a safe place to write.
+- **A run is not idle just because its status is not `queued`, `running` or `pending`.**
+  `waiting_local_directory` is a live state: the run holds a place in the queue waiting for the
+  target repository's local checkout, and several runs against the same repository serialise
+  behind it. Measured on 20/09/2026, asking three reviews on one repository at once: one ran and
+  two sat in `waiting_local_directory` until it finished. A liveness check written as an
+  allow-list of busy states reports them as idle — and "no run is alive" is exactly the
+  precondition for merging. Decide liveness by a **deny-list of terminal states**
+  (`completed`, `failed`, `cancelled`, …) and treat anything unrecognised as alive: an unknown
+  status is far more likely to be a new busy state than a new finished one.
 - It is skipped when the assignee has no runtime, is archived, you cannot invoke it, or it
   already holds a pending run on that issue — consecutive comments coalesce into the waiting run
   rather than starting a second one.
