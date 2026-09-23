@@ -7,6 +7,21 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.8] — 2026-09-23
+
+### Added
+
+- §8: **a description write replaces the whole field, and nothing merges it.** Two writers that
+  read, edit and write back erase each other in silence; v0.5.2 still has no compare-and-set on
+  `issue update`. Three habits — read immediately before writing, change only your substring,
+  re-read and compare content — and the case that motivated them (LAS-69, 21/09/2026; LAS-147).
+- `skills/board/scripts/patch-description.py`: the three habits as a helper. Exact-substring
+  edits and/or an append on a fresh read, write with `--no-start`, re-read and compare ignoring
+  trailing whitespace. Exit 0 verified, 1 nothing written, 2 CLI or usage error, 3 concurrent
+  write detected.
+
+---
+
 ## [0.2.7] — 2026-09-20
 
 ### Added

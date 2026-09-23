@@ -312,3 +312,19 @@ The reference covers the mechanics of side effects. These are the habits around 
   written to nobody — the same failure as a comment on an unscoped item, from the other
   side. Anything that must be done goes where it will be found: a checkbox with a `verify:`
   in the issue description, or an issue of its own.
+- **A description write replaces the whole field, and nothing merges it.** `issue update
+  --description-*` writes the entire description; the CLI has no compare-and-set (no
+  `--if-revision` as of v0.5.2 — `revision` comes back on read and cannot be passed on write).
+  Two writers that read, edit and write back erase each other in silence, with no conflict and
+  an ordinary `activity` event in the `timeline`. Measured on 21/09/2026 on LAS-69: a session
+  marked ten DoD boxes and another added two `verify:` criteria 25 minutes later; nothing was
+  lost only because of the order. The cost grows with the rule above — the more pending work
+  lives as checkboxes in descriptions, the more a lost write costs. Three habits close most of
+  the window: **read immediately before writing** (never write back a read from earlier in the
+  turn); **change only your substring** — exact replacement asserted to occur once, or an
+  append — instead of re-emitting an edited copy; and **re-read after writing** and compare
+  with what you meant to write. Compare content, not `updated_at`, and ignore trailing
+  whitespace: on 21/09/2026 a trailing newline from `print()` was enough for a false alarm on
+  the first write, which is how a check gets abandoned. `scripts/patch-description.py` in this
+  skill does the three: it exits 1 without writing when a substring does not occur exactly
+  once, and 3 when the re-read differs — a write landed inside the window.
