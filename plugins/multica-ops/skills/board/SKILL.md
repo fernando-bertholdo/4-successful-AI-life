@@ -314,7 +314,7 @@ The reference covers the mechanics of side effects. These are the habits around 
   in the issue description, or an issue of its own.
 - **A description write replaces the whole field, and nothing merges it.** `issue update
   --description-*` writes the entire description; the CLI has no compare-and-set (no
-  `--if-revision` as of v0.5.2 — `revision` comes back on read and cannot be passed on write).
+  `--if-revision` as of v0.5.3 — `revision` comes back on read and cannot be passed on write).
   Two writers that read, edit and write back erase each other in silence, with no conflict and
   an ordinary `activity` event in the `timeline`. Measured on 21/09/2026 on LAS-69: a session
   marked ten DoD boxes at 16:39:04Z and another added two `verify:` criteria at 17:04:45Z, with
@@ -323,21 +323,30 @@ The reference covers the mechanics of side effects. These are the habits around 
   more a lost write costs. Three habits close most of the window: **read immediately before
   writing** (never write back a read from earlier in the turn); **change only your
   substring** — exact replacement asserted to occur once, or an append — instead of
-  re-emitting an edited copy; and **re-read after writing**. The re-read has two checks, and
-  each catches a different half of the window. The content must match what you wrote, which
-  catches a write landing *after* yours; compare content, not `updated_at`, and ignore
-  trailing whitespace (on 21/09/2026 a trailing newline from `print()` was enough for a false
-  alarm on the first write, which is how a check gets abandoned). And `revision` must have
-  moved by exactly one: a write that landed *before* yours was erased by yours, so the re-read
-  shows your text and only the counter shows the loss. Measured on 24/09/2026 (v0.5.2, on a
-  throwaway issue): every description write that changes the text moves `revision` by one and
-  logs a `description_updated`; a write identical to the stored text logs the event and moves
-  nothing, so a write that changes nothing must not be sent at all. The counter also moves on
-  a comment, a reply, a title or status change, and on writes the `timeline` does not show
-  (47 of 100 `lass` issues had more revisions than visible events on 24/09/2026), so a jump is
-  not proof of loss. What decides is the `timeline`: more than one `description_updated`
-  after the fresh read's `updated_at` — yours is one of them — means a description write landed
-  in the window. `scripts/patch-description.py` in this skill does all of it: it exits 1
-  without writing when a substring does not occur exactly once, the append is already there,
-  or the edits change nothing; and 3 when the re-read differs or `revision` did not move by
-  exactly one, printing the `updated_at` to search the `timeline` from.
+  re-emitting an edited copy; and **check the window after writing**, which takes one check for
+  each half of it. A write landing *after* yours shows in the content: re-read and compare with
+  what you wrote — content, not `updated_at`, ignoring trailing whitespace (on 21/09/2026 a
+  trailing newline from `print()` was enough for a false alarm on the first write, which is how
+  a check gets abandoned). A write landing *before* yours was erased by yours, so the re-read
+  shows your text and only the `timeline` shows it: count the `description_updated` events
+  **before reading the description** (`N`) and again after writing (`M`); exactly one new event
+  means yours alone. The order is the point — a write landing between a read and a later count
+  enters `N` while the text in hand is already stale. Measured on 24/09/2026 (v0.5.2, on a
+  throwaway issue): every description write logged a `description_updated`, even one identical
+  to the stored text, so a write that changes nothing must not be sent at all. Two shortcuts
+  fail. `revision` also moves on a comment, a reply, a title or status change and on writes the
+  `timeline` does not show (47 of 100 `lass` issues had more revisions than visible events on
+  24/09/2026), so a jump is not proof of a description write. And `--since` drops the whole
+  second it is given (v0.5.3: an event at 20:07:03Z is missing from `--since 20:07:03Z` and
+  present from `--since 20:07:02Z`), while an issue's `updated_at` is, as a rule, the second of
+  its last event (96 of 100 `lass` issues on 24/09/2026) — so `--since <updated_at>` is blind to
+  the very write that matters; to search by hand, start one second earlier. An erased write has
+  nothing to be restored from: the event keeps no text (`details` is empty) and the CLI has no
+  history command. Do not write over it again; its author — the event's `actor_type` and
+  `actor_id` — re-applies it, and to an agent that request is a mention, which starts a run
+  (§5). `scripts/patch-description.py` in this skill does all of it: it exits 1 without writing
+  when a substring does not occur exactly once, the append is already there, or the edits
+  change nothing; 2 on `--edits` that are not pairs of two strings, or an empty append; and 3
+  when the re-read differs or there is not exactly one new event, printing the read's
+  `updated_at`, `revision` before and after, each new event with its author, and the command
+  that lists them.
