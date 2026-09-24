@@ -2,7 +2,7 @@
 
 **The layer around [Multica](https://multica.ai)'s official CLI skill — the environment, the shapes, the limits, and the governance.**
 
-Version `0.2.8` · 1 skill · native plugin
+Version `0.2.9` · 1 skill · native plugin
 
 ---
 
@@ -53,6 +53,12 @@ Model-invoked; to pull it in explicitly:
 | `MULTICA_PLAYBOOK` | Path to the repository that versions your Multica configuration. When set, that repo — its agent-context file, manifests, drift check and deploy script — outranks this skill on everything it declares. |
 
 Nothing board-specific ships in this plugin: no workspace ids, no project names, no machine paths.
+
+## Tests
+
+```
+bash tests/run-tests.sh    # patch-description.py against a fake CLI; standard library only
+```
 
 ## Compatibility
 

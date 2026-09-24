@@ -7,6 +7,45 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.9] — 2026-09-24
+
+### Changed
+
+- `patch-description.py` decides the window by counting `description_updated`, not by
+  `revision`. It counts the events before reading the description (`N`) and again after writing
+  (`M`), and requires exactly one new event, ours — new by id, so a read the server caps cannot
+  hide one; if ours has not shown yet, it reads again, up to three times a second apart. The
+  0.2.8 check, `revision` exactly +1, raised exit 3 on a comment, a status change or a write the
+  `timeline` does not show; a comment in the window now exits 0. The count comes before the
+  read because the inverse lets a write land in `N` with the text in hand already stale, and it
+  uses no `--since`: that flag drops the whole second it is given, and `updated_at` is the second
+  of the last event (measured on CLI v0.5.3). LAS-147, items 2 and 5.
+- Exit 3 gives the input for the action instead of "reconcile by hand": the erased text cannot
+  be recovered through the CLI (the event keeps no text, `details` is empty, and there is no
+  history command), so do not write over it again and ask the event's author to re-apply it.
+  It prints the read's `updated_at`, `revision` before and after, each new event with its time,
+  `actor_type` and `actor_id`, and the command that lists them. With two or more new events and
+  `revision` up by only one, it says nothing was lost. LAS-147, item 4.
+- The branch where the re-read differs prints the same window and says ours may be the write
+  that was erased; re-running is safe. LAS-147, item 1.
+- §8 follows the script: count instead of `revision` +1, the order, the second `--since`
+  drops (start one second earlier when searching by hand), no recovery, the author re-applies.
+  No `--if-revision` on `issue update` as of v0.5.3.
+
+### Fixed
+
+- `--edits` takes only a JSON list of pairs of two strings, the first non-empty, and exits 2
+  otherwise; 0.2.8 turned `null`, numbers and a two-character object key into text and exited
+  0. An empty `--append` block exits 2 instead of 1. LAS-147, item 3.
+
+### Added
+
+- `tests/`: a fake `multica` (`fake_multica.py`, reached through `MULTICA_BIN`) that reproduces
+  the measured server behaviour, and 15 `unittest` cases for the script;
+  `bash tests/run-tests.sh`, standard library only.
+
+---
+
 ## [0.2.8] — 2026-09-23
 
 ### Added
