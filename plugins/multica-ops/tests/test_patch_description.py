@@ -79,5 +79,25 @@ class Baseline(Case):
         self.assertEqual(r.returncode, 3)
 
 
+class Usage(Case):
+    """--edits takes only pairs of two strings; an empty append is a usage error."""
+
+    def test_malformed_edits_exit_2_before_touching_the_board(self):
+        bad = ["@null", "@12", '@"ab"', {"ab": "zz"}, [[None, "x"]], [[12, 13]],
+               [["a", "b", "c"]], [["", "x"]], ["ab"]]
+        for payload in bad:
+            with self.subTest(payload=payload):
+                r = self.run_script("--edits", payload)
+                self.assertEqual(r.returncode, 2, r.stderr)
+                self.assertIn("pairs of two strings", r.stderr)
+                self.assertEqual(self.state["calls"], [])
+
+    def test_empty_append_block_exits_2(self):
+        r = self.run_script("--append", "@  \n\n")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("empty", r.stderr)
+        self.assertEqual(self.state["calls"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -26,7 +26,9 @@ Usage:
   patch-description.py --workspace-id WS --issue LAS-123 --append block.md
   (both flags together: replacements first, then the append)
 
-edits.json is a JSON list of [old, new] pairs.
+edits.json is a JSON list of pairs of two strings, [["old", "new"], ...], each
+`old` non-empty; anything else exits 2 before the board is read, and so does an
+empty append block.
 Env: MULTICA_PROFILE (required), MULTICA_BIN (default: the desktop-app binary).
 
 Exit codes:
@@ -52,6 +54,17 @@ import sys
 
 DEFAULT_BIN = ("/Applications/Multica.app/Contents/Resources/app.asar.unpacked/"
                "resources/bin/multica")
+
+
+def load_edits(path):
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, list) or not all(
+            isinstance(p, list) and len(p) == 2
+            and all(isinstance(x, str) for x in p) and p[0] for p in data):
+        raise ValueError("--edits must be a JSON list of pairs of two strings, "
+                         'the first non-empty: [["old", "new"], ...]')
+    return [(old, repl) for old, repl in data]
 
 
 def main():
@@ -86,12 +99,13 @@ def main():
     try:
         edits = []
         if a.edits:
-            with open(a.edits, encoding="utf-8") as f:
-                edits = [(str(old), str(repl)) for old, repl in json.load(f)]
+            edits = load_edits(a.edits)
         block = None
         if a.append:
             with open(a.append, encoding="utf-8") as f:
                 block = f.read().strip()
+            if not block:
+                raise ValueError("the --append block is empty")
     except (OSError, ValueError, TypeError) as e:
         print(f"cannot load --edits/--append: {e}", file=sys.stderr)
         return 2
