@@ -28,7 +28,9 @@ import json
 import os
 import sys
 
-OTHER = {"actor_id": "other-actor", "actor_type": "agent", "actor_name": "Other"}
+# An agent's event carries no `actor_name` key; a member's does (v0.5.3, 24/09/2026:
+# LAS-140 and LAS-141 against LAS-147).
+OTHER = {"actor_id": "other-actor", "actor_type": "agent"}
 SELF = {"actor_id": "self-actor", "actor_type": "member", "actor_name": "Self"}
 
 

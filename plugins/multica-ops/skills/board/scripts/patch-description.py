@@ -105,9 +105,15 @@ def window(issue, fresh_at, fresh_rev, after_rev, seen, me):
              f"re-read: revision {after_rev}",
              f"  description_updated events new since our count ({len(seen)}; one "
              "should be ours):"]
+    # An agent's event has no `actor_name` key (v0.5.3, LAS-140 and LAS-141); a
+    # member's has one. The id is what identifies the author either way.
     lines += [f"    {e.get('id')}  {e.get('created_at')}  {e.get('actor_type')} "
-              f"{e.get('actor_id')} ({e.get('actor_name')})"
+              f"{e.get('actor_id')}"
+              + (f" ({e['actor_name']})" if e.get("actor_name") else "")
               + ("  [our id]" if e.get("actor_id") == me else "") for e in seen]
+    if any(not e.get("actor_name") for e in seen):
+        lines.append("  no name shown: an agent's event carries none; `multica agent list` "
+                     "gives the name for its id")
     lines.append(f"  list them: multica issue timeline {issue} --action "
                  "description_updated --output json (no --since: it drops the "
                  "whole second it is given)")

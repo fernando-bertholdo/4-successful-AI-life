@@ -132,8 +132,10 @@ class Window(Case):
                        "other-actor", "cannot be recovered", "Do not write over",
                        "self-actor (Self)  [our id]",
                        "editing in the app", "another run of this agent",
+                       "agent other-actor\n", "`multica agent list`",
                        "timeline ISSUE-1 --action description_updated"):
             self.assertIn(needed, r.stderr)
+        self.assertNotIn("None", r.stderr)
 
     def test_write_between_count_and_read_is_flagged_but_nothing_lost(self):
         r = self.run_script(*EDIT, hooks=[hook("after", "timeline", "append",
