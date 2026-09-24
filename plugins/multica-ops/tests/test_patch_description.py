@@ -18,7 +18,7 @@ TEXT = "## DoD\n\n- [ ] one\n- [ ] two\n"
 
 
 class Case(unittest.TestCase):
-    def run_script(self, *args, hooks=(), description=TEXT, **state):
+    def run_script(self, *args, hooks=(), description=TEXT, env=(), **state):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         path = os.path.join(tmp.name, "state.json")
@@ -38,8 +38,9 @@ class Case(unittest.TestCase):
                 files.append(p)
             else:
                 files.append(a)
-        env = dict(os.environ, MULTICA_BIN=str(FAKE), MULTICA_PROFILE="test",
-                   FAKE_MULTICA_STATE=path)
+        base = {k: v for k, v in os.environ.items() if k != "MULTICA_AGENT_ID"}
+        env = dict(base, MULTICA_BIN=str(FAKE), MULTICA_PROFILE="test",
+                   FAKE_MULTICA_STATE=path, **dict(env))
         r = subprocess.run([sys.executable, str(SCRIPT), "--workspace-id", "ws",
                             "--issue", "ISSUE-1", *files],
                            capture_output=True, text=True, env=env)
@@ -174,6 +175,12 @@ class Window(Case):
         self.assertNotIn("theirs", self.state["description"])
         self.assertIn("WINDOW NOT CLEAN:", r.stderr)
         self.assertEqual(self.state["counts"]["timeline"], 3)
+
+    def test_inside_an_agent_task_our_event_is_the_agents(self):
+        r = self.run_script(*EDIT, env={"MULTICA_AGENT_ID": "task-agent"})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        kinds = [c[0] for c in self.state["calls"]]
+        self.assertEqual(kinds[:2], ["timeline", "get"])
 
     def test_someone_elses_event_alone_does_not_verify_the_window(self):
         r = self.run_script(*EDIT, own_event_lag=10, hooks=[

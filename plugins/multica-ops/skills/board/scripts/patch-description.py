@@ -16,12 +16,17 @@ its own count and its own re-read, and detects a description write inside it:
      without writing (an identical write still logs a `description_updated`,
      measured on 24/09/2026, and would count as someone else's);
   4. writes with --no-start, so no agent run starts;
-  5. counts again (M) and requires exactly one new event, and that one by our
-     own profile: an event's `actor_id` is the `id` that `multica user profile
-     get` returns for the profile that wrote it (v0.5.3, 24/09/2026: all 9
-     `description_updated` on LAS-147), read once before the count. New means an
-     id absent from N, so old entries a capped read drops (`issue timeline
-     --help`) do not shift the count. Until an event by our profile shows it
+  5. counts again (M) and requires exactly one new event, and that one ours by
+     `actor_id`, our id being read once before the count. Outside an agent task
+     it is the `id` that `multica user profile get` returns (v0.5.3, 24/09/2026:
+     all 9 `description_updated` on LAS-147, all written by a member). Inside a
+     task it is MULTICA_AGENT_ID: there the CLI sends that variable as
+     `X-Agent-Id` (v0.5.3, local probe, 24/09/2026), task writes carry the
+     agent's id (LAS-140, LAS-141), and `user profile get` returns the member
+     who owns the token (measured from a task in the LAS-147 review, same
+     day). Not measured: a task's write compared with that task's variable.
+     New means an id absent from N, so old entries a capped read drops (`issue
+     timeline --help`) do not shift the count. Until an event of ours shows it
      reads again, up to three times a second apart (latency not measured); if
      none shows, the window is not verified, whatever else showed. Two sessions
      on one profile look alike: with ours late, theirs passes for ours. And the
@@ -46,7 +51,8 @@ Usage:
 edits.json is a JSON list of pairs of two strings, [["old", "new"], ...], each
 `old` non-empty; anything else exits 2 before the board is read, and so does an
 empty append block.
-Env: MULTICA_PROFILE (required), MULTICA_BIN (default: the desktop-app binary).
+Env: MULTICA_PROFILE (required), MULTICA_BIN (default: the desktop-app binary),
+MULTICA_AGENT_ID (set inside an agent task; taken as our id, see step 5).
 
 Exit codes:
   0  written, and the re-read matches
@@ -58,7 +64,7 @@ Exit codes:
      if any edit is already there: a replaced `old` no longer occurs, an
      insertion's `new` is present, the append block is present
   3  written, but the window was not clean: the re-read differs, or not exactly
-     one new `description_updated`, or none by our profile. It prints what there
+     one new `description_updated`, or none of ours. It prints what there
      is to act on: the read's `updated_at`, `revision` before and after, each new
      event with its time and author (`actor_type`, `actor_id`) and the command
      that lists them.
@@ -164,8 +170,10 @@ def main():
         return 2
 
     try:
-        me = json.loads(cli(["user", "profile", "get", "--output", "json"]),
-                        strict=False)["id"]
+        # Inside an agent task our events carry the agent's id, not the member's
+        # that `user profile get` returns there (docstring, step 5).
+        me = os.environ.get("MULTICA_AGENT_ID") or json.loads(
+            cli(["user", "profile", "get", "--output", "json"]), strict=False)["id"]
         before = events()
         fresh, fresh_rev, fresh_at = read()
     except (RuntimeError, ValueError, KeyError, TypeError) as e:
@@ -224,7 +232,7 @@ def main():
         return 3
     if not ours:
         print("WINDOW NOT VERIFIED: the re-read shows our text, but no new "
-              f"description_updated by our profile showed in {SETTLE_READS} timeline "
+              f"description_updated of ours showed in {SETTLE_READS} timeline "
               "reads, so a write that landed before ours cannot be ruled out"
               + (f"; any event below may be one ours erased. {LOST}" if seen else "")
               + f"\n{info}", file=sys.stderr)

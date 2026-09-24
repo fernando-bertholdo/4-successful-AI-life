@@ -14,7 +14,10 @@ shapes CLI v0.5.3 returns. What it reproduces, and where each came from:
 - `--since T` drops the whole second of T (measured on v0.5.3, 24/09/2026);
 - `user profile get` returns as `id` the `actor_id` of the profile's own events
   (v0.5.3, 24/09/2026: all 9 `description_updated` on LAS-147). Its call is
-  logged as "profile".
+  logged as "profile";
+- with MULTICA_AGENT_ID set, as inside an agent task, `user profile get` still
+  returns the member, and our update's event carries the agent's id, with
+  `actor_type` agent and no `actor_name` key (LAS-140, LAS-141).
 
 Hooks inject someone else's write around the n-th call of a kind:
 {"when": "before"|"after", "call": "get"|"timeline"|"update", "nth": 1,
@@ -71,7 +74,9 @@ def serve(st, cmd, ident, flags, stdin):
     if st.get("fail_update"):
         sys.exit(st["fail_update"])
     lag = st.get("own_event_lag", 0)
-    write(st, stdin, SELF, st["counts"]["timeline"] + lag if lag else 0)
+    agent = os.environ.get("MULTICA_AGENT_ID")
+    who = {"actor_id": agent, "actor_type": "agent"} if agent else SELF
+    write(st, stdin, who, st["counts"]["timeline"] + lag if lag else 0)
     return {"identifier": ident}
 
 
