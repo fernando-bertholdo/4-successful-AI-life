@@ -354,6 +354,6 @@ The reference covers the mechanics of side effects. These are the habits around 
   when a substring does not occur exactly once, an insertion (a replacement whose new text
   contains the old) or the append is already there, or the edits change nothing — so a re-run
   after an exit 3 writes nothing if an edit survived; 2 on `--edits` that are not pairs of two
-  strings, or an empty append; and 3 when the re-read differs or there is not exactly one new
-  event, printing the read's `updated_at`, `revision` before and after, each new event with its
-  author, and the command that lists them.
+  strings, or an empty append; and 3 when the re-read differs, there is not exactly one new
+  event, or none by your profile, printing the read's `updated_at`, `revision` before and after,
+  each new event with its author (yours marked), and the command that lists them.
