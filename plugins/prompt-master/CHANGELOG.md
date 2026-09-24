@@ -4,6 +4,21 @@ Este changelog rastreia o **wrapper** deste plugin (nosso código + nossos patch
 
 Formato: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) + versionamento `MAJOR.MINOR.PATCH+upstream-X.Y.Z`.
 
+## [1.0.0+upstream-1.8.0] — 2026-09-24
+
+### Changed
+- Sync do upstream: `nidhinjs/prompt-master` avançou `v1.7.0` → `v1.8.0` (HEAD `2bd9251`).
+  Sem patches locais a re-aplicar (nenhuma sentinela `LOCAL-PATCH` em `upstream/`).
+
+### Upstream highlights (v1.8.0)
+- Nas palavras da nota de versão do upstream (`upstream/README.md`): *"Current-model refresh.
+  Added Claude Fable 5, Opus 5, Sonnet 5, GPT-5.6 Sol/Terra/Luna, Codex, and Grok 4.6 routing.
+  Replaced hidden chain-of-thought requests with auditable reasoning and generalized the Claude
+  task brief for current adaptive-thinking models."*
+
+### Wrapper changes (nossos)
+- Só a versão, em `plugin.json` e na entrada do `marketplace.json`; a `description` não muda.
+
 ## [1.0.0+upstream-1.7.0] — 2026-06-16
 
 ### Changed

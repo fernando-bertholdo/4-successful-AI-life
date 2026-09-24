@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
-    "version": "0.8.10"
+    "version": "0.8.11"
   },
   "plugins": [
     {
@@ -55,7 +55,7 @@
       "name": "prompt-master",
       "source": "./plugins/prompt-master",
       "description": "Generates optimized prompts for AI tools (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests — not for general conversation or coding tasks. Vendored from nidhinjs/prompt-master via git subtree, kept in sync via weekly GitHub Action.",
-      "version": "1.0.0+upstream-1.7.0",
+      "version": "1.0.0+upstream-1.8.0",
       "license": "MIT",
       "category": "productivity",
       "keywords": [

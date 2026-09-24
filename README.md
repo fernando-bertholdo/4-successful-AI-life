@@ -41,7 +41,7 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 |---|---|---|
 | [**ui-excellence**](./plugins/ui-excellence/) | `1.0.0-alpha.3` | UI/UX skill bundle with a triage coordinator — visual design, typography, accessibility, usability audits, CRO, microinteractions, and engagement loops. |
 | [**smart-session-rename-cc**](./plugins/smart-session-rename-cc/) | `1.5.0` | Auto-names your Claude Code sessions from the work you actually do, via a Stop hook + a Haiku-generated title. |
-| [**prompt-master**](./plugins/prompt-master/) | `1.0.0+upstream-1.7.0` | Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. |
+| [**prompt-master**](./plugins/prompt-master/) | `1.0.0+upstream-1.8.0` | Generates optimized prompts for any AI tool (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests. |
 | [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.0.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
 | [**enhanced-planning**](./plugins/enhanced-planning/) | `1.0.0+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
 | [**multica-ops**](./plugins/multica-ops/) | `0.2.9` | Companion to Multica's official CLI skill — desktop-app binary discovery, the bridged-session route, the shapes and limits the reference omits, and the constraints of a governed board. |
