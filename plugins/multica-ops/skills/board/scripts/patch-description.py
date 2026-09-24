@@ -7,17 +7,19 @@ and cannot be passed on write). Two writers that read, edit and write back erase
 each other in silence. This helper keeps the race window to the seconds between
 its own read and its own re-read, and detects a write that lands inside it:
 
-  1. reads the description and `revision` immediately before writing — never
-     reuse an old read;
+  1. reads the description, `revision` and `updated_at` immediately before
+     writing — never reuse an old read;
   2. applies exact-substring replacements, each of which must occur exactly once,
-     and/or appends a block;
+     and/or appends a block; if the result is the text already stored, it stops
+     without writing (an identical write moves no `revision`, measured on
+     24/09/2026, and would read as a concurrent write);
   3. writes with --no-start, so no agent run starts;
-  4. re-reads and requires `revision` to have gone up by exactly one — our write.
-     This is the check that catches a write landing BEFORE ours: ours erased it,
-     so the re-read shows our text and a content comparison alone passes;
-  5. compares the re-read with the fresh read plus the edits, ignoring trailing
-     whitespace (a trailing newline alone produced false alarms on 21/09/2026) —
-     this catches a write landing AFTER ours.
+  4. compares the re-read with what it wrote, ignoring trailing whitespace (a
+     trailing newline alone produced false alarms on 21/09/2026) — this catches
+     a write landing AFTER ours;
+  5. requires `revision` to have moved by exactly one — our write. This is the
+     check that catches a write landing BEFORE ours: ours erased it, so the
+     re-read shows our text and the content comparison passes.
 
 Usage:
   patch-description.py --workspace-id WS --issue LAS-123 --edits edits.json
@@ -29,15 +31,18 @@ Env: MULTICA_PROFILE (required), MULTICA_BIN (default: the desktop-app binary).
 
 Exit codes:
   0  written, and the re-read matches
-  1  nothing written: an `old` did not occur exactly once, or the append is
-     already there
-  2  CLI or usage error
-  3  written, but another write landed in the window: `revision` moved by more
-     than one, or the re-read differs. A write before ours was erased by ours;
-     read `issue timeline` for a `description_updated` that is not ours and
-     reconcile by hand before writing again. `revision` moves on writes to other
-     fields too, so this can also be a status or priority change — conservative
-     by design
+  1  nothing written: an `old` did not occur exactly once, the append is already
+     there, or the edits leave the description unchanged
+  2  CLI, file or usage error. It can also come AFTER a successful write, when
+     the re-read fails; re-running is safe, because a replaced substring no
+     longer matches and a repeated append exits 1
+  3  written, but the window was not clean: the re-read differs (a write landed
+     after ours), or `revision` did not move by exactly one. A jump is not proof
+     of loss — comments, replies, title and status changes and writes the
+     timeline does not show also move the counter. What decides is the timeline:
+     more than one `description_updated` after the printed `updated_at` (ours is
+     one of them) means a description write landed in the window; reconcile by
+     hand before writing again
 """
 import argparse
 import json
@@ -65,44 +70,64 @@ def main():
     base = [os.environ.get("MULTICA_BIN", DEFAULT_BIN), "--profile", profile,
             "--workspace-id", a.workspace_id]
 
-    def read():
-        r = subprocess.run(base + ["issue", "get", a.issue, "--output", "json"],
-                           capture_output=True, text=True)
+    def cli(args, stdin=None):
+        try:
+            r = subprocess.run(base + args, input=stdin, capture_output=True, text=True)
+        except OSError as e:
+            raise RuntimeError(f"cannot run the CLI: {e}")
         if r.returncode:
             raise RuntimeError(r.stderr.strip())
-        d = json.loads(r.stdout, strict=False)
-        return d["description"] or "", d.get("revision")
+        return r.stdout
+
+    def read():
+        d = json.loads(cli(["issue", "get", a.issue, "--output", "json"]), strict=False)
+        return d["description"] or "", d.get("revision"), d.get("updated_at")
 
     try:
-        fresh, fresh_rev = read()
+        edits = []
+        if a.edits:
+            with open(a.edits, encoding="utf-8") as f:
+                edits = [(str(old), str(repl)) for old, repl in json.load(f)]
+        block = None
+        if a.append:
+            with open(a.append, encoding="utf-8") as f:
+                block = f.read().strip()
+    except (OSError, ValueError, TypeError) as e:
+        print(f"cannot load --edits/--append: {e}", file=sys.stderr)
+        return 2
+
+    try:
+        fresh, fresh_rev, fresh_at = read()
     except (RuntimeError, ValueError, KeyError) as e:
         print(f"read failed: {e}", file=sys.stderr)
         return 2
 
     new = fresh
-    if a.edits:
-        for old, repl in json.load(open(a.edits, encoding="utf-8")):
-            n = new.count(old)
-            if n != 1:
-                print(f"nothing written: substring occurs {n} times: {old[:80]!r}",
-                      file=sys.stderr)
-                return 1
-            new = new.replace(old, repl)
-    if a.append:
-        block = open(a.append, encoding="utf-8").read().strip()
+    for old, repl in edits:
+        n = new.count(old)
+        if n != 1:
+            print(f"nothing written: substring occurs {n} times: {old[:80]!r}",
+                  file=sys.stderr)
+            return 1
+        new = new.replace(old, repl)
+    if block is not None:
         if block in new:
             print("nothing written: the append block is already there", file=sys.stderr)
             return 1
-        new = new.rstrip() + "\n\n" + block + "\n"
+        new = (new.rstrip() + "\n\n" if new.strip() else "") + block + "\n"
+    if new.rstrip() == fresh.rstrip():
+        print("nothing written: the edits leave the description unchanged",
+              file=sys.stderr)
+        return 1
 
-    r = subprocess.run(base + ["issue", "update", a.issue, "--description-stdin",
-                               "--no-start"], input=new, capture_output=True, text=True)
-    if r.returncode:
-        print(f"write failed: {r.stderr.strip()}", file=sys.stderr)
+    try:
+        cli(["issue", "update", a.issue, "--description-stdin", "--no-start"], stdin=new)
+    except RuntimeError as e:
+        print(f"write failed: {e}", file=sys.stderr)
         return 2
 
     try:
-        after, after_rev = read()
+        after, after_rev, _ = read()
     except (RuntimeError, ValueError, KeyError) as e:
         print(f"written, but the re-read failed: {e}", file=sys.stderr)
         return 2
@@ -113,10 +138,12 @@ def main():
         return 3
     if isinstance(fresh_rev, int) and isinstance(after_rev, int):
         if after_rev != fresh_rev + 1:
-            print(f"CONCURRENT WRITE: revision went from {fresh_rev} to {after_rev}, "
-                  "not +1, and the re-read shows our text: a write landed before "
-                  "ours and ours erased it, or another field changed — check "
-                  "`issue timeline` before writing again", file=sys.stderr)
+            print(f"WINDOW NOT CLEAN: revision went from {fresh_rev} to {after_rev}, "
+                  "not exactly +1, and the re-read shows our text. Either a description "
+                  "write before ours was erased by ours, or nothing was lost and the jump "
+                  "came from a comment or another field. Decide by `issue timeline`: more "
+                  f"than one `description_updated` after {fresh_at} (ours is one) means "
+                  "a description write landed in the window", file=sys.stderr)
             return 3
     else:
         print("warning: no integer `revision` in the read; a write landing before "
