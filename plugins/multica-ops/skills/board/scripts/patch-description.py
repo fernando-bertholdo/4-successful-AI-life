@@ -24,7 +24,8 @@ its own count and its own re-read, and detects a description write inside it:
      --help`) do not shift the count. Until an event by our profile shows it
      reads again, up to three times a second apart (latency not measured); if
      none shows, the window is not verified, whatever else showed. Two sessions
-     on one profile look alike: with ours late, theirs passes for ours;
+     on one profile look alike: with ours late, theirs passes for ours. And the
+     wait ends at ours: another author's event that shows later still is missed;
   6. compares the re-read with what it wrote, ignoring trailing whitespace (a
      trailing newline alone produced false alarms on 21/09/2026) — this catches
      a write landing after ours.
