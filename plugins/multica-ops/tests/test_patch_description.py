@@ -145,6 +145,16 @@ class Window(Case):
         self.assertEqual(r.returncode, 3)
         self.assertIn("NOTHING LOST", r.stderr)
 
+    def test_write_after_ours_prints_the_window_and_says_ours_may_be_lost(self):
+        r = self.run_script(*EDIT, hooks=[hook("after", "update", "append",
+                                               "\n- [ ] theirs")])
+        self.assertEqual(r.returncode, 3)
+        self.assertIn("CONCURRENT WRITE", r.stderr)
+        for needed in (f"updated_at {NOW}", "revision 5; re-read: revision 7",
+                       "ours may be the one it erased", "other-actor",
+                       "timeline ISSUE-1 --action description_updated"):
+            self.assertIn(needed, r.stderr)
+
     def test_own_event_that_trails_the_write_is_waited_for(self):
         r = self.run_script(*EDIT, own_event_lag=1)
         self.assertEqual(r.returncode, 0, r.stderr)

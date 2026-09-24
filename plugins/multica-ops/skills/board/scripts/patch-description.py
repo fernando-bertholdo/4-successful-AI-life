@@ -188,9 +188,12 @@ def main():
         return 2
     info = window(a.issue, fresh_at, fresh_rev, after_rev, seen)
     if after.rstrip() != new.rstrip():
-        print(f"CONCURRENT WRITE: expected {len(new.rstrip())} characters, found "
-              f"{len(after.rstrip())}; someone wrote after our write",
-              file=sys.stderr)
+        print("CONCURRENT WRITE: the re-read differs from what we wrote (expected "
+              f"{len(new.rstrip())} characters, found {len(after.rstrip())}): a "
+              "description write landed after ours, and ours may be the one it erased. "
+              "Re-running this command is safe: it re-reads, re-applies only our edits "
+              "and exits 1 if they survived. If another event below landed before ours, "
+              f"ours erased it. {LOST}\n{info}", file=sys.stderr)
         return 3
     if not seen:
         print("WINDOW NOT VERIFIED: the re-read shows our text, but our own "
