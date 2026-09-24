@@ -127,6 +127,23 @@ class Window(Case):
         self.assertEqual(r.returncode, 3)
         self.assertNotIn("theirs", self.state["description"])
         self.assertIn("WINDOW NOT CLEAN:", r.stderr)
+        for needed in (f"updated_at {NOW}", "revision 5; re-read: revision 7",
+                       "other-actor", "cannot be recovered", "Do not write over",
+                       "timeline ISSUE-1 --action description_updated"):
+            self.assertIn(needed, r.stderr)
+
+    def test_write_between_count_and_read_is_flagged_but_nothing_lost(self):
+        r = self.run_script(*EDIT, hooks=[hook("after", "timeline", "append",
+                                               "\n- [ ] theirs")])
+        self.assertEqual(r.returncode, 3)
+        self.assertIn("NOTHING LOST", r.stderr)
+        self.assertIn("theirs", self.state["description"])
+        self.assertIn("- [x] one", self.state["description"])
+
+    def test_identical_write_in_the_window_is_flagged_but_nothing_lost(self):
+        r = self.run_script(*EDIT, hooks=[hook("before", "update", "identical")])
+        self.assertEqual(r.returncode, 3)
+        self.assertIn("NOTHING LOST", r.stderr)
 
     def test_own_event_that_trails_the_write_is_waited_for(self):
         r = self.run_script(*EDIT, own_event_lag=1)

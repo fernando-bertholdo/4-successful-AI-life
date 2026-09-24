@@ -49,7 +49,12 @@ Exit codes:
      the re-read fails; re-running is safe, because a replaced substring no
      longer matches and a repeated append exits 1
   3  written, but the window was not clean: the re-read differs, or not exactly
-     one new `description_updated`
+     one new `description_updated`. It prints what there is to act on: the
+     read's `updated_at`, `revision` before and after, each new event with its
+     time and author (`actor_type`, `actor_id`) and the command that lists them.
+     An erased text cannot be recovered through the CLI — the event keeps no
+     text (`details` is empty) and there is no history command — so do not
+     write over it again: ask the event's author to re-apply their change
 """
 import argparse
 import json
@@ -61,6 +66,23 @@ import time
 DEFAULT_BIN = ("/Applications/Multica.app/Contents/Resources/app.asar.unpacked/"
                "resources/bin/multica")
 SETTLE_READS = 3
+LOST = ("The erased text cannot be recovered through the CLI: the event keeps no text "
+        "(`details` is empty) and there is no history command. Do not write over it "
+        "again; ask the author of the other event to re-apply their change (to an "
+        "agent, that means a mention, which starts a run).")
+
+
+def window(issue, fresh_at, fresh_rev, after_rev, seen):
+    lines = [f"  our read: updated_at {fresh_at}, revision {fresh_rev}; "
+             f"re-read: revision {after_rev}",
+             f"  description_updated events new since our count ({len(seen)}; one "
+             "should be ours):"]
+    lines += [f"    {e.get('id')}  {e.get('created_at')}  {e.get('actor_type')} "
+              f"{e.get('actor_id')} ({e.get('actor_name')})" for e in seen]
+    lines.append(f"  list them: multica issue timeline {issue} --action "
+                 "description_updated --output json (no --since: it drops the "
+                 "whole second it is given)")
+    return "\n".join(lines)
 
 
 def load_edits(path):
@@ -164,6 +186,7 @@ def main():
     except (RuntimeError, ValueError, KeyError, TypeError) as e:
         print(f"written, but the re-read failed: {e}", file=sys.stderr)
         return 2
+    info = window(a.issue, fresh_at, fresh_rev, after_rev, seen)
     if after.rstrip() != new.rstrip():
         print(f"CONCURRENT WRITE: expected {len(new.rstrip())} characters, found "
               f"{len(after.rstrip())}; someone wrote after our write",
@@ -172,13 +195,20 @@ def main():
     if not seen:
         print("WINDOW NOT VERIFIED: the re-read shows our text, but our own "
               f"description_updated did not show in {SETTLE_READS} timeline reads, so a "
-              "write that landed before ours cannot be ruled out",
+              f"write that landed before ours cannot be ruled out\n{info}",
               file=sys.stderr)
         return 3
     if len(seen) > 1:
-        print(f"WINDOW NOT CLEAN: {len(seen)} description_updated since our count, ours "
-              "is one; if another landed after our read, ours erased it (the re-read "
-              "shows our text)", file=sys.stderr)
+        if isinstance(fresh_rev, int) and isinstance(after_rev, int) \
+                and after_rev - fresh_rev == 1:
+            print("WINDOW NOT CLEAN, NOTHING LOST: other description writes landed "
+                  "after our count, but revision moved by one between our read and the "
+                  "re-read, so only one write changed the text: the others were "
+                  f"identical to it or landed before our read\n{info}", file=sys.stderr)
+        else:
+            print("WINDOW NOT CLEAN: another description write landed after our count; "
+                  "if it landed after our read, ours erased it (the re-read shows our "
+                  f"text). {LOST}\n{info}", file=sys.stderr)
         return 3
     print(f"{a.issue}: written and verified ({len(after)} characters, one "
           f"description_updated, revision {fresh_rev} -> {after_rev})")
