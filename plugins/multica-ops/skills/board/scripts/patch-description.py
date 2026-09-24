@@ -5,14 +5,19 @@
 compare-and-set (no `--if-revision` as of v0.5.2; `revision` comes back on read
 and cannot be passed on write). Two writers that read, edit and write back erase
 each other in silence. This helper keeps the race window to the seconds between
-its own read and its own write, and detects a write that lands inside it:
+its own read and its own re-read, and detects a write that lands inside it:
 
-  1. reads the description immediately before writing — never reuse an old read;
+  1. reads the description and `revision` immediately before writing — never
+     reuse an old read;
   2. applies exact-substring replacements, each of which must occur exactly once,
      and/or appends a block;
   3. writes with --no-start, so no agent run starts;
-  4. re-reads and compares with the fresh read plus the edits, ignoring trailing
-     whitespace (a trailing newline alone produced false alarms on 21/09/2026).
+  4. re-reads and requires `revision` to have gone up by exactly one — our write.
+     This is the check that catches a write landing BEFORE ours: ours erased it,
+     so the re-read shows our text and a content comparison alone passes;
+  5. compares the re-read with the fresh read plus the edits, ignoring trailing
+     whitespace (a trailing newline alone produced false alarms on 21/09/2026) —
+     this catches a write landing AFTER ours.
 
 Usage:
   patch-description.py --workspace-id WS --issue LAS-123 --edits edits.json
@@ -27,8 +32,12 @@ Exit codes:
   1  nothing written: an `old` did not occur exactly once, or the append is
      already there
   2  CLI or usage error
-  3  written, but the re-read differs: another writer touched the field in the
-     window — reconcile by hand before writing again
+  3  written, but another write landed in the window: `revision` moved by more
+     than one, or the re-read differs. A write before ours was erased by ours;
+     read `issue timeline` for a `description_updated` that is not ours and
+     reconcile by hand before writing again. `revision` moves on writes to other
+     fields too, so this can also be a status or priority change — conservative
+     by design
 """
 import argparse
 import json
@@ -61,10 +70,11 @@ def main():
                            capture_output=True, text=True)
         if r.returncode:
             raise RuntimeError(r.stderr.strip())
-        return json.loads(r.stdout, strict=False)["description"] or ""
+        d = json.loads(r.stdout, strict=False)
+        return d["description"] or "", d.get("revision")
 
     try:
-        fresh = read()
+        fresh, fresh_rev = read()
     except (RuntimeError, ValueError, KeyError) as e:
         print(f"read failed: {e}", file=sys.stderr)
         return 2
@@ -92,16 +102,27 @@ def main():
         return 2
 
     try:
-        after = read()
+        after, after_rev = read()
     except (RuntimeError, ValueError, KeyError) as e:
         print(f"written, but the re-read failed: {e}", file=sys.stderr)
         return 2
     if after.rstrip() != new.rstrip():
         print(f"CONCURRENT WRITE: expected {len(new.rstrip())} characters, found "
-              f"{len(after.rstrip())}; someone wrote between the read and the write",
+              f"{len(after.rstrip())}; someone wrote after our write",
               file=sys.stderr)
         return 3
-    print(f"{a.issue}: written and verified ({len(after)} characters)")
+    if isinstance(fresh_rev, int) and isinstance(after_rev, int):
+        if after_rev != fresh_rev + 1:
+            print(f"CONCURRENT WRITE: revision went from {fresh_rev} to {after_rev}, "
+                  "not +1, and the re-read shows our text: a write landed before "
+                  "ours and ours erased it, or another field changed — check "
+                  "`issue timeline` before writing again", file=sys.stderr)
+            return 3
+    else:
+        print("warning: no integer `revision` in the read; a write landing before "
+              "ours cannot be detected", file=sys.stderr)
+    print(f"{a.issue}: written and verified ({len(after)} characters, "
+          f"revision {fresh_rev} -> {after_rev})")
     return 0
 
 

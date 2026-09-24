@@ -322,9 +322,14 @@ The reference covers the mechanics of side effects. These are the habits around 
   lives as checkboxes in descriptions, the more a lost write costs. Three habits close most of
   the window: **read immediately before writing** (never write back a read from earlier in the
   turn); **change only your substring** — exact replacement asserted to occur once, or an
-  append — instead of re-emitting an edited copy; and **re-read after writing** and compare
-  with what you meant to write. Compare content, not `updated_at`, and ignore trailing
-  whitespace: on 21/09/2026 a trailing newline from `print()` was enough for a false alarm on
-  the first write, which is how a check gets abandoned. `scripts/patch-description.py` in this
-  skill does the three: it exits 1 without writing when a substring does not occur exactly
-  once, and 3 when the re-read differs — a write landed inside the window.
+  append — instead of re-emitting an edited copy; and **re-read after writing**. The re-read
+  has two checks, and each catches a different half of the window. `revision` must have gone up
+  by exactly one, your write: a write that landed *before* yours was erased by yours, so the
+  re-read shows your text and only the counter shows the loss. Then the content must match
+  what you meant to write, which catches a write landing *after* yours. Compare content, not
+  `updated_at`, and ignore trailing whitespace: on 21/09/2026 a trailing newline from
+  `print()` was enough for a false alarm on the first write, which is how a check gets
+  abandoned. `scripts/patch-description.py` in this skill does all of it: it exits 1 without
+  writing when a substring does not occur exactly once, and 3 when `revision` moved by more
+  than one or the re-read differs. `revision` also moves on writes to other fields, so a 3 can
+  be a status change in the same seconds; the `timeline` tells which.

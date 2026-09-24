@@ -16,9 +16,10 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `issue update`. Three habits — read immediately before writing, change only your substring,
   re-read and compare content — and the case that motivated them (LAS-69, 21/09/2026; LAS-147).
 - `skills/board/scripts/patch-description.py`: the three habits as a helper. Exact-substring
-  edits and/or an append on a fresh read, write with `--no-start`, re-read and compare ignoring
-  trailing whitespace. Exit 0 verified, 1 nothing written, 2 CLI or usage error, 3 concurrent
-  write detected.
+  edits and/or an append on a fresh read, write with `--no-start`, then re-read: `revision`
+  must be exactly one higher (a write before ours is erased by ours and shows only there), and
+  the content must match ignoring trailing whitespace (a write after ours). Exit 0 verified,
+  1 nothing written, 2 CLI or usage error, 3 concurrent write detected.
 
 ---
 
