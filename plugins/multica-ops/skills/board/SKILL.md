@@ -330,7 +330,10 @@ The reference covers the mechanics of side effects. These are the habits around 
   a check gets abandoned). A write landing *before* yours was erased by yours, so the re-read
   shows your text and only the `timeline` shows it: count the `description_updated` events
   **before reading the description** (`N`) and again after writing (`M`); exactly one new event,
-  and that one with your profile's `id` (`user profile get`) as its `actor_id`, means yours alone.
+  and that one with your own id as its `actor_id`, means yours alone. Your id is your profile's
+  (`user profile get`), except inside an agent task: there the write carries the agent's id,
+  `MULTICA_AGENT_ID`, while `user profile get` returns the member who owns the token (v0.5.3,
+  24/09/2026: task events on LAS-140 and LAS-141; the CLI sends the variable as `X-Agent-Id`).
   Wait for that one: an event by someone else showing first is not it. Another session on the
   same profile does look like yours (see above), and while yours is late it passes for it. The
   order is the point — a write landing between a read and a later count
@@ -355,5 +358,5 @@ The reference covers the mechanics of side effects. These are the habits around 
   contains the old) or the append is already there, or the edits change nothing — so a re-run
   after an exit 3 writes nothing if an edit survived; 2 on `--edits` that are not pairs of two
   strings, or an empty append; and 3 when the re-read differs, there is not exactly one new
-  event, or none by your profile, printing the read's `updated_at`, `revision` before and after,
+  event, or none by your id, printing the read's `updated_at`, `revision` before and after,
   each new event with its author (yours marked), and the command that lists them.
