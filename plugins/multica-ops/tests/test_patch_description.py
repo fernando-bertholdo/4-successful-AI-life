@@ -99,5 +99,45 @@ class Usage(Case):
         self.assertEqual(self.state["calls"], [])
 
 
+EDIT = ("--edits", [["- [ ] one", "- [x] one"]])
+
+
+def hook(when, call, do, text="", nth=1):
+    return {"when": when, "call": call, "nth": nth, "do": do, "text": text}
+
+
+class Window(Case):
+    """The window is decided by counting description_updated, not by revision."""
+
+    def test_counts_events_before_reading_and_never_uses_since(self):
+        r = self.run_script(*EDIT)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        kinds = [c[0] for c in self.state["calls"]]
+        self.assertEqual(kinds[:2], ["timeline", "get"])
+        self.assertFalse(any("--since" in c for c in self.state["calls"]))
+
+    def test_comment_in_the_window_is_not_a_concurrent_write(self):
+        r = self.run_script(*EDIT, hooks=[hook("before", "update", "comment")])
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("revision 5 -> 7", r.stdout)
+
+    def test_write_before_ours_in_the_updated_at_second_exits_3(self):
+        r = self.run_script(*EDIT, hooks=[hook("before", "update", "append",
+                                               "\n- [ ] theirs")])
+        self.assertEqual(r.returncode, 3)
+        self.assertNotIn("theirs", self.state["description"])
+        self.assertIn("WINDOW NOT CLEAN:", r.stderr)
+
+    def test_own_event_that_trails_the_write_is_waited_for(self):
+        r = self.run_script(*EDIT, own_event_lag=1)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.state["counts"]["timeline"], 3)
+
+    def test_own_event_that_never_shows_exits_3(self):
+        r = self.run_script(*EDIT, own_event_lag=10)
+        self.assertEqual(r.returncode, 3)
+        self.assertIn("WINDOW NOT VERIFIED", r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
