@@ -13,8 +13,8 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 - `patch-description.py` decides the window by counting `description_updated`, not by
   `revision`. It counts the events before reading the description (`N`) and again after writing
-  (`M`), and requires exactly one new event, ours — new by id, so a read the server caps cannot
-  hide one; if ours has not shown yet, it reads again, up to three times a second apart. The
+  (`M`), and requires exactly one new event, ours — new by id, so old entries a capped read
+  drops do not shift the count; if ours has not shown yet, it reads again, up to three times a second apart. The
   0.2.8 check, `revision` exactly +1, raised exit 3 on a comment, a status change or a write the
   `timeline` does not show; a comment in the window now exits 0. The count comes before the
   read because the inverse lets a write land in `N` with the text in hand already stale, and it

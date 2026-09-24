@@ -17,8 +17,9 @@ its own count and its own re-read, and detects a description write inside it:
      measured on 24/09/2026, and would count as someone else's);
   4. writes with --no-start, so no agent run starts;
   5. counts again (M) and requires exactly one new event, ours. New means an id
-     absent from N, so a read the server caps cannot hide one. If none has shown
-     yet it reads again, up to three times a second apart (latency not measured);
+     absent from N, so old entries a capped read drops (`issue timeline --help`)
+     do not shift the count. If none has shown yet it reads again, up to three
+     times a second apart (latency not measured);
   6. compares the re-read with what it wrote, ignoring trailing whitespace (a
      trailing newline alone produced false alarms on 21/09/2026) — this catches
      a write landing after ours.
@@ -26,8 +27,8 @@ its own count and its own re-read, and detects a description write inside it:
 Neither `revision` nor `--since` decides. `revision` also moves on a comment, a
 status change and writes the timeline does not show, so a jump is no proof of a
 description write. `--since T` drops the whole second of T, and the fresh read's
-`updated_at` is the second of the issue's last event — the very second a
-concurrent write lands in (measured on v0.5.3: an event at 20:07:03Z is missing
+`updated_at` is, as a rule, the second of the issue's last event — the very
+second a concurrent write lands in (measured on v0.5.3: an event at 20:07:03Z is missing
 from `--since 20:07:03Z` and present in `--since 20:07:02Z`). The count uses
 neither timestamp nor counter.
 
@@ -54,7 +55,10 @@ Exit codes:
      time and author (`actor_type`, `actor_id`) and the command that lists them.
      An erased text cannot be recovered through the CLI — the event keeps no
      text (`details` is empty) and there is no history command — so do not
-     write over it again: ask the event's author to re-apply their change
+     write over it again: ask the event's author to re-apply their change.
+     With two or more new events but `revision` up by only one between read and
+     re-read, only one write changed the text, and it says nothing was lost —
+     the one place `revision` enters, and it never makes the window clean
 """
 import argparse
 import json
