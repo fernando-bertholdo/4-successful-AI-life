@@ -334,12 +334,14 @@ The reference covers the mechanics of side effects. These are the habits around 
   (`user profile get`), except inside an agent task: there the write carries the agent's id,
   `MULTICA_AGENT_ID`, while `user profile get` returns the member who owns the token (v0.5.3,
   24/09/2026: task events on LAS-140 and LAS-141; the CLI sends the variable as `X-Agent-Id`).
-  Wait for that one: an event by someone else showing first is not it. Another session on the
-  same profile does look like yours (see above), and while yours is late it passes for it. The
-  order is the point — a write landing between a read and a later count
-  enters `N` while the text in hand is already stale. Measured on 24/09/2026 (v0.5.2, on a
-  throwaway issue): every description write logged a `description_updated`, even one identical
-  to the stored text, so a write that changes nothing must not be sent at all. Two shortcuts
+  Wait for that one: an event by someone else showing first is not it. A writer with your id
+  does look like you — another session on the same profile, the person it belongs to editing in
+  the app (see above; not measured: which id an app edit carries), another run of the same
+  agent — and while yours is late it passes for yours. The order is the point — a write landing
+  between a read and a later count enters `N` while the text in hand is already stale. Measured
+  on 24/09/2026 (v0.5.2, on a throwaway issue): every description write logged a
+  `description_updated`, even one identical to the stored text, so a write that changes nothing
+  must not be sent at all. Two shortcuts
   fail. `revision` also moves on a comment, a reply, a title or status change and on writes the
   `timeline` does not show (47 of 100 `lass` issues had more revisions than visible events on
   24/09/2026), so a jump is not proof of a description write. And `--since` drops the whole
@@ -351,12 +353,12 @@ The reference covers the mechanics of side effects. These are the habits around 
   nothing to be restored from: the event keeps no text (`details` is empty) and the CLI has no
   history command. Do not write over it again; its author — the event's `actor_type` and
   `actor_id` — re-applies it, and to an agent that request is a mention, which starts a run
-  (§5). When that `actor_id` is your own profile's `id`, the event does not say which session
-  wrote it: ask whoever runs the other sessions on that profile, which the `timeline` cannot
-  answer. `scripts/patch-description.py` in this skill does all of it: it exits 1 without writing
-  when a substring does not occur exactly once, an insertion (a replacement whose new text
-  contains the old) or the append is already there, or the edits change nothing — so a re-run
-  after an exit 3 writes nothing if an edit survived; 2 on `--edits` that are not pairs of two
-  strings, or an empty append; and 3 when the re-read differs, there is not exactly one new
-  event, or none by your id, printing the read's `updated_at`, `revision` before and after,
-  each new event with its author (yours marked), and the command that lists them.
+  (§5). When that `actor_id` is your own id, the event does not say which of those writers made
+  it: ask whoever runs them, which the `timeline` cannot answer. `scripts/patch-description.py`
+  in this skill does all of it: it exits 1 without writing when a substring does not occur
+  exactly once, an insertion (a replacement whose new text contains the old) or the append is
+  already there, or the edits change nothing — so a re-run after an exit 3 writes nothing if an
+  edit survived; 2 on `--edits` that are not pairs of two strings, or an empty append; and 3
+  when the re-read differs, there is not exactly one new event, or none by your id, printing the
+  read's `updated_at`, `revision` before and after, each new event with its author (yours
+  marked), and the command that lists them.

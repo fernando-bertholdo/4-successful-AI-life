@@ -28,9 +28,12 @@ its own count and its own re-read, and detects a description write inside it:
      New means an id absent from N, so old entries a capped read drops (`issue
      timeline --help`) do not shift the count. Until an event of ours shows it
      reads again, up to three times a second apart (latency not measured); if
-     none shows, the window is not verified, whatever else showed. Two sessions
-     on one profile look alike: with ours late, theirs passes for ours. And the
-     wait ends at ours: another author's event that shows later still is missed;
+     none shows, the window is not verified, whatever else showed. A writer
+     with our id looks like us: another session on the same profile, the person
+     behind it editing in the app (not measured: which id an app edit carries),
+     or another run of the same agent; with ours late, theirs passes for ours.
+     And the wait ends at ours: another author's event that shows later still
+     is missed;
   6. compares the re-read with what it wrote, ignoring trailing whitespace (a
      trailing newline alone produced false alarms on 21/09/2026) — this catches
      a write landing after ours.
@@ -71,9 +74,9 @@ Exit codes:
      An erased text cannot be recovered through the CLI — the event keeps no
      text (`details` is empty) and there is no history command — so do not
      write over it again: ask the event's author to re-apply their change.
-     An event whose `actor_id` is our own profile's (marked) does not say which
-     session wrote it: ask whoever runs the other sessions on that profile —
-     the `timeline` cannot tell them apart.
+     An event whose `actor_id` is our own id (marked) does not say which of
+     those writers made it: ask whoever runs them — the `timeline` cannot tell
+     them apart.
      With two or more new events but `revision` up by only one between read and
      re-read, only one write changed the text, and it says nothing was lost —
      the one place `revision` enters, and it never makes the window clean
@@ -92,8 +95,9 @@ LOST = ("The erased text cannot be recovered through the CLI: the event keeps no
         "(`details` is empty) and there is no history command. Do not write over it "
         "again; ask the author of the other event to re-apply their change (to an "
         "agent, that means a mention, which starts a run). If the other event is "
-        "marked [this profile], it does not say which session wrote it: ask whoever "
-        "runs the other sessions on this profile; the timeline cannot tell them apart.")
+        "marked [our id], it does not say who wrote it (another session on this "
+        "profile, its person editing in the app, or another run of this agent): ask "
+        "whoever runs them; the timeline cannot tell them apart.")
 
 
 def window(issue, fresh_at, fresh_rev, after_rev, seen, me):
@@ -103,7 +107,7 @@ def window(issue, fresh_at, fresh_rev, after_rev, seen, me):
              "should be ours):"]
     lines += [f"    {e.get('id')}  {e.get('created_at')}  {e.get('actor_type')} "
               f"{e.get('actor_id')} ({e.get('actor_name')})"
-              + ("  [this profile]" if e.get("actor_id") == me else "") for e in seen]
+              + ("  [our id]" if e.get("actor_id") == me else "") for e in seen]
     lines.append(f"  list them: multica issue timeline {issue} --action "
                  "description_updated --output json (no --since: it drops the "
                  "whole second it is given)")
