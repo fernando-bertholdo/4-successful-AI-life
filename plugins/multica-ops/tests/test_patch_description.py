@@ -129,6 +129,8 @@ class Window(Case):
         self.assertIn("WINDOW NOT CLEAN:", r.stderr)
         for needed in (f"updated_at {NOW}", "revision 5; re-read: revision 7",
                        "other-actor", "cannot be recovered", "Do not write over",
+                       "self-actor (Self)  [this profile]",
+                       "sessions on this profile",
                        "timeline ISSUE-1 --action description_updated"):
             self.assertIn(needed, r.stderr)
 

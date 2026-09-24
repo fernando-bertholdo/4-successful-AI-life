@@ -347,7 +347,9 @@ The reference covers the mechanics of side effects. These are the habits around 
   nothing to be restored from: the event keeps no text (`details` is empty) and the CLI has no
   history command. Do not write over it again; its author — the event's `actor_type` and
   `actor_id` — re-applies it, and to an agent that request is a mention, which starts a run
-  (§5). `scripts/patch-description.py` in this skill does all of it: it exits 1 without writing
+  (§5). When that `actor_id` is your own profile's `id`, the event does not say which session
+  wrote it: ask whoever runs the other sessions on that profile, which the `timeline` cannot
+  answer. `scripts/patch-description.py` in this skill does all of it: it exits 1 without writing
   when a substring does not occur exactly once, an insertion (a replacement whose new text
   contains the old) or the append is already there, or the edits change nothing — so a re-run
   after an exit 3 writes nothing if an edit survived; 2 on `--edits` that are not pairs of two

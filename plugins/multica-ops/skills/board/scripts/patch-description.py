@@ -57,12 +57,16 @@ Exit codes:
      if any edit is already there: a replaced `old` no longer occurs, an
      insertion's `new` is present, the append block is present
   3  written, but the window was not clean: the re-read differs, or not exactly
-     one new `description_updated`. It prints what there is to act on: the
-     read's `updated_at`, `revision` before and after, each new event with its
-     time and author (`actor_type`, `actor_id`) and the command that lists them.
+     one new `description_updated`, or none by our profile. It prints what there
+     is to act on: the read's `updated_at`, `revision` before and after, each new
+     event with its time and author (`actor_type`, `actor_id`) and the command
+     that lists them.
      An erased text cannot be recovered through the CLI — the event keeps no
      text (`details` is empty) and there is no history command — so do not
      write over it again: ask the event's author to re-apply their change.
+     An event whose `actor_id` is our own profile's (marked) does not say which
+     session wrote it: ask whoever runs the other sessions on that profile —
+     the `timeline` cannot tell them apart.
      With two or more new events but `revision` up by only one between read and
      re-read, only one write changed the text, and it says nothing was lost —
      the one place `revision` enters, and it never makes the window clean
@@ -80,16 +84,19 @@ SETTLE_READS = 3
 LOST = ("The erased text cannot be recovered through the CLI: the event keeps no text "
         "(`details` is empty) and there is no history command. Do not write over it "
         "again; ask the author of the other event to re-apply their change (to an "
-        "agent, that means a mention, which starts a run).")
+        "agent, that means a mention, which starts a run). If the other event is "
+        "marked [this profile], it does not say which session wrote it: ask whoever "
+        "runs the other sessions on this profile; the timeline cannot tell them apart.")
 
 
-def window(issue, fresh_at, fresh_rev, after_rev, seen):
+def window(issue, fresh_at, fresh_rev, after_rev, seen, me):
     lines = [f"  our read: updated_at {fresh_at}, revision {fresh_rev}; "
              f"re-read: revision {after_rev}",
              f"  description_updated events new since our count ({len(seen)}; one "
              "should be ours):"]
     lines += [f"    {e.get('id')}  {e.get('created_at')}  {e.get('actor_type')} "
-              f"{e.get('actor_id')} ({e.get('actor_name')})" for e in seen]
+              f"{e.get('actor_id')} ({e.get('actor_name')})"
+              + ("  [this profile]" if e.get("actor_id") == me else "") for e in seen]
     lines.append(f"  list them: multica issue timeline {issue} --action "
                  "description_updated --output json (no --since: it drops the "
                  "whole second it is given)")
@@ -204,7 +211,7 @@ def main():
     except (RuntimeError, ValueError, KeyError, TypeError) as e:
         print(f"written, but the re-read failed: {e}", file=sys.stderr)
         return 2
-    info = window(a.issue, fresh_at, fresh_rev, after_rev, seen)
+    info = window(a.issue, fresh_at, fresh_rev, after_rev, seen, me)
     if after.rstrip() != new.rstrip():
         print("CONCURRENT WRITE: the re-read differs from what we wrote (expected "
               f"{len(new.rstrip())} characters, found {len(after.rstrip())}): a "
