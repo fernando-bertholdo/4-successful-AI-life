@@ -1,0 +1,83 @@
+"""patch-description.py against a fake `multica` (tests/fake_multica.py).
+
+Standard library only. Run: bash tests/run-tests.sh
+"""
+import json
+import os
+import pathlib
+import subprocess
+import sys
+import tempfile
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+SCRIPT = HERE.parent / "skills" / "board" / "scripts" / "patch-description.py"
+FAKE = HERE / "fake_multica.py"
+NOW = "2026-09-24T20:55:58Z"
+TEXT = "## DoD\n\n- [ ] one\n- [ ] two\n"
+
+
+class Case(unittest.TestCase):
+    def run_script(self, *args, hooks=(), description=TEXT, **state):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        path = os.path.join(tmp.name, "state.json")
+        st = {"description": description.rstrip("\n"), "revision": 5,
+              "updated_at": NOW, "now": NOW, "seq": 0, "events": [],
+              "calls": [], "counts": {"get": 0, "timeline": 0, "update": 0},
+              "hooks": list(hooks)}
+        st.update(state)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(st, f)
+        files = []
+        for i, a in enumerate(args):
+            if isinstance(a, (list, dict)) or (isinstance(a, str) and a.startswith("@")):
+                p = os.path.join(tmp.name, f"arg{i}")
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write(a[1:] if isinstance(a, str) else json.dumps(a))
+                files.append(p)
+            else:
+                files.append(a)
+        env = dict(os.environ, MULTICA_BIN=str(FAKE), MULTICA_PROFILE="test",
+                   FAKE_MULTICA_STATE=path)
+        r = subprocess.run([sys.executable, str(SCRIPT), "--workspace-id", "ws",
+                            "--issue", "ISSUE-1", *files],
+                           capture_output=True, text=True, env=env)
+        with open(path, encoding="utf-8") as f:
+            self.state = json.load(f)
+        self.updates = [c for c in self.state["calls"] if c[0] == "update"]
+        return r
+
+
+class Baseline(Case):
+    def test_clean_write_exits_0_with_one_update(self):
+        r = self.run_script("--edits", [["- [ ] one", "- [x] one"]])
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(len(self.updates), 1)
+        self.assertIn("--no-start", self.updates[0])
+        self.assertIn("- [x] one", self.state["description"])
+
+    def test_edit_that_changes_nothing_exits_1_without_writing(self):
+        r = self.run_script("--edits", [["- [ ] one", "- [ ] one"]])
+        self.assertEqual(r.returncode, 1)
+        self.assertEqual(self.updates, [])
+
+    def test_substring_not_found_once_exits_1_without_writing(self):
+        r = self.run_script("--edits", [["- [ ] ", "- [x] "]])
+        self.assertEqual(r.returncode, 1)
+        self.assertEqual(self.updates, [])
+
+    def test_append_on_empty_description_has_no_leading_blank_lines(self):
+        r = self.run_script("--append", "@- [ ] new\n", description="")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.state["description"], "- [ ] new")
+
+    def test_write_after_ours_exits_3(self):
+        r = self.run_script("--edits", [["- [ ] one", "- [x] one"]],
+                            hooks=[{"when": "after", "call": "update", "nth": 1,
+                                    "do": "append", "text": "\n- [ ] theirs"}])
+        self.assertEqual(r.returncode, 3)
+
+
+if __name__ == "__main__":
+    unittest.main()
