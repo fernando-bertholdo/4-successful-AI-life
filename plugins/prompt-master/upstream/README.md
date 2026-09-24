@@ -4,7 +4,7 @@
 
 A Claude skill that writes the accurate prompts for any AI tool. Zero tokens or credits wasted. Full context and memory retention. No re-prompting your way to an answer you should have gotten on attempt one.
 
-**Works with:** Claude, ChatGPT, Gemini, o1/o3, MiniMax, Cursor, Claude Code, GitHub Copilot, Windsurf, Bolt, v0, Lovable, Devin, Perplexity, Midjourney, DALL-E, Stable Diffusion, ComfyUI, Sora, Runway, ElevenLabs, Zapier, Make, and any AI tool you throw at it.
+**Works with:** Claude, ChatGPT, Codex, Grok, Gemini, o1/o3, MiniMax, Cursor, Claude Code, GitHub Copilot, Windsurf, Bolt, v0, Lovable, Devin, Perplexity, Midjourney, DALL-E, Stable Diffusion, ComfyUI, Sora, Runway, ElevenLabs, Zapier, Make, and any AI tool you throw at it.
 
 ---
 
@@ -86,8 +86,9 @@ Prompt Master runs a structured pipeline on every request:
 3. **Asks targeted clarifying questions** — max 3 questions if critical info is missing, never more
 4. **Routes to the right framework** — picks and applies the correct prompt architecture automatically, never shown to the user
 5. **Applies safe techniques only** — role assignment, few-shot examples, XML structure, grounding anchors, memory block as needed
-6. **Runs a token efficiency audit** — strips every word that doesn't change the output
-7. **Delivers the prompt** — one clean copyable block with a one-line strategy note
+6. **Checks model recency** — verifies exact models and controls against official provider docs when the request depends on "latest"
+7. **Runs a token efficiency audit** — strips every word that doesn't change the output
+8. **Delivers the prompt** — one clean copyable block with a one-line strategy note
 
 ---
 ## Full Example #1: Generating Prompts for Images
@@ -200,8 +201,10 @@ Prompt Master includes specific profiles for 20+ tools. For anything not on the 
 
 | Tool | Category | What Prompt Master Fixes |
 |------|----------|--------------------------|
-| **Claude** | Reasoning LLM | Removes padding, adds XML structure, specifies length |
-| **ChatGPT / GPT-5.x** | Reasoning LLM | Output contract, verbosity control, completion criteria |
+| **Claude 5 / current Claude** | Reasoning and agentic LLM | Model-aware effort, scope, XML structure, and delegation control |
+| **ChatGPT / GPT-5.6** | Reasoning and agentic LLM | Sol/Terra/Luna routing, lean contracts, autonomy and effort control |
+| **Codex** | Coding agent | File scope, approval boundaries, verification, bounded subagents |
+| **Grok 4.6** | Reasoning and agentic LLM | Search grounding, reasoning effort, tools, caching, and stop conditions |
 | **Gemini 2.x** | Reasoning LLM | Grounding anchors, citation rules, format locks |
 | **o3 / o4-mini** | Thinking LLM | Short clean instructions only — never adds CoT (they think internally) |
 | **Ollama** | Local LLM | Asks which model is loaded, includes system prompt for Modelfile |
@@ -240,12 +243,12 @@ Prompt Master includes specific profiles for 20+ tools. For anything not on the 
 
 ---
 
-## 📐 12 Prompt Templates (Auto-Selected)
+## 📐 13 Prompt Templates (Auto-Selected)
 
 Prompt Master picks the right architecture for every task automatically and routes silently — you never see the framework name, just the prompt.
 
 <details>
-<summary><h3> Click to view all 12 templates</h3></summary>
+<summary><h3> Click to view all 13 templates</h3></summary>
 
 | Template | Best For |
 |----------|----------|
@@ -253,7 +256,7 @@ Prompt Master picks the right architecture for every task automatically and rout
 | **CO-STAR** (Context, Objective, Style, Tone, Audience, Response) | Professional documents, reports, business writing |
 | **RISEN** (Role, Instructions, Steps, End Goal, Narrowing) | Complex multi-step projects |
 | **CRISPE** (Capacity, Role, Insight, Statement, Personality, Experiment) | Creative work, brand voice, iterative content |
-| **Chain of Thought** | Math, logic, debugging, multi-step analysis |
+| **Auditable Reasoning** | Checkable math, logic, debugging, and analysis without hidden reasoning requests |
 | **Few-Shot** | Consistent structured output, pattern replication |
 | **File-Scope Template** | Cursor, Windsurf, Copilot — any code editing AI |
 | **ReAct + Stop Conditions** | Claude Code, Devin, AutoGPT — any autonomous agent |
@@ -261,6 +264,7 @@ Prompt Master picks the right architecture for every task automatically and rout
 | **Reference Image Editing** | Editing an existing image — detects edit vs generate automatically |
 | **ComfyUI** | Node-based image workflows — positive/negative split per checkpoint |
 | **Prompt Decompiler** | Breaking down, adapting, simplifying, or splitting existing prompts |
+| **Current Claude Task Brief** | Complex, multi-step, or agentic tasks on current Claude models |
 
 </details>
 
@@ -276,11 +280,11 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 | **Few-Shot Examples** | Adds 2-5 examples when format consistency matters more than instructions |
 | **XML Structural Tags** | Wraps sections in XML for Claude-based tools that parse it reliably |
 | **Grounding Anchors** | Adds anti-hallucination rules for factual and citation tasks |
-| **Chain of Thought** | Forces step-by-step reasoning for logic tasks — never applied to o1/o3 |
+| **Auditable Reasoning** | Requests conclusions, assumptions, evidence, and verification without hidden reasoning |
 
 ---
 
-## 🚫 35 Credit-Killing Patterns Detected (with Before/After Examples)
+## 🚫 37 Credit-Killing Patterns Detected (with Before/After Examples)
 
 <details>
 <summary><h3> Task Patterns (7)</h3></summary>
@@ -349,16 +353,16 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 
 | # | Pattern | Before | After |
 |---|---------|--------|-------|
-| 26 | **No CoT for logic task** | "which approach is better?" | "Think through both approaches step by step before recommending" |
-| 27 | **Adding CoT to reasoning models** | "think step by step" sent to o1/o3 | Removed, reasoning models think internally and CoT instructions degrade output |
-| 28 | **No self-check on complex output** | (nothing) | "Before finishing, verify output against the constraints above" |
-| 29 | **Expecting inter-session memory** | "you already know my project" | Always re-provide the Memory Block |
-| 30 | **Contradicting prior decisions** | New prompt ignores earlier architecture | Memory Block with all established facts |
+| 26 | **No audit contract for logic task** | "which approach is better?" | Request the recommendation, assumptions, criteria, evidence, and checks |
+| 27 | **Requesting hidden reasoning** | "show your chain of thought" | Ask for a concise rationale, evidence, and verification instead |
+| 28 | **Expecting inter-session memory** | "you already know my project" | Re-provide the Memory Block in every new session |
+| 29 | **Contradicting prior work** | New prompt ignores earlier architecture | Include established decisions in the Memory Block |
+| 30 | **No grounding rule for factual tasks** | "summarize what experts say about X" | Require verifiable sources and explicit uncertainty |
 
 </details>
 
 <details>
-<summary><h3> Agentic Patterns (5)</h3></summary>
+<summary><h3> Agentic Patterns (7)</h3></summary>
 
 | # | Pattern | Before | After |
 |---|---------|--------|-------|
@@ -367,6 +371,8 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 | 33 | **Silent agent** | No progress output | "After each step output: ✅ [what was completed]" |
 | 34 | **Unlocked filesystem** | No file restrictions | "Only edit files inside `src/`. Do not touch `package.json`, `.env`, or any config file." |
 | 35 | **No human review trigger** | Agent decides everything | "Stop and ask before: deleting any file, adding any dependency, or touching the database schema" |
+| 36 | **Vague first turn for an agentic model** | "fix the auth bug" with no scope, files, or criteria | Front-load outcome, context, scope, boundaries, and acceptance criteria |
+| 37 | **Context rot on long sessions** | Repeated corrections leave stale assumptions in context | Start fresh for unrelated work or compact around current decisions and state |
 
 </details>
 
@@ -391,6 +397,7 @@ This is the single biggest fix for long sessions. Most wasted re-prompts come fr
 
 ## ℹ️ Version History
 
+- **1.8.0** — Current-model refresh. Added Claude Fable 5, Opus 5, Sonnet 5, GPT-5.6 Sol/Terra/Luna, Codex, and Grok 4.6 routing. Replaced hidden chain-of-thought requests with auditable reasoning and generalized the Claude task brief for current adaptive-thinking models.
 - **1.7.0** — Opus 4.8 compatibility. Made Claude 4.x routing version-aware: durable advice generalized across 4.6/4.7/4.8, added Opus 4.8 (current default) profile, kept Opus 4.7 labeled. De-hardcoded the effort-level note (now harness-managed). Template M and pattern 36 cover 4.7 and 4.8. Fixed a stray fragment in patterns.md.
 - **1.6.0** — Opus 4.7 update. Added Template M (Opus 4.7 Task Brief). Updated Claude and Claude Code routing for literalism, adaptive thinking, xhigh effort, and session hygiene. Added patterns 36–37.
 - **1.5.0** — Added more tool routing. New Agentic AI and 3D Model AI routing added. Fixed description to 189 chars. Removed token estimate from output. Added instruction layer and copywriting placeholders
@@ -410,6 +417,6 @@ MIT: See [LICENSE](LICENSE) for details.
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=nidhinjs/prompt-master&type=Date)](https://star-history.com/#nidhinjs/claude-skills&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=nidhinjs/prompt-master&type=Date)](https://star-history.dera.page/#nidhinjs/prompt-master&Date)
 
 ---
