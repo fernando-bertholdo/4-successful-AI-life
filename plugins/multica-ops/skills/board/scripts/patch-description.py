@@ -16,10 +16,15 @@ its own count and its own re-read, and detects a description write inside it:
      without writing (an identical write still logs a `description_updated`,
      measured on 24/09/2026, and would count as someone else's);
   4. writes with --no-start, so no agent run starts;
-  5. counts again (M) and requires exactly one new event, ours. New means an id
-     absent from N, so old entries a capped read drops (`issue timeline --help`)
-     do not shift the count. If none has shown yet it reads again, up to three
-     times a second apart (latency not measured);
+  5. counts again (M) and requires exactly one new event, and that one by our
+     own profile: an event's `actor_id` is the `id` that `multica user profile
+     get` returns for the profile that wrote it (v0.5.3, 24/09/2026: all 9
+     `description_updated` on LAS-147), read once before the count. New means an
+     id absent from N, so old entries a capped read drops (`issue timeline
+     --help`) do not shift the count. Until an event by our profile shows it
+     reads again, up to three times a second apart (latency not measured); if
+     none shows, the window is not verified, whatever else showed. Two sessions
+     on one profile look alike: with ours late, theirs passes for ours;
   6. compares the re-read with what it wrote, ignoring trailing whitespace (a
      trailing newline alone produced false alarms on 21/09/2026) — this catches
      a write landing after ours.
@@ -149,6 +154,8 @@ def main():
         return 2
 
     try:
+        me = json.loads(cli(["user", "profile", "get", "--output", "json"]),
+                        strict=False)["id"]
         before = events()
         fresh, fresh_rev, fresh_at = read()
     except (RuntimeError, ValueError, KeyError, TypeError) as e:
@@ -184,7 +191,8 @@ def main():
             if attempt:
                 time.sleep(1)
             seen = [e for k, e in events().items() if k not in before]
-            if seen:
+            ours = [e for e in seen if e.get("actor_id") == me]
+            if ours:
                 break
         after, after_rev, _ = read()
     except (RuntimeError, ValueError, KeyError, TypeError) as e:
@@ -199,11 +207,12 @@ def main():
               "and exits 1 if they survived. If another event below landed before ours, "
               f"ours erased it. {LOST}\n{info}", file=sys.stderr)
         return 3
-    if not seen:
-        print("WINDOW NOT VERIFIED: the re-read shows our text, but our own "
-              f"description_updated did not show in {SETTLE_READS} timeline reads, so a "
-              f"write that landed before ours cannot be ruled out\n{info}",
-              file=sys.stderr)
+    if not ours:
+        print("WINDOW NOT VERIFIED: the re-read shows our text, but no new "
+              f"description_updated by our profile showed in {SETTLE_READS} timeline "
+              "reads, so a write that landed before ours cannot be ruled out"
+              + (f"; any event below may be one ours erased. {LOST}" if seen else "")
+              + f"\n{info}", file=sys.stderr)
         return 3
     if len(seen) > 1:
         if isinstance(fresh_rev, int) and isinstance(after_rev, int) \

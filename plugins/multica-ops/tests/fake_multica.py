@@ -11,7 +11,10 @@ shapes CLI v0.5.3 returns. What it reproduces, and where each came from:
 - the server drops one trailing newline of the text it stores (same issue);
 - event and `updated_at` carry whole seconds only, and every event here lands in
   the same second (`now`), which is the case `--since` cannot see;
-- `--since T` drops the whole second of T (measured on v0.5.3, 24/09/2026).
+- `--since T` drops the whole second of T (measured on v0.5.3, 24/09/2026);
+- `user profile get` returns as `id` the `actor_id` of the profile's own events
+  (v0.5.3, 24/09/2026: all 9 `description_updated` on LAS-147). Its call is
+  logged as "profile".
 
 Hooks inject someone else's write around the n-th call of a kind:
 {"when": "before"|"after", "call": "get"|"timeline"|"update", "nth": 1,
@@ -54,6 +57,8 @@ def run_hooks(st, when, call):
 
 
 def serve(st, cmd, ident, flags, stdin):
+    if cmd == "profile":
+        return {"id": SELF["actor_id"], "name": SELF["actor_name"]}
     if cmd == "get":
         return {"identifier": ident, "description": st["description"],
                 "revision": st["revision"], "updated_at": st["updated_at"]}

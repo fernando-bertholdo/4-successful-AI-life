@@ -329,8 +329,11 @@ The reference covers the mechanics of side effects. These are the habits around 
   trailing newline from `print()` was enough for a false alarm on the first write, which is how
   a check gets abandoned). A write landing *before* yours was erased by yours, so the re-read
   shows your text and only the `timeline` shows it: count the `description_updated` events
-  **before reading the description** (`N`) and again after writing (`M`); exactly one new event
-  means yours alone. The order is the point — a write landing between a read and a later count
+  **before reading the description** (`N`) and again after writing (`M`); exactly one new event,
+  and that one with your profile's `id` (`user profile get`) as its `actor_id`, means yours alone.
+  Wait for that one: an event by someone else showing first is not it. Another session on the
+  same profile does look like yours (see above), and while yours is late it passes for it. The
+  order is the point — a write landing between a read and a later count
   enters `N` while the text in hand is already stale. Measured on 24/09/2026 (v0.5.2, on a
   throwaway issue): every description write logged a `description_updated`, even one identical
   to the stored text, so a write that changes nothing must not be sent at all. Two shortcuts

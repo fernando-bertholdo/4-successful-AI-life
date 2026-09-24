@@ -113,7 +113,7 @@ class Window(Case):
         r = self.run_script(*EDIT)
         self.assertEqual(r.returncode, 0, r.stderr)
         kinds = [c[0] for c in self.state["calls"]]
-        self.assertEqual(kinds[:2], ["timeline", "get"])
+        self.assertEqual(kinds[:3], ["profile", "timeline", "get"])
         self.assertFalse(any("--since" in c for c in self.state["calls"]))
 
     def test_comment_in_the_window_is_not_a_concurrent_write(self):
@@ -164,6 +164,21 @@ class Window(Case):
         r = self.run_script(*EDIT, own_event_lag=10)
         self.assertEqual(r.returncode, 3)
         self.assertIn("WINDOW NOT VERIFIED", r.stderr)
+
+    def test_late_own_event_is_not_replaced_by_someone_elses(self):
+        r = self.run_script(*EDIT, own_event_lag=1, hooks=[
+            hook("before", "update", "append", "\n- [ ] theirs")])
+        self.assertEqual(r.returncode, 3, r.stdout)
+        self.assertNotIn("theirs", self.state["description"])
+        self.assertIn("WINDOW NOT CLEAN:", r.stderr)
+        self.assertEqual(self.state["counts"]["timeline"], 3)
+
+    def test_someone_elses_event_alone_does_not_verify_the_window(self):
+        r = self.run_script(*EDIT, own_event_lag=10, hooks=[
+            hook("before", "update", "append", "\n- [ ] theirs")])
+        self.assertEqual(r.returncode, 3, r.stdout)
+        self.assertIn("WINDOW NOT VERIFIED", r.stderr)
+        self.assertIn("may be one ours erased", r.stderr)
 
 
 if __name__ == "__main__":
