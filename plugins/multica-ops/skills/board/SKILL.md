@@ -340,8 +340,9 @@ The reference covers the mechanics of side effects. These are the habits around 
   fail. `revision` also moves on a comment, a reply, a title or status change and on writes the
   `timeline` does not show (47 of 100 `lass` issues had more revisions than visible events on
   24/09/2026), so a jump is not proof of a description write. And `--since` drops the whole
-  second it is given (v0.5.3: an event at 20:07:03Z is missing from `--since 20:07:03Z` and
-  present from `--since 20:07:02Z`), while an issue's `updated_at` is, as a rule, the second of
+  second it is given (v0.5.3, 24/09/2026, LAS-147: the event at 2026-09-21T20:07:03Z is missing
+  from `--since 2026-09-21T20:07:03Z` and present from `--since 2026-09-21T20:07:02Z`), while an
+  issue's `updated_at` is, as a rule, the second of
   its last event (96 of 100 `lass` issues on 24/09/2026) — so `--since <updated_at>` is blind to
   the very write that matters; to search by hand, start one second earlier. An erased write has
   nothing to be restored from: the event keeps no text (`details` is empty) and the CLI has no

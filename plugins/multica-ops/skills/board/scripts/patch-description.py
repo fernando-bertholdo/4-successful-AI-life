@@ -33,9 +33,9 @@ Neither `revision` nor `--since` decides. `revision` also moves on a comment, a
 status change and writes the timeline does not show, so a jump is no proof of a
 description write. `--since T` drops the whole second of T, and the fresh read's
 `updated_at` is, as a rule, the second of the issue's last event — the very
-second a concurrent write lands in (measured on v0.5.3: an event at 20:07:03Z is missing
-from `--since 20:07:03Z` and present in `--since 20:07:02Z`). The count uses
-neither timestamp nor counter.
+second a concurrent write lands in (v0.5.3, 24/09/2026, LAS-147: the event at
+2026-09-21T20:07:03Z is missing from `--since 2026-09-21T20:07:03Z` and present
+in `--since 2026-09-21T20:07:02Z`). The count uses neither timestamp nor counter.
 
 Usage:
   patch-description.py --workspace-id WS --issue LAS-123 --edits edits.json
