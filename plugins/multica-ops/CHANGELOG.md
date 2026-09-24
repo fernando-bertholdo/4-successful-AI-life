@@ -7,6 +7,28 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.8] — 2026-09-23
+
+### Added
+
+- §8: **a description write replaces the whole field, and nothing merges it.** Two writers that
+  read, edit and write back erase each other in silence; v0.5.2 still has no compare-and-set on
+  `issue update`. Three habits — read immediately before writing, change only your substring,
+  re-read and compare content — and the case that motivated them (LAS-69, 21/09/2026; LAS-147).
+- `skills/board/scripts/patch-description.py`: the three habits as a helper. Exact-substring
+  edits and/or an append on a fresh read; no write at all when the result is the stored text;
+  write with `--no-start`; then re-read: the content must match ignoring trailing whitespace
+  (a write after ours), and `revision` must be exactly one higher (a write before ours is
+  erased by ours and shows only there). Exit 0 verified, 1 nothing written, 2 CLI, file or
+  usage error, 3 window not clean — a jump in `revision` is not proof of loss, and the
+  `timeline` decides.
+- What moves `revision`, measured on 24/09/2026 on a throwaway issue (v0.5.2): +1 per
+  description write that changes the text, +0 for an identical write (which still logs a
+  `description_updated`), +1 per comment or reply, +1 per title or status change, +1 for title
+  and description in one call (two events).
+
+---
+
 ## [0.2.7] — 2026-09-20
 
 ### Added
