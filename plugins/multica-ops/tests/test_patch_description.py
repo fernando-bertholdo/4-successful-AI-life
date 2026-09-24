@@ -63,6 +63,12 @@ class Baseline(Case):
         self.assertEqual(r.returncode, 1)
         self.assertEqual(self.updates, [])
 
+    def test_edit_that_only_adds_a_trailing_newline_exits_1_without_writing(self):
+        r = self.run_script("--edits", [["- [ ] two", "- [ ] two\n"]])
+        self.assertEqual(r.returncode, 1, r.stderr)
+        self.assertIn("unchanged", r.stderr)
+        self.assertEqual(self.updates, [])
+
     def test_substring_not_found_once_exits_1_without_writing(self):
         r = self.run_script("--edits", [["- [ ] ", "- [x] "]])
         self.assertEqual(r.returncode, 1)
