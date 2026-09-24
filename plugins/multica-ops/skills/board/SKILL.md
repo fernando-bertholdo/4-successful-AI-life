@@ -312,3 +312,32 @@ The reference covers the mechanics of side effects. These are the habits around 
   written to nobody — the same failure as a comment on an unscoped item, from the other
   side. Anything that must be done goes where it will be found: a checkbox with a `verify:`
   in the issue description, or an issue of its own.
+- **A description write replaces the whole field, and nothing merges it.** `issue update
+  --description-*` writes the entire description; the CLI has no compare-and-set (no
+  `--if-revision` as of v0.5.2 — `revision` comes back on read and cannot be passed on write).
+  Two writers that read, edit and write back erase each other in silence, with no conflict and
+  an ordinary `activity` event in the `timeline`. Measured on 21/09/2026 on LAS-69: a session
+  marked ten DoD boxes at 16:39:04Z and another added two `verify:` criteria at 17:04:45Z, with
+  two more description writes in between; nothing was lost only because of the order. The cost
+  grows with the rule above — the more pending work lives as checkboxes in descriptions, the
+  more a lost write costs. Three habits close most of the window: **read immediately before
+  writing** (never write back a read from earlier in the turn); **change only your
+  substring** — exact replacement asserted to occur once, or an append — instead of
+  re-emitting an edited copy; and **re-read after writing**. The re-read has two checks, and
+  each catches a different half of the window. The content must match what you wrote, which
+  catches a write landing *after* yours; compare content, not `updated_at`, and ignore
+  trailing whitespace (on 21/09/2026 a trailing newline from `print()` was enough for a false
+  alarm on the first write, which is how a check gets abandoned). And `revision` must have
+  moved by exactly one: a write that landed *before* yours was erased by yours, so the re-read
+  shows your text and only the counter shows the loss. Measured on 24/09/2026 (v0.5.2, on a
+  throwaway issue): every description write that changes the text moves `revision` by one and
+  logs a `description_updated`; a write identical to the stored text logs the event and moves
+  nothing, so a write that changes nothing must not be sent at all. The counter also moves on
+  a comment, a reply, a title or status change, and on writes the `timeline` does not show
+  (47 of 100 `lass` issues had more revisions than visible events on 24/09/2026), so a jump is
+  not proof of loss. What decides is the `timeline`: more than one `description_updated`
+  after the fresh read's `updated_at` — yours is one of them — means a description write landed
+  in the window. `scripts/patch-description.py` in this skill does all of it: it exits 1
+  without writing when a substring does not occur exactly once, the append is already there,
+  or the edits change nothing; and 3 when the re-read differs or `revision` did not move by
+  exactly one, printing the `updated_at` to search the `timeline` from.
