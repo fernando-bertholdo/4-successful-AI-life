@@ -181,5 +181,21 @@ class Window(Case):
         self.assertIn("may be one ours erased", r.stderr)
 
 
+class Rerun(Case):
+    """Re-running after an exit 3 writes nothing where an edit survived."""
+
+    INSERT = ("--edits", [["- [ ] one", "- [ ] one\n- [ ] inserted"]])
+
+    def test_insertion_is_not_applied_twice(self):
+        r = self.run_script(*self.INSERT, hooks=[hook("after", "update", "append",
+                                                      "\n- [ ] theirs")])
+        self.assertEqual(r.returncode, 3)
+        again = self.run_script(*self.INSERT, description=self.state["description"])
+        self.assertEqual(again.returncode, 1, again.stdout)
+        self.assertIn("insertion is already there", again.stderr)
+        self.assertEqual(self.updates, [])
+        self.assertEqual(self.state["description"].count("inserted"), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -49,11 +49,13 @@ Env: MULTICA_PROFILE (required), MULTICA_BIN (default: the desktop-app binary).
 
 Exit codes:
   0  written, and the re-read matches
-  1  nothing written: an `old` did not occur exactly once, the append is already
-     there, or the edits leave the description unchanged
+  1  nothing written: an `old` did not occur exactly once, an insertion (a `new`
+     that contains its `old`) is already there, the append is already there, or
+     the edits leave the description unchanged
   2  CLI, file or usage error. It can also come AFTER a successful write, when
-     the re-read fails; re-running is safe, because a replaced substring no
-     longer matches and a repeated append exits 1
+     the re-read fails. Re-running re-reads first and exits 1 without writing
+     if any edit is already there: a replaced `old` no longer occurs, an
+     insertion's `new` is present, the append block is present
   3  written, but the window was not clean: the re-read differs, or not exactly
      one new `description_updated`. It prints what there is to act on: the
      read's `updated_at`, `revision` before and after, each new event with its
@@ -169,6 +171,10 @@ def main():
             print(f"nothing written: substring occurs {n} times: {old[:80]!r}",
                   file=sys.stderr)
             return 1
+        if old != repl and old in repl and repl in new:
+            print(f"nothing written: the insertion is already there: {repl[:80]!r}",
+                  file=sys.stderr)
+            return 1
         new = new.replace(old, repl)
     if block is not None:
         if block in new:
@@ -203,9 +209,10 @@ def main():
         print("CONCURRENT WRITE: the re-read differs from what we wrote (expected "
               f"{len(new.rstrip())} characters, found {len(after.rstrip())}): a "
               "description write landed after ours, and ours may be the one it erased. "
-              "Re-running this command is safe: it re-reads, re-applies only our edits "
-              "and exits 1 if they survived. If another event below landed before ours, "
-              f"ours erased it. {LOST}\n{info}", file=sys.stderr)
+              "Re-running re-reads first and exits 1 without writing if any of our "
+              "edits is still there (an `old` gone, an insertion's `new` present, the "
+              "append present); otherwise it writes them all again. If another event "
+              f"below landed before ours, ours erased it. {LOST}\n{info}", file=sys.stderr)
         return 3
     if not ours:
         print("WINDOW NOT VERIFIED: the re-read shows our text, but no new "

@@ -348,8 +348,9 @@ The reference covers the mechanics of side effects. These are the habits around 
   history command. Do not write over it again; its author — the event's `actor_type` and
   `actor_id` — re-applies it, and to an agent that request is a mention, which starts a run
   (§5). `scripts/patch-description.py` in this skill does all of it: it exits 1 without writing
-  when a substring does not occur exactly once, the append is already there, or the edits
-  change nothing; 2 on `--edits` that are not pairs of two strings, or an empty append; and 3
-  when the re-read differs or there is not exactly one new event, printing the read's
-  `updated_at`, `revision` before and after, each new event with its author, and the command
-  that lists them.
+  when a substring does not occur exactly once, an insertion (a replacement whose new text
+  contains the old) or the append is already there, or the edits change nothing — so a re-run
+  after an exit 3 writes nothing if an edit survived; 2 on `--edits` that are not pairs of two
+  strings, or an empty append; and 3 when the re-read differs or there is not exactly one new
+  event, printing the read's `updated_at`, `revision` before and after, each new event with its
+  author, and the command that lists them.
