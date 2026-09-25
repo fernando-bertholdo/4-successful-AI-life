@@ -7,6 +7,59 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.9] — 2026-09-24
+
+### Changed
+
+- `patch-description.py` decides the window by counting `description_updated`, not by
+  `revision`. It counts the events before reading the description (`N`) and again after writing
+  (`M`), and requires exactly one new event, and that one ours: outside an agent task the `id`
+  of `user profile get` is the `actor_id` of the profile's own events (v0.5.3, 24/09/2026: all 9
+  `description_updated` on LAS-147); inside a task our id is `MULTICA_AGENT_ID`, because the
+  task's writes carry the agent's id while `user profile get` there returns the member who owns
+  the token. New is by id, so old entries a capped read drops do not shift the count; until an
+  event of ours shows, it reads again, up to three times a second apart, and another author's
+  event never stands in for ours. A writer with our id still looks like us: another session on
+  the same profile, the person it belongs to editing in the app (not measured: which id an app
+  edit carries), another run of the same agent. The 0.2.8 check, `revision` exactly +1, raised
+  exit 3 on a comment, a status change or a write the `timeline` does not show; a comment in the
+  window now exits 0. The count comes before the
+  read because the inverse lets a write land in `N` with the text in hand already stale, and it
+  uses no `--since`: that flag drops the whole second it is given, and `updated_at` is the second
+  of the last event (measured on CLI v0.5.3). LAS-147, items 2 and 5.
+- Exit 3 gives the input for the action instead of "reconcile by hand": the erased text cannot
+  be recovered through the CLI (the event keeps no text, `details` is empty, and there is no
+  history command), so do not write over it again and ask the event's author to re-apply it.
+  It prints the read's `updated_at`, `revision` before and after, each new event with its time,
+  `actor_type` and `actor_id` (the name only when the event has one: an agent's has none, and
+  `multica agent list` gives it), and the command that lists them. An event with our own id is
+  marked `[our id]`: it does not say which of the writers above made it, so the re-apply is
+  asked of whoever runs them. With two or more new events and `revision` up by only one, it says
+  nothing was lost. LAS-147, item 4.
+- The branch where the re-read differs prints the same window and says ours may be the write
+  that was erased, and what a re-run does: it re-reads and exits 1 without writing if an edit is
+  already there, otherwise it writes them all again. LAS-147, item 1.
+- §8 follows the script: count instead of `revision` +1, the order, the second `--since`
+  drops (start one second earlier when searching by hand), no recovery, the author re-applies.
+  No `--if-revision` on `issue update` as of v0.5.3.
+
+### Fixed
+
+- An insertion — a replacement whose new text contains the old, such as a `verify:` line added
+  under an item — exits 1 when its new text is already there. 0.2.8 applied it again on a
+  re-run, duplicating the text, and exited 0.
+- `--edits` takes only a JSON list of pairs of two strings, the first non-empty, and exits 2
+  otherwise; 0.2.8 turned `null`, numbers and a two-character object key into text and exited
+  0. An empty `--append` block exits 2 instead of 1. LAS-147, item 3.
+
+### Added
+
+- `tests/`: a fake `multica` (`fake_multica.py`, reached through `MULTICA_BIN`) that reproduces
+  the measured server behaviour, and 20 `unittest` cases for the script;
+  `bash tests/run-tests.sh`, standard library only.
+
+---
+
 ## [0.2.8] — 2026-09-23
 
 ### Added
