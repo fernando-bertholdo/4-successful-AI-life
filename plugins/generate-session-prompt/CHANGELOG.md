@@ -9,9 +9,9 @@ versionamento `MAJOR.MINOR.PATCH+upstream-X.Y.Z`.
 ## [1.1.0+upstream-4.0.0] — 2026-09-30
 
 ### Changed
-- Sync do upstream `tech-product-template@4e775d5` (o anterior era `da4b05c`), primeiro sync verde
-  desde 13/07/2026: o secret `UPSTREAM_TOKEN` tinha expirado e foi regravado em 30/09/2026
-  (TECH-827). O `upstream/SKILL.md` fica idêntico ao da origem (`diff` sem saída); sem patch local.
+- Sync do upstream `tech-product-template@4e775d5` (o anterior era `da4b05c`), primeira execução verde
+  do sync desde 13/07/2026 (disparo manual): o secret `UPSTREAM_TOKEN` deixou de autenticar
+  (compatível com o prazo padrão de 30 dias) e foi regravado em 30/09/2026. O `upstream/SKILL.md` fica idêntico ao da origem (`diff` sem saída); sem patch local.
 - Comportamento novo que chega com o sync: o modo opinionated lê a issue da iniciativa no
   rastreador (descrição, checkboxes, comentários de topo), e o modo genérico também, quando o
   projeto tem rastreador; o `TODO.md` e o tipo `patch` saem do procedimento; as aberturas de
