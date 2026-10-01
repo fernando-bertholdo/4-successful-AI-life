@@ -69,7 +69,7 @@ Usuário pediu "contexto completo" ou similar           → detailed
 
 **Antes de qualquer coleta**, verifique se o diretório `.planning/` existe na raiz do projeto atual:
 
-- **Existe `.planning/`** → use **MODE:opinionated-initiative** (vocabulário milestone/detour/patch/ajuste/avulso, leitura de Roadmap/TODO/CONTEXT, templates específicos do framework)
+- **Existe `.planning/`** → use **MODE:opinionated-initiative** (vocabulário milestone/detour/ajuste/avulso, leitura de Roadmap/CONTEXT, templates específicos do framework)
 - **Não existe `.planning/`** → use **MODE:generic** (vocabulário feature/bugfix/refactor/spike/misc, leitura de README/git/sessão, templates universais)
 
 A detecção determina **apenas** o procedimento de coleta de contexto e o conjunto de templates. Os princípios, níveis de detalhe, regras gerais e validação são idênticos nos dois modos.
@@ -93,10 +93,9 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
 
 ```bash
 1. Identificar tipo de trabalho
-   - Ler .planning/README.md para identificar tipo (milestone / detour / patch)
+   - Ler .planning/README.md para identificar tipo (milestone / detour)
    - Se milestone → localizar .planning/milestones/MX.X-nome/
    - Se detour → localizar .planning/detours/<nome>/
-   - Se patch → verificar .planning/patches/{slug}/plan.md
    - Se avulso (sem vínculo) → verificar .planning/scratch/
 
 2. Coletar estado atual
@@ -104,10 +103,12 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
      a. Milestone: .planning/milestones/MX.X-*/CONTEXT.md (glob)
      b. Detour: .planning/detours/<nome>/CONTEXT.md
      c. Fallback legado: _archive/<id>/CONTEXT.md
-     d. Se nada → prosseguir sem CONTEXT.md (usar Roadmap/TODO)
+     d. Se nada → prosseguir sem CONTEXT.md (usar Roadmap.md)
    - Ler CONTEXT.md resolvido (contexto vivo, se existir)
+   - Ler a issue da iniciativa no rastreador: descrição, checkboxes de DoR/DoD e
+     comentários de topo (veredito, decisão respondida, nota) — o que só existe
+     na thread não chega ao prompt por arquivo nenhum (medido em 18/09/2026)
    - Ler Roadmap.md (milestone/fase atual, DoR/DoD)
-   - Ler TODO.md (tarefas pendentes e progresso)
    - Ler plans em .claude/plans/ (se existir)
    - Verificar últimos commits (git log --oneline -5)
    - Verificar git status (mudanças pendentes)
@@ -120,34 +121,34 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
 #### Milestone (qualquer nível)
 
 **Abertura:** `Vamos continuar a implementação do milestone [ID] ([NOME]).`
-**Referências obrigatórias:** Roadmap.md (DoR/DoD), TODO.md (seção do milestone), CONTEXT.md da initiative
+**Referências obrigatórias:** Roadmap.md (DoR/DoD), CONTEXT.md da initiative
 **Contexto:** Progresso quantitativo (X/Y tarefas, N% DoD), próxima tarefa, bloqueios
 **Skills:** validate-dor, validate-dod, pre-commit-check, validate-testing
 
 #### Detour (qualquer nível)
 
 **Abertura:** `Vamos continuar o detour [NOME] (relacionado a [MILESTONES]).`
-**Referências obrigatórias:** .planning/detours/<nome>/CONTEXT.md, Roadmap.md (seção Desvios), TODO.md
+**Referências obrigatórias:** .planning/detours/<nome>/CONTEXT.md, Roadmap.md (seção Desvios)
 **Contexto:** Fases do detour, entregas já concluídas, impacto em milestones futuros
 **Skills:** pre-commit-check, organize-commits, update-docs
 
 #### Ajuste de Roadmap / Documentação (qualquer nível)
 
-**Abertura:** `Vamos continuar os ajustes de roadmap e documentação do Monitor de Fundos Lass.`
-**Referências obrigatórias:** Roadmap.md, TODO.md, Projeto.md, .planning/README.md
+**Abertura:** `Vamos continuar os ajustes de roadmap e documentação de [PROJETO].`
+**Referências obrigatórias:** Roadmap.md, Projeto.md, .planning/README.md
 **Contexto:** O que motivou os ajustes, quais milestones são afetados, decisões a registrar
 **Skills:** update-docs, validate-docs-links, audit-architecture
 
 #### Troubleshooting (qualquer nível)
 
 **Abertura:** `Vamos resolver o issue [DESCRIÇÃO] no contexto de [INICIATIVA].`
-**Referências obrigatórias:** Arquivo com erro, log/evidência, TODO.md
+**Referências obrigatórias:** Arquivo com erro, log/evidência, CONTEXT.md da iniciativa
 **Contexto:** Sintoma, esperado, tentativas anteriores, impacto
 **Skills:** pre-commit-check, validate-testing
 
 #### Trabalho Avulso / Sem Milestone (qualquer nível)
 
-**Abertura:** `Vamos trabalhar em [DESCRIÇÃO] no projeto Monitor de Fundos Lass.`
+**Abertura:** `Vamos trabalhar em [DESCRIÇÃO] no projeto [PROJETO].`
 **Referências:** .planning/scratch/<slug>-CONTEXT.md (se existir), arquivos relevantes
 **Contexto:** Motivação, escopo, relação com roadmap (se houver)
 
@@ -156,7 +157,7 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
 #### Brief (200-500 tokens)
 
 ```markdown
-Vamos continuar o desenvolvimento do Monitor de Fundos Lass
+Vamos continuar o desenvolvimento de [PROJETO]
 na [TIPO: milestone|detour|ajuste] [ID] ([NOME]).
 
 **Referências principais:**
@@ -181,7 +182,7 @@ na [TIPO: milestone|detour|ajuste] [ID] ([NOME]).
 #### Standard (800-1500 tokens — default)
 
 ```markdown
-Vamos continuar o desenvolvimento do Monitor de Fundos Lass
+Vamos continuar o desenvolvimento de [PROJETO]
 na [TIPO] [ID] ([NOME]). [1 frase de contexto situacional]
 
 **Referências principais:**
@@ -213,7 +214,7 @@ na [TIPO] [ID] ([NOME]). [1 frase de contexto situacional]
 #### Detailed (1500-3000+ tokens)
 
 ```markdown
-Vamos continuar o desenvolvimento do Monitor de Fundos Lass
+Vamos continuar o desenvolvimento de [PROJETO]
 com foco em [DESCRIÇÃO DO FOCO]. [2-3 frases de contexto situacional]
 
 **Referências principais:**
@@ -278,7 +279,6 @@ com foco em [DESCRIÇÃO DO FOCO]. [2-3 frases de contexto situacional]
 - `.planning/detours/<nome>/CONTEXT.md` — Contexto vivo de detour
 - `.planning/scratch/` — Context dumps avulsos (sem milestone)
 - `documents/core/Roadmap.md` — Milestones, desvios, DoR/DoD
-- `documents/core/TODO.md` — Tarefas granulares e progresso
 - `documents/core/Projeto.md` — Regras de negócio e decisões
 - `CLAUDE.md` — Regras operacionais
 
@@ -287,7 +287,7 @@ com foco em [DESCRIÇÃO DO FOCO]. [2-3 frases de contexto situacional]
 - `fresh-context` — Gerar CONTEXT.md para handoff (complementar: context file vs. prompt)
 - `validate-dor` — Validar DoR antes de iniciar milestone
 - `validate-dod` — Validar DoD antes de fechar milestone
-- `update-docs` — Atualizar documentação (Projeto/Roadmap/TODO)
+- `update-docs` — Atualizar documentação (Projeto/Roadmap)
 - `pre-commit-check` — Qualidade antes de commit
 <!-- MODE:opinionated-initiative end -->
 
@@ -315,6 +315,9 @@ Use quando `.planning/` **não** existe na raiz. Vocabulário e estrutura são u
    - git log --oneline -10 (últimos commits — narrativa do trabalho recente)
    - git status (mudanças pendentes não commitadas)
    - git diff HEAD --stat (escopo das mudanças não commitadas, se houver)
+   - Se o projeto tem rastreador de issues: a issue do trabalho corrente
+     (descrição, checkboxes, comentários de topo) — decisão que vive só na
+     thread não chega ao prompt por arquivo nenhum
    - Listar arquivos modificados nas últimas 48h:
      find . -type f -mtime -2 -not -path './.git/*' -not -path './node_modules/*' \
        -not -path './.next/*' -not -path './dist/*' -not -path './build/*' 2>/dev/null | head -20
@@ -623,7 +626,7 @@ generate-session-prompt
 ### Problema: Prompt muito genérico
 
 **Causa:** Tipo de trabalho não identificado, ou modo errado, ou contexto da sessão pobre
-**Solução:** Em modo opinionated, atualizar TODO.md/CONTEXT.md antes; em modo genérico, garantir que a sessão tem decisões/análises explícitas
+**Solução:** Em modo opinionated, atualizar o CONTEXT.md da iniciativa antes; em modo genérico, garantir que a sessão tem decisões/análises explícitas
 
 ### Problema: Prompt detalhado quando queria conciso
 
@@ -654,7 +657,7 @@ generate-session-prompt
 **Refactor para modo dual (opinionated + generic):**
 - Adicionada detecção automática de modo via presença de `.planning/` na raiz
 - Bloco `MODE:opinionated-initiative` preserva integralmente o comportamento v3.0.0
-  (vocabulário milestone/detour/patch/ajuste/avulso, leitura de Roadmap/TODO/CONTEXT)
+  (vocabulário milestone/detour/patch/ajuste/avulso, leitura de Roadmap/CONTEXT)
 - Novo bloco `MODE:generic` para projetos sem framework opinionado: vocabulário
   feature/bugfix/refactor/spike/misc, coleta via README + git log + git status +
   contexto da sessão

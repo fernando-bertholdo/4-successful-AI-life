@@ -20,6 +20,7 @@ Formato: `MAJOR.MINOR.PATCH+upstream-X.Y.Z`
 | Mudança | Bump |
 |---|---|
 | Sync upstream (sem alterar patches) | só `+upstream-X.Y.Z` |
+| Sync upstream que muda comportamento sem o upstream subir a versão (a linha acima não subiria nada) | MINOR |
 | Adição de patch local que altera comportamento | MINOR |
 | Correção de patch local | PATCH |
 | Refator de patches por breaking change do upstream | MAJOR |

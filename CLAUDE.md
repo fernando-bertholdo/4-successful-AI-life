@@ -37,6 +37,7 @@ Format: `MAJOR.MINOR.PATCH+upstream-X.Y.Z`
 | Scenario | Bump |
 |---|---|
 | Upstream sync (no local-patch change) | only `+upstream-X.Y.Z` |
+| Upstream sync that changes behavior while the upstream version does not move (the row above would bump nothing) | MINOR |
 | Local patch that changes behavior | MINOR |
 | Local-patch fix | PATCH |
 | Refactor of patches due to an upstream breaking change | MAJOR |
