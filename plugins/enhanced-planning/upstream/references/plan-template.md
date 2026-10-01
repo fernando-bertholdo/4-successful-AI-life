@@ -161,5 +161,5 @@ Decisoes congeladas ANTES da implementacao. Mudanca exige checkpoint humano expl
 - [ ] Cobertura atende meta do milestone
 - [ ] Nenhum arquivo modificado fora do escopo do plano
 - [ ] Protocolo multi-sessao seguido (tabela de progresso consistente)
-- [ ] Documentacao atualizada (Projeto.md, Roadmap.md, TODO.md se aplicavel)
+- [ ] Documentacao atualizada (Projeto.md, Roadmap.md se aplicavel)
 ```

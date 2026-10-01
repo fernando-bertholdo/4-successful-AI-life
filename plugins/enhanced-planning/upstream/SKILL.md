@@ -42,7 +42,7 @@ Este skill nasceu no `tech-product-template`, que tem um framework de planejamen
 ## Quando NAO Usar
 
 - Tarefas simples (1-2 arquivos, <100 linhas)
-- Patches rapidos (<=2 sessoes, sem risco de regressao)
+- Correcoes pontuais sem risco de regressao, que nao alteram o plano
 - Exploracao/pesquisa sem deliverable definido
 - Quando `writing-plans` do superpowers ja foi invocado e a tarefa e trivial
 
@@ -250,3 +250,5 @@ Ao executar `mirror-upstream`, substituir valores concretos por placeholders.
 
 ### v1.0.0 (20/Marco/2026)
 - Criacao inicial: workflow 5-step, tier matrix, auto-assessment, integracao com skills existentes
+
+<!-- @runtime-placeholders: CODEX_MODEL, DOCS_DIR, PLANNING_DIR, PROJECT_NAME -->
