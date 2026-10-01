@@ -37,7 +37,8 @@ Format: `MAJOR.MINOR.PATCH+upstream-X.Y.Z`
 | Scenario | Bump |
 |---|---|
 | Upstream sync (no local-patch change) | only `+upstream-X.Y.Z` |
-| Upstream sync that changes behavior while the upstream version does not move (the row above would bump nothing) | MINOR |
+| Upstream sync that changes behavior — what the skill tells the agent to read, do or stop doing — while the upstream version does not move (the plain-sync row would bump nothing) | MINOR |
+| Upstream sync that changes only text, not behavior, while the upstream version does not move | PATCH |
 | Local patch that changes behavior | MINOR |
 | Local-patch fix | PATCH |
 | Refactor of patches due to an upstream breaking change | MAJOR |
