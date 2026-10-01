@@ -107,6 +107,7 @@ Formato: `MAJOR.MINOR.PATCH+upstream-X.Y.Z`
 | Patch local que altera comportamento | MINOR |
 | Correção de patch local | PATCH |
 | Refator de patches por breaking change do upstream | MAJOR |
+
 Com o upstream parado, as duas linhas que dizem "sem o upstream subir a versão" prevalecem sobre
 "Sync upstream (sem alterar patches)", que não subiria nada.
 
