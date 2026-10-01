@@ -37,11 +37,14 @@ Format: `MAJOR.MINOR.PATCH+upstream-X.Y.Z`
 | Scenario | Bump |
 |---|---|
 | Upstream sync (no local-patch change) | only `+upstream-X.Y.Z` |
-| Upstream sync that changes behavior — what the skill tells the agent to read, do or stop doing — while the upstream version does not move (the plain-sync row would bump nothing) | MINOR |
+| Upstream sync that changes behavior — what the skill tells the agent to read, do or stop doing — while the upstream version does not move | MINOR |
 | Upstream sync that changes only text, not behavior, while the upstream version does not move | PATCH |
 | Local patch that changes behavior | MINOR |
 | Local-patch fix | PATCH |
 | Refactor of patches due to an upstream breaking change | MAJOR |
+
+When the upstream version does not move, the two rows that say so take precedence over "Upstream sync
+(no local-patch change)", which would bump nothing.
 
 The part before `+` is pure semver of **our wrapper** (our code). The part after `+` is build
 metadata identifying the vendored upstream snapshot. Native plugins use plain semver with no
