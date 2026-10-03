@@ -1,8 +1,10 @@
 import calendar
+import importlib.util
 import pathlib
 import sys
 import time
 import unittest
+from unittest import mock
 from datetime import datetime, timezone
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
@@ -71,6 +73,18 @@ class TestFormatoAntigo(FusoFixo, unittest.TestCase):
 
     def test_formato_antigo_tambem_e_mostrado(self):
         self.assertEqual(mostrar("2026-08-04T14:22:31"), "04/08/2026 14:22 BRT")
+
+
+class TestSemBaseDeFusos(unittest.TestCase):
+    def test_fallback_e_utc_menos_3(self):
+        """Host sem base de fusos: Brasilia cai no UTC-3 fixo."""
+        spec = importlib.util.spec_from_file_location(
+            "carimbo_sem_zoneinfo", RAIZ / "scripts" / "lib" / "carimbo.py")
+        mod = importlib.util.module_from_spec(spec)
+        with mock.patch.dict(sys.modules, {"zoneinfo": None}):
+            spec.loader.exec_module(mod)
+        self.assertIsInstance(mod.BRASILIA, timezone)
+        self.assertEqual(mod.mostrar("2026-10-03T22:30:00Z"), "03/10/2026 19:30 BRT")
 
 
 if __name__ == "__main__":
