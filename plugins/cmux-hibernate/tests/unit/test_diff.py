@@ -8,6 +8,8 @@ import unittest
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from fuso import FusoFixo  # noqa: E402
 from lib.cmux_state import Aba, Estado, Janela, Pane, Workspace  # noqa: E402
 from lib.diff import carregar_snapshot, comparar, idade_em_dias  # noqa: E402
 
@@ -58,10 +60,14 @@ class TestDiff(unittest.TestCase):
                  "transcript": {"path": "/t.jsonl"}}]}]}]}]}
         self.assertEqual(len(comparar(snap, estado_atual())["vivas"]), 1)
 
+
+class TestIdade(FusoFixo, unittest.TestCase):
+    FUSO = "America/Sao_Paulo"
+
     def test_idade_em_dias_formato_antigo(self):
-        """Snapshot gravado ate' a 0.1.0: hora local do host, sem zona."""
-        base = time.mktime(time.strptime("2026-08-04T14:22:31", "%Y-%m-%dT%H:%M:%S"))
-        self.assertAlmostEqual(idade_em_dias(SNAP, base + 2 * 86400), 2.0, places=1)
+        """Snapshot gravado ate' a 0.1.0: hora local do host, sem zona (14:22:31 em -03 = 17:22:31Z)."""
+        base = calendar.timegm((2026, 8, 4, 17, 22, 31))
+        self.assertAlmostEqual(idade_em_dias(SNAP, base + 2 * 86400), 2.0, places=6)
 
     def test_idade_em_dias_formato_utc(self):
         snap = dict(SNAP, gerado_em="2026-10-03T22:30:00Z")
@@ -69,7 +75,7 @@ class TestDiff(unittest.TestCase):
         self.assertAlmostEqual(idade_em_dias(snap, base + 2 * 86400), 2.0, places=6)
 
 
-class TestCarregarSnapshot(unittest.TestCase):
+class TestCarregarSnapshot(FusoFixo, unittest.TestCase):
     def _grava(self, base, nome, gerado_em):
         d = base / nome
         d.mkdir()
@@ -87,12 +93,11 @@ class TestCarregarSnapshot(unittest.TestCase):
         """A ordem e' a do instante, nao a do nome: hora local e UTC nao se comparam como texto."""
         with tempfile.TemporaryDirectory() as tmp:
             base = pathlib.Path(tmp)
-            antigo = time.strftime("%Y-%m-%dT%H-%M-%S", time.localtime(time.time() - 3600))
-            novo = time.strftime("%Y-%m-%dT%H-%M-%SZ", time.gmtime(time.time()))
-            self._grava(base, antigo, antigo[:13] + ":" + antigo[14:16] + ":" + antigo[17:])
-            self._grava(base, novo, novo[:13] + ":" + novo[14:16] + ":" + novo[17:19] + "Z")
+            # Em Toquio (UTC+9), 07:00 local de 04/10 e' 22:00Z de 03/10: uma hora antes do novo.
+            self._grava(base, "2026-10-04T07-00-00", "2026-10-04T07:00:00")
+            self._grava(base, "2026-10-03T23-00-00Z", "2026-10-03T23:00:00Z")
             _, origem = carregar_snapshot(base)
-            self.assertEqual(origem.name, novo)
+            self.assertEqual(origem.name, "2026-10-03T23-00-00Z")
 
 
 if __name__ == "__main__":

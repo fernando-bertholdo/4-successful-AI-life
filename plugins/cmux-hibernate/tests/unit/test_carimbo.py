@@ -1,6 +1,5 @@
 import calendar
 import pathlib
-import re
 import sys
 import time
 import unittest
@@ -8,6 +7,8 @@ from datetime import datetime, timezone
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from fuso import FusoFixo  # noqa: E402
 from lib.carimbo import (agora_utc, instante_do_nome, ler, mostrar,  # noqa: E402
                          nome_de_diretorio)
 
@@ -16,11 +17,6 @@ class TestLer(unittest.TestCase):
     def test_formato_novo_e_utc(self):
         dt = ler("2026-10-03T22:30:00Z")
         self.assertEqual(dt.timestamp(), calendar.timegm((2026, 10, 3, 22, 30, 0)))
-
-    def test_formato_antigo_e_hora_local_do_host(self):
-        """Snapshots ate' a 0.1.0 gravaram hora local sem zona."""
-        esperado = time.mktime(time.strptime("2026-08-04T14:22:31", "%Y-%m-%dT%H:%M:%S"))
-        self.assertEqual(ler("2026-08-04T14:22:31").timestamp(), esperado)
 
     def test_offset_explicito(self):
         self.assertEqual(ler("2026-10-03T19:30:00-03:00"), ler("2026-10-03T22:30:00Z"))
@@ -47,10 +43,6 @@ class TestInstanteDoNome(unittest.TestCase):
         self.assertEqual(instante_do_nome("2026-10-04T01-30-05Z"),
                          datetime(2026, 10, 4, 1, 30, 5, tzinfo=timezone.utc))
 
-    def test_nome_antigo_e_hora_local(self):
-        esperado = time.mktime(time.strptime("2026-08-04T14-22-31", "%Y-%m-%dT%H-%M-%S"))
-        self.assertEqual(instante_do_nome("2026-08-04T14-22-31").timestamp(), esperado)
-
     def test_nome_alheio(self):
         self.assertIsNone(instante_do_nome("notas"))
 
@@ -63,9 +55,22 @@ class TestMostrar(unittest.TestCase):
         """Das 21:00 as 23:59 em Brasilia, o UTC ja' esta' no dia seguinte."""
         self.assertEqual(mostrar("2026-10-04T01:30:00Z"), "03/10/2026 22:30 BRT")
 
+
+class TestFormatoAntigo(FusoFixo, unittest.TestCase):
+    """Snapshots ate' a 0.1.0 gravaram hora local sem zona. Num host a -03,
+    14:22:31 local e' 17:22:31Z; sob UTC a leitura errada coincidiria com a certa."""
+    FUSO = "America/Sao_Paulo"
+
+    def test_gerado_em_antigo_e_hora_local_do_host(self):
+        self.assertEqual(ler("2026-08-04T14:22:31").timestamp(),
+                         calendar.timegm((2026, 8, 4, 17, 22, 31)))
+
+    def test_nome_antigo_e_hora_local_do_host(self):
+        self.assertEqual(instante_do_nome("2026-08-04T14-22-31").timestamp(),
+                         calendar.timegm((2026, 8, 4, 17, 22, 31)))
+
     def test_formato_antigo_tambem_e_mostrado(self):
-        self.assertTrue(re.fullmatch(r"\d\d/\d\d/\d{4} \d\d:\d\d BRT",
-                                     mostrar("2026-08-04T14:22:31")))
+        self.assertEqual(mostrar("2026-08-04T14:22:31"), "04/08/2026 14:22 BRT")
 
 
 if __name__ == "__main__":
