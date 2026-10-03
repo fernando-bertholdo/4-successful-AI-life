@@ -6,6 +6,15 @@ patches). O changelog do skill upstream vive em `upstream/` (se existir).
 Formato: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 versionamento `MAJOR.MINOR.PATCH+upstream-X.Y.Z`.
 
+## [1.1.1+upstream-2.0.0] — 2026-10-03
+
+### Changed
+- README do wrapper: a frase do sync semanal passa a dizer `09:00 UTC (06:00 BRT)`. O cron
+  continua em UTC por escolha: é o padrão do Actions e o valor é o que a máquina agenda;
+  `timezone: America/Sao_Paulo` com `0 6 * * 1` seria a alternativa. TECH-972.
+- PATCH no wrapper porque só o texto mudou: `upstream/` e o comportamento da skill ficam como
+  estavam, e a versão `+upstream-2.0.0` não se move.
+
 ## [1.1.0+upstream-2.0.0] — 2026-10-01
 
 ### Changed

@@ -85,7 +85,8 @@ if (cd "$TEMPLATE_ROOT" && git rev-parse HEAD >/dev/null 2>&1); then
 fi
 
 WRAPPER_VERSION="1.0.0+upstream-${UPSTREAM_VERSION}"
-TODAY=$(date +%Y-%m-%d)
+# Data do calendário de Brasília, não a do relógio do host: o cabeçalho do CHANGELOG é lido lá.
+TODAY=$(TZ=America/Sao_Paulo date +%Y-%m-%d)
 
 echo "→ Skill: $SKILL_NAME"
 echo "  Source:           $SKILL_SRC"
@@ -157,7 +158,7 @@ Documente cada patch no \`CHANGELOG.md\` deste diretório.
 ## Sync com upstream
 
 **Automático:** workflow \`.github/workflows/sync-$SKILL_NAME.yml\` roda
-toda segunda-feira 09:00 UTC e abre PR se houver mudanças.
+toda segunda-feira 09:00 UTC (06:00 BRT) e abre PR se houver mudanças.
 
 **Manual:**
 
@@ -201,7 +202,7 @@ name: Sync $SKILL_NAME
 
 on:
   schedule:
-    - cron: '0 9 * * 1'      # toda segunda 09:00 UTC
+    - cron: '0 9 * * 1'      # toda segunda 09:00 UTC (06:00 BRT)
   workflow_dispatch: {}      # botão "Run workflow" manual
 
 jobs:

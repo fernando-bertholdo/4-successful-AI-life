@@ -7,6 +7,25 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.10] — 2026-10-03
+
+### Changed
+
+- §8: the dated note a session leaves when it acts under a human's profile now carries the hour
+  in the zone that person reads, the zone written out, and UTC beside it (`18:41 BRT (21:41Z)`).
+  The API's stamps come in UTC, so an hour with no zone cannot be matched against them. When the
+  UTC falls on another calendar day than the local hour, it carries its date
+  (`22:59 BRT (04/10 01:59Z)`). The zone is the person's, not fixed in the text; BRT is the
+  example. TECH-972.
+- §6: `autopilot trigger-add --help` documents the `--timezone` default as UTC (v0.6.1,
+  03/10/2026), so the skill now says to pass the zone the schedule's reader lives by, with
+  `--timezone America/Sao_Paulo` as the example. That is what `--help` documents; no scheduled
+  run was measured. TECH-972.
+- Unchanged on purpose: the examples of API stamps in §8 and the `created_at` / `updated_at` that
+  `scripts/patch-description.py` prints. Machine stamps stay in UTC, with `Z`.
+
+---
+
 ## [0.2.9] — 2026-09-24
 
 ### Changed

@@ -71,7 +71,7 @@ The full workflow — architecture model, one-time fine-grained-PAT setup, the
 `scripts/promote-skill.sh` bootstrap, and troubleshooting — lives in
 [`docs/promotion-runbook.md`](./docs/promotion-runbook.md).
 
-Weekly automated sync runs from [`.github/workflows/`](./.github/workflows/) (Mondays 09:00 UTC),
+Weekly automated sync runs from [`.github/workflows/`](./.github/workflows/) (Mondays 09:00 UTC, 06:00 BRT),
 opening a PR when an upstream advances and an auto-deduplicated `[sync-failure] <skill>` issue if a
 run fails. **Merge sync PRs with `--merge`, never `--squash`** — squash collapses the
 `chore(...): sync from ...` commits that document which upstream snapshot is embedded in which of

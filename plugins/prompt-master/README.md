@@ -43,7 +43,7 @@ Documente cada patch no `CHANGELOG.md` deste diretório (separado do CHANGELOG d
 
 ## Sync com upstream
 
-**Automático:** workflow `.github/workflows/sync-prompt-master.yml` roda toda segunda-feira às 09:00 UTC e abre PR se houver mudanças.
+**Automático:** workflow `.github/workflows/sync-prompt-master.yml` roda toda segunda-feira às 09:00 UTC (06:00 BRT) e abre PR se houver mudanças.
 
 **Manual:**
 

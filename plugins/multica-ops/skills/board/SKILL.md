@@ -230,7 +230,10 @@ the duration and is not needed.
   a path.
 - Scheduled autopilots take a full cron expression and an IANA timezone
   (`autopilot trigger-add --kind schedule --cron … --timezone …`), and `autopilot create` takes
-  `--subscriber`. Sub-hourly expressions are writable; whether the server honours a given
+  `--subscriber`. `trigger-add --help` documents the `--timezone` default as UTC (v0.6.1,
+  03/10/2026), so a cron written as the hour a person reads it lands hours off unless you pass
+  the zone that person lives by: `--cron '0 9 * * 1' --timezone America/Sao_Paulo` for 09:00 on
+  Mondays in Brasília. Sub-hourly expressions are writable; whether the server honours a given
   granularity is a test, not a promise.
 
 ## 7. When a repository governs the board
@@ -287,7 +290,12 @@ The reference covers the mechanics of side effects. These are the habits around 
   decision is cheap and changes the outcome; leave it to them, and do not comment on an
   unscoped item — that comment is written to nobody.
 - Acts performed with a human's profile are indistinguishable from that human in
-  `issue timeline`. When a session acts, leave a dated note saying so.
+  `issue timeline`. When a session acts, leave a dated note saying so, with the hour in the zone
+  that person reads, the zone written out, and UTC beside it so the note can be matched against
+  the API's stamps, which come in UTC: `18:41 BRT (21:41Z)`, not `18:41` and not `21:41Z` alone.
+  When the UTC falls on another calendar day than the local hour, it carries its date, so the
+  note is not matched against the wrong day: `22:59 BRT (04/10 01:59Z)`. An hour with no zone
+  cannot be placed against those stamps.
 - Never create a registry object — agent, skill, project, autopilot — casually. It will appear
   in no manifest and no drift check will see it.
 - **A write to the board never shares a command chain with a step that can fail.** Verify
