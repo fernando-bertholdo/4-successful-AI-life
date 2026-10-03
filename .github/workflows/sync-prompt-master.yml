@@ -115,8 +115,13 @@ jobs:
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           # Hora de Brasília para quem lê, UTC ao lado para cruzar com o carimbo da run.
           # Um só instante nos dois formatos, para os minutos não divergirem na virada.
+          # O UTC leva a data (DD/MM) quando cai em outro dia do calendário que o de Brasília.
           NOW_EPOCH=$(date +%s)
-          NOW="$(TZ=America/Sao_Paulo date -d "@${NOW_EPOCH}" '+%d/%m/%Y %H:%M BRT') ($(date -u -d "@${NOW_EPOCH}" '+%H:%MZ'))"
+          BRT_DIA=$(TZ=America/Sao_Paulo date -d "@${NOW_EPOCH}" '+%d/%m')
+          UTC_DIA=$(date -u -d "@${NOW_EPOCH}" '+%d/%m')
+          UTC_FMT='%H:%MZ'
+          if [ "$UTC_DIA" != "$BRT_DIA" ]; then UTC_FMT='%d/%m %H:%MZ'; fi
+          NOW="$(TZ=America/Sao_Paulo date -d "@${NOW_EPOCH}" '+%d/%m/%Y %H:%M BRT') ($(date -u -d "@${NOW_EPOCH}" "+${UTC_FMT}"))"
 
           EXISTING=$(gh issue list --search "${TITLE} in:title" --state open --json number --jq '.[0].number // empty')
 
