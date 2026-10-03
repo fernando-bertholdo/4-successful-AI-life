@@ -4,11 +4,13 @@ O snapshot e' um retrato datado de uso unico: vale por um ciclo de fechar e
 reabrir. Nenhum campo afirma estado volatil ("estava rodando"), porque isso
 envelheceria em silencio — tudo que muda e' derivado na leitura.
 """
-from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 import json
 import shutil
+
+from lib.carimbo import (agora_utc, instante_do_nome, ler, mais_recentes_primeiro, mostrar,
+                         nome_de_diretorio)
 
 BASE_ESTADO = Path.home() / ".local" / "state" / "cmux-hibernate"
 
@@ -24,7 +26,7 @@ def _aba(a) -> dict:
 
 def serializar(estado, aba_controle: Optional[str], stale_days: int) -> dict:
     return {
-        "gerado_em": datetime.now().isoformat(timespec="seconds"),
+        "gerado_em": agora_utc(),
         "metodo": "CMUX_SURFACE_ID (processo)",
         "stale_days": stale_days,
         "aba_de_controle": aba_controle,
@@ -43,7 +45,7 @@ def serializar(estado, aba_controle: Optional[str], stale_days: int) -> dict:
 
 def _inventario(d: dict) -> str:
     linhas = ["# Snapshot cmux-hibernate", "",
-              "**Gerado:** " + d["gerado_em"], "",
+              "**Gerado:** %s (%s)" % (mostrar(d["gerado_em"]), d["gerado_em"]), "",
               "Comandos de retomada manual, caso precise reconstruir sem agente:", ""]
     for j in d["janelas"]:
         for w in j["workspaces"]:
@@ -63,7 +65,7 @@ def _inventario(d: dict) -> str:
 
 
 def gravar(dados: dict, base: Path = BASE_ESTADO) -> Path:
-    destino = base / datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    destino = base / nome_de_diretorio(ler(dados["gerado_em"]))
     destino.mkdir(parents=True, exist_ok=True)
     (destino / "snapshot.json").write_text(json.dumps(dados, indent=2, ensure_ascii=False))
     (destino / "INVENTARIO.md").write_text(_inventario(dados))
@@ -71,10 +73,12 @@ def gravar(dados: dict, base: Path = BASE_ESTADO) -> Path:
 
 
 def aplicar_retencao(base: Path, manter: int = 5) -> List[Path]:
-    """Mantem so' os mais recentes. E' o que impede o acumulo de retratos velhos."""
+    """Mantem so' os mais recentes. E' o que impede o acumulo de retratos velhos.
+    Diretorio cujo nome nao e' carimbo de snapshot nao entra na conta nem e' apagado."""
     if not base.exists():
         return []
-    dirs = sorted([d for d in base.iterdir() if d.is_dir()], reverse=True)
+    dirs = mais_recentes_primeiro([d for d in base.iterdir()
+                                   if d.is_dir() and instante_do_nome(d.name) is not None])
     removidos = dirs[manter:]
     for d in removidos:
         shutil.rmtree(d)

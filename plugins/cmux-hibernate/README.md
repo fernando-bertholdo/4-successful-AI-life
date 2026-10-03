@@ -49,7 +49,7 @@ onde você pode pedir a conferência. `--all` desarma inclusive ela.
 ## Desenvolvimento
 
 ```bash
-bash tests/run-tests.sh              # 37 testes, somente stdlib
+bash tests/run-tests.sh              # suíte de testes, somente stdlib
 tests/fixtures/capture.sh            # recaptura o ambiente (grava em .raw/)
 python3 tests/fixtures/sanitize.py   # gera as fixtures publicáveis
 ```

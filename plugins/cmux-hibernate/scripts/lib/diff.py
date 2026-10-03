@@ -6,7 +6,8 @@ nome de um projeto pode hospedar sessao de outro.
 from pathlib import Path
 from typing import Optional, Tuple
 import json
-import time
+
+from lib.carimbo import ler, mais_recentes_primeiro
 
 MAX_SNAPSHOT_AGE = 3
 
@@ -16,15 +17,14 @@ def carregar_snapshot(base: Path, escolhido: Optional[Path] = None) -> Tuple[dic
         return json.loads((escolhido / "snapshot.json").read_text()), escolhido
     if not base.exists():
         raise RuntimeError("nenhum snapshot em %s — rode o hibernate antes" % base)
-    dirs = sorted([d for d in base.iterdir() if (d / "snapshot.json").exists()], reverse=True)
+    dirs = mais_recentes_primeiro([d for d in base.iterdir() if (d / "snapshot.json").exists()])
     if not dirs:
         raise RuntimeError("nenhum snapshot em %s — rode o hibernate antes" % base)
     return json.loads((dirs[0] / "snapshot.json").read_text()), dirs[0]
 
 
 def idade_em_dias(dados: dict, agora: float) -> float:
-    t = time.mktime(time.strptime(dados["gerado_em"], "%Y-%m-%dT%H:%M:%S"))
-    return (agora - t) / 86400.0
+    return (agora - ler(dados["gerado_em"]).timestamp()) / 86400.0
 
 
 def _abas_do_snapshot(dados: dict):

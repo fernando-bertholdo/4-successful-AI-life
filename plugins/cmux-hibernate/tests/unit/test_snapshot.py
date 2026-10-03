@@ -6,6 +6,8 @@ import unittest
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from fuso import FusoFixo  # noqa: E402
 from lib.cmux_state import Aba, Estado, Janela, Pane, Workspace  # noqa: E402
 from lib.snapshot import aplicar_retencao, gravar, serializar  # noqa: E402
 
@@ -43,11 +45,54 @@ class TestSnapshot(unittest.TestCase):
             lido = json.loads((destino / "snapshot.json").read_text())
             self.assertEqual(lido["aba_de_controle"], "U1")
 
+    def test_gerado_em_e_utc_com_z(self):
+        d = serializar(estado_exemplo(), aba_controle=None, stale_days=7)
+        self.assertRegex(d["gerado_em"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
+
+    def test_diretorio_e_o_instante_de_gerado_em_em_utc(self):
+        dados = dict(serializar(estado_exemplo(), "U1", 7), gerado_em="2026-10-04T01:30:05Z")
+        with tempfile.TemporaryDirectory() as tmp:
+            destino = gravar(dados, pathlib.Path(tmp))
+            self.assertEqual(destino.name, "2026-10-04T01-30-05Z")
+
+
+class TestInventario(FusoFixo, unittest.TestCase):
+    """Fora de Brasilia: em America/Sao_Paulo a hora do host coincidiria com a certa."""
+
+    def test_inventario_mostra_hora_de_brasilia_com_zona(self):
+        dados = dict(serializar(estado_exemplo(), "U1", 7), gerado_em="2026-10-04T01:30:05Z")
+        with tempfile.TemporaryDirectory() as tmp:
+            texto = (gravar(dados, pathlib.Path(tmp)) / "INVENTARIO.md").read_text()
+            self.assertIn("**Gerado:** 03/10/2026 22:30 BRT (2026-10-04T01:30:05Z)", texto)
+
+
+class TestRetencao(FusoFixo, unittest.TestCase):
+    def test_retencao_ordena_pelo_instante_entre_os_dois_formatos(self):
+        """Nome antigo (hora local) e nome novo (UTC) nao se comparam como texto."""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = pathlib.Path(tmp)
+            # Em Toquio (UTC+9), 07:00 local de 04/10 e' 22:00Z de 03/10: uma hora antes do novo.
+            for nome in ("2026-10-04T07-00-00", "2026-10-03T23-00-00Z"):
+                (base / nome).mkdir()
+            removidos = aplicar_retencao(base, manter=1)
+            self.assertEqual([d.name for d in removidos], ["2026-10-04T07-00-00"])
+
+    def test_retencao_nao_toca_diretorio_alheio(self):
+        """So' sai o que o carimbo reconhece como snapshot; o resto e' de quem o pos ali."""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = pathlib.Path(tmp)
+            for nome in ["2026-08-04T10-00-0%d" % i for i in range(6)] + ["guardar-antes-do-conserto"]:
+                (base / nome).mkdir()
+                (base / nome / "snapshot.json").write_text("{}")
+            removidos = aplicar_retencao(base, manter=5)
+            self.assertEqual([d.name for d in removidos], ["2026-08-04T10-00-00"])
+            self.assertTrue((base / "guardar-antes-do-conserto").exists())
+
     def test_retencao_mantem_os_cinco_mais_recentes(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = pathlib.Path(tmp)
             for i in range(8):
-                d = base / ("2026-08-04T10-0%d" % i)
+                d = base / ("2026-08-04T10-00-0%d" % i)
                 d.mkdir()
                 (d / "snapshot.json").write_text("{}")
             removidos = aplicar_retencao(base, manter=5)
