@@ -80,7 +80,7 @@ Weekly automated upstream sync lives in [`.github/workflows/`](./.github/workflo
 - `sync-generate-session-prompt.yml` — trigger that delegates to the reusable
   `_sync-skill-from-template.yml` (sparse-checkout from the private `tech-product-template`).
 
-Both run Mondays 09:00 UTC, open a PR when the upstream advances, and open an auto-deduplicated
+Both run Mondays 09:00 UTC (06:00 BRT), open a PR when the upstream advances, and open an auto-deduplicated
 `[sync-failure] <skill>` issue if the workflow fails. The sparse-checkout from the private
 upstream needs the `UPSTREAM_TOKEN` secret (see the promotion runbook for PAT setup/rotation).
 

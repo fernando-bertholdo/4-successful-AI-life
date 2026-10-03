@@ -43,7 +43,7 @@ Documente cada patch no `CHANGELOG.md` deste diretório.
 ## Sync com upstream
 
 **Automático:** workflow `.github/workflows/sync-enhanced-planning.yml` roda
-toda segunda-feira 09:00 UTC e abre PR se houver mudanças.
+toda segunda-feira 09:00 UTC (06:00 BRT) e abre PR se houver mudanças.
 
 **Manual:**
 
