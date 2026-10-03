@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
-    "version": "0.8.13"
+    "version": "0.8.14"
   },
   "plugins": [
     {
@@ -55,7 +55,7 @@
       "name": "prompt-master",
       "source": "./plugins/prompt-master",
       "description": "Generates optimized prompts for AI tools (LLMs, image/video AI, coding agents). Activates only on explicit prompt-engineering requests — not for general conversation or coding tasks. Vendored from nidhinjs/prompt-master via git subtree, kept in sync via weekly GitHub Action.",
-      "version": "1.0.0+upstream-1.8.0",
+      "version": "1.0.1+upstream-1.8.0",
       "license": "MIT",
       "category": "productivity",
       "keywords": [
@@ -74,7 +74,7 @@
       "name": "generate-session-prompt",
       "source": "./plugins/generate-session-prompt",
       "description": "Generate a handoff prompt to resume development work in a new session. Use when sessions exceed ~150k tokens, when resuming after a pause, when switching tools, or on context shifts. Accepts a detail level (brief, standard, detailed). Auto-detects mode: opinionated when `.planning/` exists in the project root, generic otherwise.",
-      "version": "1.1.0+upstream-4.0.0",
+      "version": "1.1.1+upstream-4.0.0",
       "license": "MIT",
       "category": "productivity",
       "keywords": [
@@ -96,7 +96,7 @@
       "name": "enhanced-planning",
       "source": "./plugins/enhanced-planning",
       "description": "Adds structural guardrails to implementation plans — human checkpoints, risk registry, named guardrails, decision locks, multi-session protocol, and Codex review. Complements (does not replace) writing-plans. Works standalone; pairs with /codex:rescue. Vendored from tech-product-template, synced weekly.",
-      "version": "1.1.0+upstream-2.0.0",
+      "version": "1.1.1+upstream-2.0.0",
       "license": "MIT",
       "category": "productivity",
       "keywords": [
@@ -133,7 +133,7 @@
       "name": "multica-ops",
       "source": "./plugins/multica-ops",
       "description": "Companion to the official multica-cli skill, not a replacement: where the binary hides in a desktop-app install, how to reach it from a bridged Cowork/claude.ai session, the shell and JSON shapes the reference does not state, the platform limits, and the constraints of working a board governed by a repository that versions its Multica configuration.",
-      "version": "0.2.9",
+      "version": "0.2.10",
       "license": "MIT",
       "category": "productivity",
       "keywords": [
