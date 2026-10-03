@@ -9,7 +9,8 @@ from typing import List, Optional
 import json
 import shutil
 
-from lib.carimbo import agora_utc, ler, mais_recentes_primeiro, mostrar, nome_de_diretorio
+from lib.carimbo import (agora_utc, instante_do_nome, ler, mais_recentes_primeiro, mostrar,
+                         nome_de_diretorio)
 
 BASE_ESTADO = Path.home() / ".local" / "state" / "cmux-hibernate"
 
@@ -72,10 +73,12 @@ def gravar(dados: dict, base: Path = BASE_ESTADO) -> Path:
 
 
 def aplicar_retencao(base: Path, manter: int = 5) -> List[Path]:
-    """Mantem so' os mais recentes. E' o que impede o acumulo de retratos velhos."""
+    """Mantem so' os mais recentes. E' o que impede o acumulo de retratos velhos.
+    Diretorio cujo nome nao e' carimbo de snapshot nao entra na conta nem e' apagado."""
     if not base.exists():
         return []
-    dirs = mais_recentes_primeiro([d for d in base.iterdir() if d.is_dir()])
+    dirs = mais_recentes_primeiro([d for d in base.iterdir()
+                                   if d.is_dir() and instante_do_nome(d.name) is not None])
     removidos = dirs[manter:]
     for d in removidos:
         shutil.rmtree(d)

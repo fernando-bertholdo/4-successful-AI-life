@@ -12,7 +12,8 @@
 - O `wake.py` continua lendo os snapshots gravados pela 0.1.0, sem zona, como hora local
   do host. A escolha do mais recente e a retenção ordenam pelo instante, não pelo nome:
   nome em hora local e nome em UTC não se comparam como texto, e num host a leste de UTC
-  a ordem por nome escolheria o snapshot antigo.
+  a ordem por nome escolheria o snapshot antigo. A retenção só conta e só apaga diretório
+  cujo nome é carimbo de snapshot: um diretório de outro nome, posto ali à mão, fica.
 - Novo `lib/carimbo.py`, com os testes de cada formato.
 
 ## [0.1.0] — 2026-08-04
