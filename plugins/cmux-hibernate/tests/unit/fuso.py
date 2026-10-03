@@ -1,7 +1,9 @@
 """Fixa o fuso do processo durante um teste.
 
-Teste de hora local que herda o fuso do host so' discrimina em alguns fusos: a
-ordem por nome passava em America/Sao_Paulo e em UTC, e so' falhava a leste de UTC.
+Teste de hora local que herda o fuso do host so' discrimina em alguns fusos: num
+host a frente de UTC, a ordem por nome pode escolher o antigo, quando o intervalo
+entre os dois snapshots e' menor que o adiantamento do fuso; em America/Sao_Paulo
+e em UTC ela nunca erra, e o teste passava com o defeito.
 """
 import os
 import time
