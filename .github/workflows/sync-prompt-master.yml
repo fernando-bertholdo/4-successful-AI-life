@@ -5,7 +5,7 @@ name: Sync prompt-master upstream
 on:
   schedule:
     # Cron syntax: minuto hora dia-mês mês dia-semana
-    # '0 9 * * 1' = toda segunda-feira às 09:00 UTC.
+    # '0 9 * * 1' = toda segunda-feira às 09:00 UTC (06:00 BRT).
     # Cron do GH Actions sempre roda em UTC; ajuste se quiser outro horário.
     - cron: '0 9 * * 1'
 

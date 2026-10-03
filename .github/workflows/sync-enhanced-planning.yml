@@ -5,7 +5,7 @@ name: Sync enhanced-planning
 
 on:
   schedule:
-    - cron: '0 9 * * 1'      # toda segunda 09:00 UTC
+    - cron: '0 9 * * 1'      # toda segunda 09:00 UTC (06:00 BRT)
   workflow_dispatch: {}      # botão "Run workflow" manual
 
 jobs:
