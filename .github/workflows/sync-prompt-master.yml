@@ -6,7 +6,8 @@ on:
   schedule:
     # Cron syntax: minuto hora dia-mês mês dia-semana
     # '0 9 * * 1' = toda segunda-feira às 09:00 UTC (06:00 BRT).
-    # Cron do GH Actions sempre roda em UTC; ajuste se quiser outro horário.
+    # Sem `timezone:` o Actions agenda em UTC, e o valor fica em UTC por escolha;
+    # `timezone: America/Sao_Paulo` com '0 6 * * 1' seria a alternativa.
     - cron: '0 9 * * 1'
 
   # Habilita o botão "Run workflow" na aba Actions do GitHub —

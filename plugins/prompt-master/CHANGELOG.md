@@ -8,7 +8,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) + versionament
 
 ### Wrapper changes (nossos)
 - README do wrapper: a frase do sync semanal passa a dizer `09:00 UTC (06:00 BRT)`. O cron
-  continua em UTC, que é o que o Actions aceita. TECH-972.
+  continua em UTC por escolha: é o padrão do Actions e o valor é o que a máquina agenda;
+  `timezone: America/Sao_Paulo` com `0 6 * * 1` seria a alternativa. TECH-972.
 - PATCH no wrapper porque só o texto mudou: `upstream/` e o comportamento da skill ficam como
   estavam, e a versão `+upstream-1.8.0` não se move.
 
