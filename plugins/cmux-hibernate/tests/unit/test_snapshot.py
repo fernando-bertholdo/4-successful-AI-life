@@ -55,6 +55,10 @@ class TestSnapshot(unittest.TestCase):
             destino = gravar(dados, pathlib.Path(tmp))
             self.assertEqual(destino.name, "2026-10-04T01-30-05Z")
 
+
+class TestInventario(FusoFixo, unittest.TestCase):
+    """Fora de Brasilia: em America/Sao_Paulo a hora do host coincidiria com a certa."""
+
     def test_inventario_mostra_hora_de_brasilia_com_zona(self):
         dados = dict(serializar(estado_exemplo(), "U1", 7), gerado_em="2026-10-04T01:30:05Z")
         with tempfile.TemporaryDirectory() as tmp:

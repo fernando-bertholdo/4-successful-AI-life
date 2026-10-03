@@ -5,7 +5,7 @@ import sys
 import time
 import unittest
 from unittest import mock
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
@@ -39,6 +39,10 @@ class TestGravar(unittest.TestCase):
         dt = datetime(2026, 10, 4, 1, 30, 5, tzinfo=timezone.utc)
         self.assertEqual(nome_de_diretorio(dt), "2026-10-04T01-30-05Z")
 
+    def test_nome_de_diretorio_converte_para_utc(self):
+        dt = datetime(2026, 10, 3, 22, 30, 5, tzinfo=timezone(timedelta(hours=-3)))
+        self.assertEqual(nome_de_diretorio(dt), "2026-10-04T01-30-05Z")
+
 
 class TestInstanteDoNome(unittest.TestCase):
     def test_nome_novo(self):
@@ -49,7 +53,9 @@ class TestInstanteDoNome(unittest.TestCase):
         self.assertIsNone(instante_do_nome("notas"))
 
 
-class TestMostrar(unittest.TestCase):
+class TestMostrar(FusoFixo, unittest.TestCase):
+    """Fora de Brasilia: em America/Sao_Paulo a hora do host coincidiria com a certa."""
+
     def test_hora_de_brasilia_com_zona(self):
         self.assertEqual(mostrar("2026-10-03T22:30:00Z"), "03/10/2026 19:30 BRT")
 
