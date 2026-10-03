@@ -112,7 +112,10 @@ jobs:
           set -euo pipefail
           TITLE="[sync-failure] ${SKILL_NAME}"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          NOW=$(date -u '+%Y-%m-%d %H:%M UTC')
+          # Hora de Brasília para quem lê, UTC ao lado para cruzar com o carimbo da run.
+          # Um só instante nos dois formatos, para os minutos não divergirem na virada.
+          NOW_EPOCH=$(date +%s)
+          NOW="$(TZ=America/Sao_Paulo date -d "@${NOW_EPOCH}" '+%d/%m/%Y %H:%M BRT') ($(date -u -d "@${NOW_EPOCH}" '+%H:%MZ'))"
 
           EXISTING=$(gh issue list --search "${TITLE} in:title" --state open --json number --jq '.[0].number // empty')
 
