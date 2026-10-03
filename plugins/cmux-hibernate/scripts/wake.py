@@ -11,6 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from lib.carimbo import mostrar  # noqa: E402
 from lib.cmux_state import ler_estado  # noqa: E402
 from lib.diff import MAX_SNAPSHOT_AGE, carregar_snapshot, comparar, idade_em_dias  # noqa: E402
 from lib.restore import criar_workspace, filtrar_alvo, planejar_rebuild, subir  # noqa: E402
@@ -35,7 +36,7 @@ def main() -> int:
         return 2
 
     idade = idade_em_dias(dados, time.time())
-    print("Snapshot de %s (%.1f dias) · %s" % (dados["gerado_em"], idade, origem.name))
+    print("Snapshot de %s (%.1f dias) · %s" % (mostrar(dados["gerado_em"]), idade, origem.name))
     if idade > args.max_age:
         resp = input("  Snapshot com mais de %.0f dias. Continuar? [s/N] " % args.max_age)
         if resp.strip().lower() not in ("s", "sim", "y"):
