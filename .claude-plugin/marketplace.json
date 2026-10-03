@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
-    "version": "0.8.14"
+    "version": "0.8.15"
   },
   "plugins": [
     {
@@ -118,7 +118,7 @@
       "name": "cmux-hibernate",
       "source": "./plugins/cmux-hibernate",
       "description": "Hibernate and restore Claude Code sessions across cmux workspaces, freeing memory without losing your environment.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "license": "MIT",
       "category": "productivity",
       "keywords": [

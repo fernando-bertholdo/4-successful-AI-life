@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.1] — 2026-10-03
+
+### Fixed
+- O carimbo de máquina sai em UTC com `Z`: `gerado_em` no `snapshot.json` e o nome do
+  diretório do snapshot (`2026-10-03T22-30-00Z`). Até aqui os dois saíam na hora local do
+  host, sem zona.
+- A hora mostrada a gente vai no horário de Brasília, com a zona escrita: `**Gerado:**`
+  no `INVENTARIO.md` (`03/10/2026 19:30 BRT (2026-10-03T22:30:00Z)`) e a linha
+  "Snapshot de" do `wake.py`.
+- O `wake.py` continua lendo os snapshots gravados pela 0.1.0, sem zona, como hora local
+  do host. A escolha do mais recente e a retenção ordenam pelo instante, não pelo nome:
+  nome em hora local e nome em UTC não se comparam como texto, e num host a leste de UTC
+  a ordem por nome escolheria o snapshot antigo.
+- Novo `lib/carimbo.py`, com os testes de cada formato.
+
 ## [0.1.0] — 2026-08-04
 
 ### Added
