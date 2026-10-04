@@ -42,8 +42,13 @@ uma decisão.
 /reload-plugins
 ```
 
-Os textos que o agente lê e os da faixa estão em português e falam do Fernando, o dono das
-sessões para quem o mod foi escrito.
+## Configuração
+
+Os textos que o agente lê chamam quem decide de "o usuário". A opção `dono` troca isso pelo
+nome, com o artigo, para as frases ficarem certas: "o Fernando", "a Ana". Ela aparece no
+`/config`, entre as opções do plugin.
+
+Os textos do mod estão em português.
 
 ## Desenvolvimento
 

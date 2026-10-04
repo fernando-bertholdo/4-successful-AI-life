@@ -16,11 +16,17 @@ const STALE_MS = 14 * 24 * 60 * 60 * 1000
 /** Onde procurar o CLI do Cmux, nesta ordem */
 const CMUX_CANDIDATES = ['cmux', '/Applications/cmux.app/Contents/Resources/bin/cmux']
 
-/** Linhas do texto do agente que indicam uma decisão do Fernando */
+/** Linhas do texto do agente que indicam uma decisão de quem usa a sessão */
 const TEXT_MARKERS = /🔴|aguardo (o )?seu aval|preciso da sua decis[aã]o|depende de voc[eê] decidir/i
 
-const INSTRUCTIONS = [
-  'Decisões do Fernando. Quando surgir algo que só o Fernando pode decidir',
+/** Como os textos chamam quem decide, com o artigo; a opção `dono` do plugin troca */
+const DONO_PADRAO = 'o usuário'
+
+/** "o usuário" → "O usuário", para o começo de frase */
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+const instructions = (dono: string) => [
+  `Decisões que esperam ${dono}. Quando surgir algo que só ${dono} pode decidir`,
   '(aprovar merge ou deploy, mudar escopo, aceitar ou adiar um achado de revisão,',
   'definir prazo, dar aval a uma seção ou proposta, escolher entre caminhos com custo',
   'ou risco diferentes), chame a ferramenta mcp__decisoes__registrar_decisao em vez de',
@@ -40,9 +46,9 @@ const landing = atom({ plugin: 'decisoes', key: 'landing' } as const, null as La
 
 const LANDED = /POUSO (DE EMERGÊNCIA )?CONCLUÍDO/
 
-const LANDING_TEXT = {
+const landingText = (dono: string) => ({
   organizado: [
-    'Pouso organizado: o Fernando vai fechar o Mac em breve (alguns minutos).',
+    `Pouso organizado: ${dono} vai fechar a máquina em breve (alguns minutos).`,
     'Não comece frente nova. Termine o passo atual até um ponto consistente, sem deixar arquivo pela metade.',
     'Depois: (1) guarde o trabalho em andamento do jeito que este projeto prefere (commit local de WIP ou stash nomeado; sem push forçado);',
     '(2) encerre os processos e monitores que você iniciou, ou diga quais continuam;',
@@ -50,13 +56,13 @@ const LANDING_TEXT = {
     "(4) responda com um resumo de até 5 linhas terminando em 'POUSO CONCLUÍDO'.",
   ].join(' '),
   emergencia: [
-    'Pouso de emergência: o Fernando vai fechar o Mac agora (1 a 2 minutos).',
+    `Pouso de emergência: ${dono} vai fechar a máquina agora (1 a 2 minutos).`,
     'Pare assim que for seguro, sem deixar arquivo corrompido. Não rode testes, builds nem nada demorado.',
     'Faça só: guarde o trabalho em andamento (commit local de WIP ou stash nomeado, sem push);',
     'escreva em até 5 linhas onde parou e o próximo passo, num arquivo ou comentário de retomada do projeto;',
     "responda terminando em 'POUSO DE EMERGÊNCIA CONCLUÍDO'.",
   ].join(' '),
-} as const
+})
 
 type $T = EngineInterface
 
@@ -153,6 +159,8 @@ let cmuxPath: string | null | undefined // undefined: ainda não procurado; null
 let registeredThisTurn = false
 let turnRunning = false
 let namesFetchedAt = 0
+/** Quem decide, como os textos o chamam; vem da opção `dono` em cada carga */
+let dono = DONO_PADRAO
 let cachedNames: { workspaceName?: string; tabTitle?: string; windowId?: string } = {}
 
 // ── Cmux ────────────────────────────────────────────────────────────────
@@ -297,7 +305,7 @@ async function sendBatch($: $T) {
   if (answered.length === 0) return
   const lines = answered.map(d => `- ${d.id} — ${d.pergunta}\n  Resposta: ${d.resposta}`)
   const text = [
-    `Decisões do Fernando (${answered.length}):`,
+    `Respostas às decisões (${answered.length}):`,
     ...lines,
     '',
     'Siga a partir daqui com base nessas respostas.',
@@ -317,7 +325,7 @@ async function openPane($: $T) {
 // ── Navegação para outra sessão ─────────────────────────────────────────
 
 async function requestLanding($: $T, kind: Landing['kind']) {
-  const text = LANDING_TEXT[kind]
+  const text = landingText(dono)[kind]
   let injected = false
   if (turnRunning) {
     // Entra no turno em curso: o modelo lê no próximo passo, sem interromper a ferramenta que está rodando
@@ -399,7 +407,9 @@ async function goTo($: $T, targetId: string, label: string) {
 
 // ── Ciclo de vida ───────────────────────────────────────────────────────
 
-export const register: Register = on => {
+export const register: Register = (on, options) => {
+  dono = typeof options.dono === 'string' && options.dono.trim() ? options.dono.trim() : DONO_PADRAO
+
   // ── Ciclo de vida ───────────────────────────────────────────────────────
 
   on('session.start', async ($, e, next) => {
@@ -408,8 +418,8 @@ export const register: Register = on => {
     await $.tool.register({
       name: TOOL,
       description:
-        'Registra uma decisão que só o Fernando pode tomar, sem travar a sessão. Ele responde depois por botões; ' +
-        'a resposta chega como mensagem do plugin decisoes. Use para merge, deploy, escopo, prazo, aval, ' +
+        `Registra uma decisão que só ${dono} pode tomar, sem travar a sessão. A resposta vem depois, por botões, ` +
+        'e chega como mensagem do plugin decisoes. Use para merge, deploy, escopo, prazo, aval, ' +
         'ou escolha entre caminhos de custo ou risco diferentes. Não use para o que você pode decidir sozinho.',
       inputSchema: {
         type: 'object',
@@ -457,7 +467,7 @@ export const register: Register = on => {
     const composed = await next(e)
     return {
       ...composed,
-      sections: [...composed.sections, { id: 'decisoes:instrucoes', text: INSTRUCTIONS, scope: 'session' as const }],
+      sections: [...composed.sections, { id: 'decisoes:instrucoes', text: instructions(dono), scope: 'session' as const }],
     }
   })
 
@@ -482,7 +492,7 @@ export const register: Register = on => {
     })
     return {
       result:
-        `Registrada como ${id}. O Fernando decide quando voltar e a resposta chega numa mensagem do plugin decisoes. ` +
+        `Registrada como ${id}. ${capitalize(dono)} decide quando voltar e a resposta chega numa mensagem do plugin decisoes. ` +
         'Siga com o que não depende disso ou pouse; não repita a pergunta no texto.',
     }
   })
@@ -497,7 +507,7 @@ export const register: Register = on => {
     if (e.agentId === undefined) turnRunning = false
     if (e.agentId === undefined && LANDED.test(e.answer) && (await read($, landing))) {
       await update($, landing, () => null)
-      $.ui.toast('✓ Pouso concluído. Pode fechar o Mac.', { timeoutMs: 15_000 })
+      $.ui.toast('✓ Pouso concluído. Pode fechar a máquina.', { timeoutMs: 15_000 })
     }
     if (e.agentId === undefined && !e.isAborted && !registeredThisTurn) {
       const lines = e.answer

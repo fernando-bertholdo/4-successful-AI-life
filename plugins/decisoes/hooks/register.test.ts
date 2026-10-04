@@ -254,4 +254,24 @@ describe('register', () => {
     expect([...w.appended, ...w.submitted][0]).toContain('Pouso de emergência')
     expect(await band.find({ type: 'Text', text: /pouso de emergência em andamento/ })).toBeDefined()
   })
+
+  test('sem a opção dono, os textos falam do usuário', async ($, on) => {
+    const w = world(on)
+    await $.session.start(START)
+    const r = await $.tool.call({ tool: TOOL, pergunta: 'Mergear?', opcoes: ['Sim', 'Não'] } as never)
+    expect(String(r.result)).toContain('O usuário decide quando voltar')
+    const band = await $.ui.mount(BAND)
+    await band.press({ key: 'pouso' })
+    expect(w.submitted[0]).toContain('o usuário vai fechar a máquina em breve')
+  })
+
+  test('a opção dono troca quem os textos chamam', { options: { dono: 'a Ana' } }, async ($, on) => {
+    const w = world(on)
+    await $.session.start(START)
+    const r = await $.tool.call({ tool: TOOL, pergunta: 'Mergear?', opcoes: ['Sim', 'Não'] } as never)
+    expect(String(r.result)).toContain('A Ana decide quando voltar')
+    const band = await $.ui.mount(BAND)
+    await band.press({ key: 'pouso-emergencia' })
+    expect(w.submitted[0]).toContain('a Ana vai fechar a máquina agora')
+  })
 })
