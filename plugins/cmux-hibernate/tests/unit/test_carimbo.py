@@ -28,7 +28,9 @@ class TestLer(unittest.TestCase):
             ler("ontem")
 
 
-class TestGravar(unittest.TestCase):
+class TestGravar(FusoFixo, unittest.TestCase):
+    """Fora de UTC: num host em UTC a hora local gravada com `Z` coincidiria com a certa."""
+
     def test_agora_utc_termina_em_z(self):
         self.assertRegex(agora_utc(), r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
 
