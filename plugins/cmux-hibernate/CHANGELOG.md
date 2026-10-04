@@ -9,9 +9,15 @@
   revezamento de sessão. A sessão que aparece em mais de uma aba continua pulada.
 - No dry-run com `--surface`, a saída diz qual aba seria desarmada.
 - A `SKILL.md` e o `README.md` do plugin dizem como pedir uma aba só.
-- `--surface` e `--all` são mutuamente exclusivos. Aba que não casa, ou casa mais de uma vez,
-  e aba sem sessão Claude Code saem com erro e código 2, sem gravar snapshot.
-- Sete testes em `test_bindings.py` (`TestUmaAba`). Medido em 04/10/2026: 71 testes OK.
+- `--surface` e `--all` são mutuamente exclusivos. Alvo vazio (um `$CMUX_SURFACE_ID` sem
+  valor), aba que não casa ou casa mais de uma vez, e aba sem sessão Claude Code saem com
+  código 2, antes de gravar snapshot; a mensagem diz quantas abas casaram.
+- Com `--surface`, a saída é 1 quando a aba pedida não é desarmada, ou não seria no dry-run
+  (sessão em mais de uma aba, desarme que falhou), e o "Pode dar Cmd+Q" não aparece.
+- O snapshot não chama de aba de controle a aba que o `--surface` desarmou.
+- Dezenove testes: dez em `test_bindings.py` (`TestUmaAba`) e nove no novo
+  `test_hibernate_main.py`, que roda o `main()` sem cmux. Medido em 04/10/2026: 83 testes OK;
+  com `if args.surface:` no lugar de `if args.surface is not None:`, 1 falha (alvo vazio).
 
 ## [0.1.2] — 2026-10-03
 
