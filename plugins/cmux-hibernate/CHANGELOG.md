@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.2] — 2026-10-03
+
+### Changed
+- `test_carimbo.py`: a classe `TestGravar` fixa o fuso do processo (`FusoFixo`, `Asia/Tokyo`).
+  Antes ela herdava o fuso do host, e sob UTC a mutação que grava a hora local com `Z`
+  coincidia com a certa e passava a suíte. Medido sob `TZ=UTC`: com a mutação, 1 falha,
+  diferença de `32399.x` s (9 h menos a fração do segundo; `32399.02` na medição) contra o
+  limite de 2 s; sem ela, 64 testes OK. Só teste, o plugin não muda de comportamento.
+
 ## [0.1.1] — 2026-10-03
 
 ### Fixed
