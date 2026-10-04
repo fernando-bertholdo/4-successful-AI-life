@@ -294,8 +294,9 @@ The reference covers the mechanics of side effects. These are the habits around 
   that person reads, the zone written out, and UTC beside it so the note can be matched against
   the API's stamps, which come in UTC: `18:41 BRT (21:41Z)`, not `18:41` and not `21:41Z` alone.
   When the UTC falls on another calendar day than the local hour, it carries its date, so the
-  note is not matched against the wrong day: `22:59 BRT (04/10 01:59Z)`. An hour with no zone
-  cannot be placed against those stamps.
+  note is not matched against the wrong day: `22:59 BRT (04/10 01:59Z)`. The date is
+  day/month, as a Brazilian reader writes it; outside Brazil `04/10` reads as 10 April. An hour
+  with no zone cannot be placed against those stamps.
 - Never create a registry object — agent, skill, project, autopilot — casually. It will appear
   in no manifest and no drift check will see it.
 - **A write to the board never shares a command chain with a step that can fail.** Verify
