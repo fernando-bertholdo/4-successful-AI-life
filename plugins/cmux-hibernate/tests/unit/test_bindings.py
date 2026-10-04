@@ -4,7 +4,7 @@ import unittest
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
-from lib.bindings import comando_resume, localizar_aba, planejar_desarme  # noqa: E402
+from lib.bindings import abas_que_casam, comando_resume, planejar_desarme  # noqa: E402
 from lib.cmux_state import Aba, Estado, Janela, Pane, Workspace  # noqa: E402
 
 
@@ -52,14 +52,31 @@ class TestBindings(unittest.TestCase):
 class TestUmaAba(unittest.TestCase):
     """--surface: o plano tem so' a aba pedida, mesmo que seja a de controle."""
 
+    def uuids(self, alvo, e=None):
+        return [a.uuid for a in abas_que_casam(e or estado(), alvo)]
+
     def test_localiza_por_uuid_em_qualquer_caixa(self):
-        self.assertEqual(localizar_aba(estado(), "outra").uuid, "OUTRA")
+        self.assertEqual(self.uuids("outra"), ["OUTRA"])
 
-    def test_localiza_por_ref(self):
-        self.assertEqual(localizar_aba(estado(), "surface:2").uuid, "OUTRA")
+    def test_localiza_por_ref_em_qualquer_caixa_e_com_espacos(self):
+        self.assertEqual(self.uuids(" SURFACE:2 "), ["OUTRA"])
 
-    def test_aba_inexistente_e_none(self):
-        self.assertIsNone(localizar_aba(estado(), "surface:99"))
+    def test_aba_inexistente_nao_casa(self):
+        self.assertEqual(self.uuids("surface:99"), [])
+
+    def test_alvo_vazio_nao_casa(self):
+        """$CMUX_SURFACE_ID vazio nao pode virar 'todas as abas'."""
+        self.assertEqual(self.uuids(""), [])
+        self.assertEqual(self.uuids("   "), [])
+
+    def test_ref_repetida_devolve_as_duas(self):
+        e = estado()
+        e.janelas[0].workspaces[0].panes[0].abas[2].ref = "surface:2"
+        self.assertEqual(sorted(self.uuids("surface:2", e)), ["OUTRA", "SHELL"])
+
+    def test_aba_pedida_nao_controle_preserva_o_controle(self):
+        plano = planejar_desarme(estado(), aba_controle="CTRL", so_aba="OUTRA")
+        self.assertEqual([p["surface"] for p in plano], ["OUTRA"])
 
     def test_plano_so_com_a_aba_pedida(self):
         plano = planejar_desarme(estado(), aba_controle=None, so_aba="OUTRA")
