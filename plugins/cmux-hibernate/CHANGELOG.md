@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0] — 2026-10-04
+
+### Added
+- `hibernate.py --surface <aba>` desarma uma aba só, pedida pelo uuid (o formato do
+  `CMUX_SURFACE_ID`, em qualquer caixa) ou pela ref `surface:N`. Pedir a aba pelo nome vence
+  a preservação da aba de controle: é o que deixa uma sessão hibernar a própria aba, como no
+  revezamento de sessão. A sessão que aparece em mais de uma aba continua pulada.
+- No dry-run com `--surface`, a saída diz qual aba seria desarmada.
+- A `SKILL.md` e o `README.md` do plugin dizem como pedir uma aba só.
+- `--surface` e `--all` são mutuamente exclusivos. Aba que não casa, ou casa mais de uma vez,
+  e aba sem sessão Claude Code saem com erro e código 2, sem gravar snapshot.
+- Sete testes em `test_bindings.py` (`TestUmaAba`). Medido em 04/10/2026: 71 testes OK.
+
 ## [0.1.2] — 2026-10-03
 
 ### Changed
