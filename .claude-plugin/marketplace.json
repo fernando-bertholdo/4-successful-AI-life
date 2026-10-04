@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Curated plugins for AI-assisted work: UI/UX excellence, session auto-naming and handoff, prompt engineering, and structured planning.",
-    "version": "0.8.17"
+    "version": "0.9.0"
   },
   "plugins": [
     {
@@ -148,6 +148,21 @@
       "author": {
         "name": "Fernando Bertholdo"
       }
+    },
+    {
+      "name": "decisoes",
+      "source": "./plugins/decisoes",
+      "description": "A Claude Code mod (function-hooks plugin) that collects, per session, the decisions only the session's owner can make — a tool the agent calls plus lines flagged in its text — lets you answer them with buttons in a band and a pane, lists the other cmux sessions waiting on you, and asks a session to land before you close the machine. Texts in Portuguese.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "decisions",
+        "session",
+        "cmux",
+        "hooks",
+        "mod"
+      ]
     }
   ]
 }

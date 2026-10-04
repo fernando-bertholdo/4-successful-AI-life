@@ -31,6 +31,7 @@ Inside any Claude Code session, add the marketplace and install the plugins you 
 /plugin install enhanced-planning@4-successful-ai-life
 /plugin install multica-ops@4-successful-ai-life
 /plugin install cmux-hibernate@4-successful-ai-life
+/plugin install decisoes@4-successful-ai-life
 /reload-plugins
 ```
 
@@ -47,6 +48,7 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 | [**enhanced-planning**](./plugins/enhanced-planning/) | `1.1.1+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
 | [**multica-ops**](./plugins/multica-ops/) | `0.2.11` | Companion to Multica's official CLI skill — desktop-app binary discovery, the bridged-session route, the shapes and limits the reference omits, and the constraints of a governed board. |
 | [**cmux-hibernate**](./plugins/cmux-hibernate/) | `0.2.0` | Hibernates the Claude Code sessions open across cmux workspaces before you quit cmux, so they come back one at a time, as you open each tab, instead of all at once. |
+| [**decisoes**](./plugins/decisoes/) | `0.1.0` | A Claude Code mod that collects the decisions only you can make in each session, lets you answer them with buttons, and takes you to the other cmux sessions waiting on you. Texts in Portuguese. |
 
 <details>
 <summary><b>🎨 ui-excellence</b> — UI/UX craft, framework-agnostic</summary>
@@ -175,6 +177,21 @@ Dozens of tabs running Claude Code cost memory, and quitting cmux is risky: the 
 
 </details>
 
+<details>
+<summary><b>⚑ decisoes</b> — the decisions waiting on you, one click away</summary>
+
+<br>
+
+A mod — a plugin of function hooks, with a band above the prompt and a pane of its own. The agent gets a `registrar_decisao` tool and an instruction to use it instead of asking in prose; lines its answer flags with 🔴 (or "aguardo seu aval") become decisions too. The band shows how many decisions wait and for how long; the pane takes one at a time, with numbered options, a free answer, and "adiar", and sends the answers back as one turn once the last pending one is answered. The band also lists the other sessions waiting on you and takes you to their cmux tab, or resumes the session in a new tab when the old one closed; two buttons ask the session to land before you close the machine. Texts in Portuguese.
+
+```
+/decisoes
+```
+
+→ [Plugin README](./plugins/decisoes/README.md)
+
+</details>
+
 ## 📦 Installation
 
 The [Quick Start](#-quick-start) above is the recommended path — install from GitHub. Other ways to install:
@@ -242,7 +259,8 @@ To auto-install in a project, add to `.claude/settings.json`:
     "generate-session-prompt@4-successful-ai-life": true,
     "enhanced-planning@4-successful-ai-life": true,
     "multica-ops@4-successful-ai-life": true,
-    "cmux-hibernate@4-successful-ai-life": true
+    "cmux-hibernate@4-successful-ai-life": true,
+    "decisoes@4-successful-ai-life": true
   }
 }
 ```
