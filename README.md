@@ -30,6 +30,7 @@ Inside any Claude Code session, add the marketplace and install the plugins you 
 /plugin install generate-session-prompt@4-successful-ai-life
 /plugin install enhanced-planning@4-successful-ai-life
 /plugin install multica-ops@4-successful-ai-life
+/plugin install cmux-hibernate@4-successful-ai-life
 /reload-plugins
 ```
 
@@ -45,6 +46,7 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 | [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.1.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
 | [**enhanced-planning**](./plugins/enhanced-planning/) | `1.1.1+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
 | [**multica-ops**](./plugins/multica-ops/) | `0.2.11` | Companion to Multica's official CLI skill — desktop-app binary discovery, the bridged-session route, the shapes and limits the reference omits, and the constraints of a governed board. |
+| [**cmux-hibernate**](./plugins/cmux-hibernate/) | `0.2.0` | Hibernates the Claude Code sessions open across cmux workspaces before you quit cmux, so they come back one at a time, as you open each tab, instead of all at once. |
 
 <details>
 <summary><b>🎨 ui-excellence</b> — UI/UX craft, framework-agnostic</summary>
@@ -158,6 +160,21 @@ Point `MULTICA_PLAYBOOK` at that repository and the skill defers to it. Nothing 
 
 </details>
 
+<details>
+<summary><b>💤 cmux-hibernate</b> — quit cmux without losing, or reloading, every session</summary>
+
+<br>
+
+Dozens of tabs running Claude Code cost memory, and quitting cmux is risky: the resume binding it keeps records an intention, not the live process, and reopening starts every session at once. `hibernate.py` reads the state from the processes (`CMUX_SURFACE_ID`, `lsof`), rewrites each binding with the right directory and `auto_resume: false`, and writes a dated snapshot; after you reopen, each tab wakes when you open it, and `wake.py` checks or rebuilds what is missing. `--surface <tab>` hibernates a single tab, including the one the command runs from.
+
+```
+/cmux-hibernate:cmux-hibernate
+```
+
+→ [Plugin README](./plugins/cmux-hibernate/README.md)
+
+</details>
+
 ## 📦 Installation
 
 The [Quick Start](#-quick-start) above is the recommended path — install from GitHub. Other ways to install:
@@ -224,7 +241,8 @@ To auto-install in a project, add to `.claude/settings.json`:
     "prompt-master@4-successful-ai-life": true,
     "generate-session-prompt@4-successful-ai-life": true,
     "enhanced-planning@4-successful-ai-life": true,
-    "multica-ops@4-successful-ai-life": true
+    "multica-ops@4-successful-ai-life": true,
+    "cmux-hibernate@4-successful-ai-life": true
   }
 }
 ```
