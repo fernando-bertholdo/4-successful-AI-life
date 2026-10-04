@@ -7,6 +7,16 @@ and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.2.11] — 2026-10-03
+
+### Changed
+
+- §8: the example `22:59 BRT (04/10 01:59Z)` now says the date is day/month, as a Brazilian
+  reader writes it, and that outside Brazil `04/10` reads as 10 April. Without the order, a note
+  carrying the date of the other calendar day could be matched against the wrong day. TECH-991.
+
+---
+
 ## [0.2.10] — 2026-10-03
 
 ### Changed
