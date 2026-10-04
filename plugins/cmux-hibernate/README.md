@@ -37,6 +37,9 @@ python3 scripts/wake.py --rebuild       # recria workspaces ausentes
 A aba de onde o `hibernate` roda é preservada: é a única sessão viva ao reabrir, e de
 onde você pode pedir a conferência. `--all` desarma inclusive ela.
 
+`--surface <aba>` desarma uma aba só, pelo uuid ou pela ref `surface:N` do `cmux tree`,
+inclusive a de onde o comando roda: é o caminho para uma sessão hibernar a si mesma.
+
 ## Limitações conhecidas
 
 - **Splits aproximados no `--rebuild`.** O CLI do cmux não expõe a proporção real dos

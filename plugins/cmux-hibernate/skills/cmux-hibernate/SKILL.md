@@ -22,6 +22,9 @@ A aba de onde o comando roda é preservada: é a única sessão que sobe quando 
 reabre, e de onde a conferência pode ser pedida. Use `--all` apenas se o usuário
 quiser zero sessões vivas.
 
+Para uma aba só, `--surface <uuid|surface:N>`: desarma aquela aba e nenhuma outra,
+inclusive a de onde o comando roda.
+
 ## Depois de reabrir
 
 ```bash
