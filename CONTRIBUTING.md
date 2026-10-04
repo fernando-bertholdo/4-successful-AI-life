@@ -45,10 +45,25 @@ here, and where the deeper conventions live. For day-to-day maintenance conventi
     │   ├── .claude-plugin/plugin.json
     │   ├── upstream/              ← sparse-checkout mirror of tech-product-template
     │   ├── README.md · CHANGELOG.md
-    └── enhanced-planning/         ← vendored planning-guardrails skill
-        ├── .claude-plugin/plugin.json
-        ├── upstream/              ← SKILL.md + references/ (LOCAL-PATCH: standalone-usage)
-        ├── README.md · CHANGELOG.md
+    ├── enhanced-planning/         ← vendored planning-guardrails skill
+    │   ├── .claude-plugin/plugin.json
+    │   ├── upstream/              ← SKILL.md + references/ (LOCAL-PATCH: standalone-usage)
+    │   ├── README.md · CHANGELOG.md
+    ├── multica-ops/               ← Multica board companion skill
+    │   ├── .claude-plugin/plugin.json
+    │   ├── skills/board/          ← SKILL.md + scripts/patch-description.py
+    │   ├── tests/                 ← fake CLI + patch-description suite
+    │   ├── README.md · LICENSE · CHANGELOG.md
+    ├── cmux-hibernate/            ← hibernate and wake cmux sessions
+    │   ├── .claude-plugin/plugin.json
+    │   ├── skills/cmux-hibernate/ ← /cmux-hibernate skill
+    │   ├── scripts/               ← hibernate.py + wake.py + lib/
+    │   ├── tests/ · docs/ · README.md · CHANGELOG.md
+    └── decisoes/                  ← Claude Code mod (function hooks)
+        ├── .claude-plugin/plugin.json   ← manifest + types contract
+        ├── hooks/                 ← hooks.json + register.tsx + register.test.ts
+        ├── types/index.d.ts       ← $.state contract
+        ├── tsconfig.json · README.md · CHANGELOG.md
 ```
 
 Each plugin is fully self-contained under `plugins/<name>/` with its own manifest, docs, license,
