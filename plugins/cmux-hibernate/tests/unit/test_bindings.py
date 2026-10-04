@@ -4,7 +4,7 @@ import unittest
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
-from lib.bindings import comando_resume, planejar_desarme  # noqa: E402
+from lib.bindings import comando_resume, localizar_aba, planejar_desarme  # noqa: E402
 from lib.cmux_state import Aba, Estado, Janela, Pane, Workspace  # noqa: E402
 
 
@@ -47,6 +47,36 @@ class TestBindings(unittest.TestCase):
                                  duplicadas=["22222222-2222-2222-2222-222222222222"])
         self.assertEqual([p["sessao"] for p in plano],
                          ["11111111-1111-1111-1111-111111111111"])
+
+
+class TestUmaAba(unittest.TestCase):
+    """--surface: o plano tem so' a aba pedida, mesmo que seja a de controle."""
+
+    def test_localiza_por_uuid_em_qualquer_caixa(self):
+        self.assertEqual(localizar_aba(estado(), "outra").uuid, "OUTRA")
+
+    def test_localiza_por_ref(self):
+        self.assertEqual(localizar_aba(estado(), "surface:2").uuid, "OUTRA")
+
+    def test_aba_inexistente_e_none(self):
+        self.assertIsNone(localizar_aba(estado(), "surface:99"))
+
+    def test_plano_so_com_a_aba_pedida(self):
+        plano = planejar_desarme(estado(), aba_controle=None, so_aba="OUTRA")
+        self.assertEqual([p["surface"] for p in plano], ["OUTRA"])
+
+    def test_aba_pedida_vence_a_de_controle(self):
+        """A sessao velha do revezamento hiberna a propria aba pelo CMUX_SURFACE_ID."""
+        plano = planejar_desarme(estado(), aba_controle="CTRL", so_aba="CTRL")
+        self.assertEqual([p["surface"] for p in plano], ["CTRL"])
+
+    def test_aba_pedida_duplicada_fica_de_fora(self):
+        plano = planejar_desarme(estado(), aba_controle=None, so_aba="OUTRA",
+                                 duplicadas=["22222222-2222-2222-2222-222222222222"])
+        self.assertEqual(plano, [])
+
+    def test_aba_pedida_sem_sessao_fica_de_fora(self):
+        self.assertEqual(planejar_desarme(estado(), aba_controle=None, so_aba="SHELL"), [])
 
 
 if __name__ == "__main__":
