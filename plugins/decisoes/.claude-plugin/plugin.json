@@ -1,0 +1,13 @@
+{
+  "name": "decisoes",
+  "version": "0.1.0",
+  "description": "Acumula as decisões que só o Fernando pode tomar em cada sessão, deixa responder com botões e leva às outras sessões no Cmux.",
+  "author": {
+    "name": "Fernando Bertholdo",
+    "url": "https://github.com/fernando-bertholdo"
+  },
+  "repository": "https://github.com/fernando-bertholdo/4-successful-AI-life",
+  "license": "MIT",
+  "keywords": ["decisions", "session", "cmux", "hooks", "mod"],
+  "types": "./types/index.d.ts"
+}
