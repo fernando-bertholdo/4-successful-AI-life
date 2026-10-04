@@ -2,6 +2,9 @@
 """Hiberna as sessoes Claude Code do cmux: retrata, desarma e libera memoria.
 
 O padrao e' dry-run. Use --apply para desarmar de fato.
+
+Saida: 0 no caminho normal; 1 quando --surface nao desarma, ou nao desarmaria,
+a aba pedida; 2 em erro de leitura do cmux ou de argumento.
 """
 import argparse
 import os
@@ -10,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib.bindings import desarmar, localizar_aba, planejar_desarme  # noqa: E402
+from lib.bindings import abas_que_casam, desarmar, planejar_desarme  # noqa: E402
 from lib.cmux_state import (  # noqa: E402
     STALE_DAYS,
     _ps_eww,
@@ -41,11 +44,13 @@ def main() -> int:
         return 2
 
     so_aba = None
-    if args.surface:
-        aba = localizar_aba(estado, args.surface)
-        if aba is None:
-            print("erro: nenhuma aba casa com %s" % args.surface, file=sys.stderr)
+    if args.surface is not None:
+        achadas = abas_que_casam(estado, args.surface)
+        if len(achadas) != 1:
+            print("erro: %s abas casam com %r; --surface pede exatamente uma"
+                  % ("nenhuma" if not achadas else len(achadas), args.surface), file=sys.stderr)
             return 2
+        aba = achadas[0]
         if not aba.sessao:
             print("erro: a aba %s nao tem sessao Claude Code" % aba.ref, file=sys.stderr)
             return 2
@@ -70,12 +75,12 @@ def main() -> int:
         print("\n  anomalia: %d sessoes aparecem em mais de uma aba; serao puladas"
               % len(duplicadas))
 
-    dados = serializar(estado, controle, args.stale_days)
+    dados = serializar(estado, None if so_aba == controle else controle, args.stale_days)
     destino = gravar(dados, BASE_ESTADO)
     aplicar_retencao(BASE_ESTADO)
 
     plano = planejar_desarme(estado, controle, duplicadas, so_aba)
-    if so_aba:
+    if so_aba is not None:
         for p in plano:
             print("\n  Aba pedida: %s  %s" % (p["sessao"][:8], (p["titulo"] or "")[:58]))
         if not plano:
@@ -91,12 +96,16 @@ def main() -> int:
             else:
                 print("      falhou: %s  %s" % (p["sessao"][:8], (p["titulo"] or "")[:50]))
         print("\n  Desarmadas: %d abas   (sobem so quando voce abrir)" % ok)
-        if so_aba:
+        falhou_pedida = so_aba is not None and ok == 0
+        if so_aba is not None:
             print("  Preservadas: todas as outras (--surface)")
         else:
             print("  Preservada: %s" % ("nenhuma (--all)" if controle is None else "1 (esta aba)"))
 
     print("\n  Snapshot: %s" % destino)
+    if so_aba is not None and (not plano or (args.apply and falhou_pedida)):
+        print("  A aba pedida continua armada.", file=sys.stderr)
+        return 1
     if args.apply:
         print("  Pode dar Cmd+Q.")
     return 0

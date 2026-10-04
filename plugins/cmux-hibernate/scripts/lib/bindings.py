@@ -14,13 +14,14 @@ def comando_resume(sessao: str) -> List[str]:
     return ["claude", "--resume", sessao, "--dangerously-skip-permissions"]
 
 
-def localizar_aba(estado, alvo: str):
-    """Acha a aba pelo uuid (o formato do CMUX_SURFACE_ID) ou pela ref `surface:N`.
-    Devolve None se nenhuma, ou mais de uma, casar."""
+def abas_que_casam(estado, alvo: str) -> list:
+    """As abas cujo uuid (o formato do CMUX_SURFACE_ID) ou ref `surface:N` e' o alvo.
+    Quem chama exige exatamente uma; alvo vazio nao casa com nada."""
     alvo = alvo.strip()
-    achadas = [a for *_, a in estado.todas_abas()
-               if a.uuid.upper() == alvo.upper() or a.ref == alvo.lower()]
-    return achadas[0] if len(achadas) == 1 else None
+    if not alvo:
+        return []
+    return [a for *_, a in estado.todas_abas()
+            if a.uuid.upper() == alvo.upper() or a.ref == alvo.lower()]
 
 
 def planejar_desarme(estado, aba_controle: Optional[str],
