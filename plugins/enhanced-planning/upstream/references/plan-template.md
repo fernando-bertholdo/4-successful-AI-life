@@ -1,6 +1,6 @@
 # Plan Template — Secoes Obrigatorias
 
-Template markdown que o agente injeta no plano. Todas as secoes abaixo sao obrigatorias.
+Template markdown que o agente injeta no plano. As secoes abaixo sao obrigatorias, exceto a Revisao Codex, que e opcional (ver a faixa da propria secao).
 
 ---
 
@@ -86,14 +86,17 @@ Tabela completa de arquivos que devem ser mantidos em sincronia.
 
 ## Revisao Codex (com meta-avaliacao)
 
+> **Seção opcional.** Manter somente se o `/codex:rescue` consta entre os comandos disponíveis (pré-condição de instalação do protocolo), a Checagem de Acesso do protocolo passou e o usuário confirmou a inclusão (Step 2 da skill). Caso contrário, remover esta seção e registrar `Revisao Codex: pulada ([motivo])` numa nota logo abaixo da Tabela de Progresso (a tabela é por slice e não tem linha para um pulo do plano).
+
 Consultar [codex-review-protocol.md](codex-review-protocol.md) para protocolo completo.
 
 **Ao completar cada PR:**
 1. Verificar criterios de aceite 100%
 2. Completar verificacao cruzada
-3. Invocar `/codex:rescue --effort xhigh` para executar revisao (2 fases: exploracao independente + classificacao comparativa)
-4. **Meta-avaliacao Claude** dos achados (CRITICO → fix obrigatorio; MEDIO → ajuste opcional; BAIXO → observacao)
-5. Registrar resultado na Tabela de Progresso
+3. Conferir que o `/codex:rescue` consta entre os comandos disponiveis (sem ele, pular a revisao deste PR e registrar `plugin codex ausente` na coluna Notas do slice) e rodar a Checagem de Acesso do protocolo; com exit diferente de 0, pular a revisao deste PR e registrar o pulo na coluna Notas do slice
+4. Invocar `/codex:rescue --effort xhigh` para executar revisao (2 fases: exploracao independente + classificacao comparativa)
+5. **Meta-avaliacao Claude** dos achados (CRITICO → fix obrigatorio; MEDIO → ajuste opcional; BAIXO → observacao)
+6. Registrar resultado na Tabela de Progresso
 
 ---
 
@@ -103,8 +106,8 @@ Decisoes congeladas ANTES da implementacao. Mudanca exige checkpoint humano expl
 
 | Decisao | Data | Implicacao Downstream |
 |---|---|---|
-| [Decisao 1] | [Data] | [O que quebra se mudar] |
-| [Decisao 2] | [Data] | [O que quebra se mudar] |
+| [Decisao 1] | [Data, calendário do fuso do dono] | [O que quebra se mudar] |
+| [Decisao 2] | [Data, calendário do fuso do dono] | [O que quebra se mudar] |
 
 **Regra:** Para desbloquear uma decisao, o agente DEVE usar AskUserQuestion explicando: (1) a decisao original, (2) por que precisa mudar, (3) impacto downstream.
 
@@ -115,7 +118,7 @@ Decisoes congeladas ANTES da implementacao. Mudanca exige checkpoint humano expl
 **OBRIGATORIO ao completar cada PR — executar TODOS os passos antes de iniciar proximo PR:**
 
 1. **Marcar checkboxes:** Riscar (`- [x]`) TODOS os criterios de aceite do PR concluido neste plano
-2. **Tabela de Progresso:** Preencher colunas Data, Commit (hashes), Status (`completo`) e Notas
+2. **Tabela de Progresso:** Preencher colunas Data (calendário do fuso do dono, `AGENTS.md`, "Horas e datas"), Commit (hashes), Status (`completo`) e Notas
 3. **CONTEXT.md da initiative:** Adicionar entrada no "Diario de Rodadas" com:
    - O que foi entregue (lista de arquivos/modulos)
    - Commits (hashes)
@@ -155,7 +158,7 @@ Decisoes congeladas ANTES da implementacao. Mudanca exige checkpoint humano expl
 - [ ] Verificacao cruzada de docs completa (isonomia)
 - [ ] CONTEXT.md atualizado com diario de rodadas para cada PR
 - [ ] Guardrails G-* verificados e nenhum violado
-- [ ] Revisao Codex executada para cada PR (ou justificativa de skip)
+- [ ] Revisao Codex executada para cada PR (ou justificativa de skip); remover este item se a secao foi omitida
 - [ ] Decision locks respeitados (nenhum desbloqueado sem checkpoint)
 - [ ] Testes passando (`pytest -q`)
 - [ ] Cobertura atende meta do milestone
