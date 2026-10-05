@@ -1,6 +1,6 @@
 ---
 name: generate-session-prompt
-version: 4.0.0
+version: 4.1.0
 description: Gerar prompt para retomada de desenvolvimento em nova sessão. Use quando sessão >150k tokens, ao retomar trabalho após pausa, ao trocar de ferramenta, ou em mudança de contexto. Aceita argumento de detalhe (brief, standard, detailed). Funciona em qualquer projeto — modo opinionated quando há `.planning/` na raiz, modo genérico caso contrário.
 ---
 
@@ -81,6 +81,7 @@ A detecção determina **apenas** o procedimento de coleta de contexto e o conju
 3. **Determinar nível de detalhe** — argumento explícito, ou inferir
 4. **Gerar prompt** seguindo a estrutura do nível escolhido + template do tipo de trabalho do modo ativo
 5. **Validar** contra o checklist do nível
+6. **Entregar** — no chat sempre e, havendo área de transferência, copiado e conferido (ver seção Entrega)
 
 ---
 
@@ -105,9 +106,10 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
      c. Fallback legado: _archive/<id>/CONTEXT.md
      d. Se nada → prosseguir sem CONTEXT.md (usar Roadmap.md)
    - Ler CONTEXT.md resolvido (contexto vivo, se existir)
-   - Ler a issue da iniciativa no rastreador: descrição, checkboxes de DoR/DoD e
-     comentários de topo (veredito, decisão respondida, nota) — o que só existe
-     na thread não chega ao prompt por arquivo nenhum (medido em 18/09/2026)
+   - Se o projeto tem rastreador de issues: a issue da iniciativa (descrição,
+     checkboxes de DoR/DoD, comentários de topo — veredito, decisão respondida,
+     nota) — o que só existe na thread não chega ao prompt por arquivo nenhum
+     (medido em 18/09/2026)
    - Ler Roadmap.md (milestone/fase atual, DoR/DoD)
    - Ler plans em .claude/plans/ (se existir)
    - Verificar últimos commits (git log --oneline -5)
@@ -128,7 +130,7 @@ Use quando `.planning/` existe na raiz. Vocabulário e estrutura assumem o frame
 #### Detour (qualquer nível)
 
 **Abertura:** `Vamos continuar o detour [NOME] (relacionado a [MILESTONES]).`
-**Referências obrigatórias:** .planning/detours/<nome>/CONTEXT.md, Roadmap.md (seção Desvios)
+**Referências obrigatórias:** .planning/detours/<nome>/CONTEXT.md, .planning/README.md (tabela `## Desvios (Detours)`)
 **Contexto:** Fases do detour, entregas já concluídas, impacto em milestones futuros
 **Skills:** pre-commit-check, organize-commits, update-docs
 
@@ -583,6 +585,82 @@ com foco em [FOCO]. [2-3 frases de contexto situacional]
 - [ ] Skills e validações sugeridas
 - [ ] Tipo de trabalho identificado
 
+## Entrega
+
+Último passo do procedimento. O prompt chega ao usuário **sempre no chat** e, quando a sessão
+tem área de transferência, também copiado e conferido. Não há script junto desta skill: `.sh`
+não roda no Windows nativo e Python não é garantido nas três plataformas. A instrução é a
+tabela abaixo, e a segurança vem da conferência do passo 4.
+
+1. **Mostrar** o prompt no chat, sempre, copiado ou não, e antes dos comandos abaixo: salvar,
+   copiar e reler podem falhar ou prender a chamada, e com o prompt já na tela o "sempre" não
+   depende de eles voltarem.
+2. **Salvar** o prompt como `session-prompt-<repo>-<AAAAMMDD-HHMMZ>.md`, com a hora em UTC
+   (`date -u +%Y%m%d-%H%MZ`: o nome é da máquina, e o `Z` diz a zona), no diretório de rascunho
+   que o harness oferecer (no Claude Code, o scratchpad da sessão); sem ele, num diretório novo
+   do temporário do sistema, `D=$(mktemp -d "${TMPDIR:-/tmp}/session-prompt-XXXXXX")` (modo 700;
+   o nome do arquivo é previsível, e em `/tmp` com a umask 022 ele ficaria legível aos outros
+   usuários da máquina); no Windows, `$env:TEMP` já é por usuário. **Nunca dentro do repositório,
+   nem em `.planning/scratch/`:** o prompt é veículo de entrega, o que precisa durar vive no
+   rastreador e no CONTEXT da iniciativa (`fresh-context`), e fora do template não existe
+   `.planning/`. Abaixo, `$F` é o caminho desse arquivo.
+3. **Copiar** com o comando nativo do sistema, sempre em UTF-8:
+
+| Sistema | Copiar | Reler |
+|---|---|---|
+| macOS | `LC_ALL=en_US.UTF-8 pbcopy < "$F"` | `LC_ALL=en_US.UTF-8 pbpaste` |
+| Windows (PowerShell) | `Get-Content -Raw -Encoding UTF8 $F \| Set-Clipboard` | `[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Clipboard -Raw` |
+| Linux, Wayland | `wl-copy < "$F"` | `wl-paste -n` |
+| Linux, X11 | `xclip -selection clipboard < "$F"` | `xclip -selection clipboard -o` |
+
+   Qual linha vale: `uname -s` igual a `Darwin` é macOS; `MINGW*`, `MSYS*` ou `CYGWIN*` (Git
+   Bash) é Windows; `Linux` com `microsoft` em `/proc/version` (WSL) também é Windows; outro
+   `Linux` é Wayland com `$WAYLAND_DISPLAY` definida e `wl-copy` no `PATH`, e X11 com `$DISPLAY`
+   (sem `wl-copy`, vale o X11 mesmo com `$WAYLAND_DISPLAY`: a sessão Wayland com XWayland define
+   as duas). Em shell bash no Windows (Git Bash, WSL), a linha do Windows roda pelo PowerShell,
+   com `$F` convertido para caminho Windows, o `'` do caminho dobrado (é o escape de uma string
+   entre aspas simples do PowerShell: `O'Brien` vira `O''Brien`), o `$` do PowerShell escapado,
+   senão o bash o expande antes, e `MSYS_NO_PATHCONV=1`, que desliga a conversão de caminho do
+   Git Bash nos argumentos do `powershell.exe`:
+
+   ```bash
+   W=$(wslpath -w "$F")   # no Git Bash: W=$(cygpath -w "$F")
+   W=${W//\'/\'\'}
+   MSYS_NO_PATHCONV=1 powershell.exe -NoProfile -Command "\$F = '$W'; Get-Content -Raw -Encoding UTF8 \$F | Set-Clipboard"
+   reler() { MSYS_NO_PATHCONV=1 powershell.exe -NoProfile -Command '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Clipboard -Raw'; }
+   ```
+
+4. **Conferir** a releitura contra o arquivo, os dois em UTF-8, ignorando `\r` e as quebras de
+   linha finais. Em bash, com `reler` sendo o comando da coluna Reler:
+
+   ```bash
+   [ "$(reler | tr -d '\r')" = "$(tr -d '\r' < "$F")" ] && echo IGUAL || echo DIFERE
+   ```
+
+   No PowerShell, sem bash no caminho:
+
+   ```powershell
+   $a = ((Get-Clipboard -Raw) -replace "`r", '').TrimEnd("`n"); $b = ((Get-Content -Raw -Encoding UTF8 $F) -replace "`r", '').TrimEnd("`n")
+   if ($a -ceq $b) { 'IGUAL' } else { 'DIFERE' }
+   ```
+
+   `IGUAL`: diga "copiado e conferido". `DIFERE`: a área de transferência pode não ter o prompt do
+   arquivo (a cópia saiu diferente, a releitura falhou ou a área guarda um conteúdo antigo; o
+   comparador não distingue os três), então diga "a cópia não confere, não cole; use o arquivo em
+   `$F`". Comando ausente, comando que falha ou sessão sem área de transferência (SSH, contêiner,
+   runtime de agente, claude.ai) **não é erro**: diga que não copiou e dê o caminho de `$F`.
+
+   Por que a releitura força UTF-8: copiar e reler no mesmo locale errado se anulam. No macOS,
+   `pbcopy` sem locale UTF-8 grava `ação` como `a√ß√£o`, e `pbpaste` no mesmo locale devolve
+   o texto certo, então a conferência passaria sobre uma área de transferência corrompida
+   (medido em 30/09/2026, no macOS). Ambiente sem `LANG` pode ocorrer num runtime de agente: por
+   isso o comando da tabela fixa o locale em vez de herdá-lo.
+
+Na linhagem do `tech-product-template`, o harness `scripts/validate/test-entrega-clipboard.sh`
+roda os comandos da tabela e os blocos cercados (a chamada do bash ao PowerShell e as duas
+conferências), lidos deste arquivo e executados como estão escritos, com um fixture de acentos,
+emoji, crases e `$()`.
+
 ## Fluxo de Uso
 
 ### Cenário 1: Continuação simples
@@ -651,6 +729,33 @@ generate-session-prompt
 ---
 
 ## Changelog
+
+### v4.1.0 (01/Outubro/2026)
+
+**Entrega e o que mudou desde a v4.0.0 sem subir a versão:**
+- Seção nova "Entrega", passo 6 do procedimento (2.19.0 da origem): o prompt
+  vai sempre ao chat e, havendo área de transferência, é salvo fora do repositório,
+  copiado pelo comando nativo do sistema e conferido por releitura em UTF-8. Sem
+  script: tabela por sistema (macOS, Windows, Linux Wayland e X11)
+- A seção Entrega depois da revisão adversarial: o prompt aparece no chat antes de qualquer
+  comando (passo 1); `DIFERE` manda não colar; o bloco do bash ao PowerShell dobra o `'` do
+  caminho e roda com `MSYS_NO_PATHCONV=1`; sem `wl-copy` vale a linha X11; sem scratchpad o
+  arquivo vai para um diretório `mktemp -d`; e o harness executa esse bloco como o texto o escreve
+- A coleta dos dois modos lê a issue no rastreador com a mesma condição, "se o
+  projeto tem rastreador de issues"; o modo opinionated lia sem condição (achado de
+  revisão adversarial)
+- Registradas aqui as mudanças que saíram sem versão (fonte:
+  `git log 284100f.. -- .claude/skills/generate-session-prompt/SKILL.md`): `patches/` vira
+  diretório e o passo do patch aponta `.planning/patches/{slug}/plan.md` (SYNC-20260513-001,
+  `59c0491`); o nome de projeto de negócio escrito em cinco pontos do bloco opinionated vira
+  `[PROJETO]` (SYNC-20260805-005, `0f1d930`); a coleta lê a issue no rastreador (2.17.0
+  da origem, `9056d20`); `TODO.md` e o tipo `patch` saem da coleta e dos templates (detour
+  `aposentar-todo-md-e-patch`: `5818ee8`, `5c16300`)
+
+**Motivação:** o plugin vendorizado no marketplace `4-successful-AI-life` usa esta
+versão no rótulo `+upstream-X.Y.Z`; sem a subida, versões diferentes da skill
+carregam o mesmo rótulo `4.0.0` (na camada `.claude/`, os commits listados acima mudaram o
+conteúdo da skill com o `version:` do frontmatter ainda em `4.0.0`).
 
 ### v4.0.0 (28/Abril/2026)
 
