@@ -1,0 +1,214 @@
+{
+  "createdAt": 1793400000.0,
+  "version": 1,
+  "windows": [
+    {
+      "windowId": "A1000000-0000-4000-8000-000000000001",
+      "tabManager": {
+        "selectedWorkspaceIndex": 0,
+        "workspaces": [
+          {
+            "workspaceId": "A2000000-0000-4000-8000-000000000001",
+            "customTitle": "projeto alfa",
+            "processTitle": "alfa",
+            "panels": [
+              {
+                "id": "B0000001-0000-4000-8000-000000000001",
+                "stableSurfaceId": "F0000001-0000-4000-8000-000000000001",
+                "title": "aba armada pelos dois",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp",
+                  "agent": {
+                    "hadActivePromptTurn": false,
+                    "kind": "claude",
+                    "permissionMode": "bypassPermissions",
+                    "sessionId": "11111111-0000-4000-8000-000000000001",
+                    "workingDirectory": "/tmp/projeto-1111"
+                  },
+                  "resumeBinding": {
+                    "approvalPolicy": "auto",
+                    "autoResume": true,
+                    "checkpointId": "11111111-0000-4000-8000-000000000001",
+                    "cwd": "/tmp/projeto-1111",
+                    "kind": "claude",
+                    "name": "Claude Code",
+                    "source": "agent-hook",
+                    "updatedAt": 1793400000.0
+                  },
+                  "wasAgentRunning": true
+                }
+              },
+              {
+                "id": "B0000002-0000-4000-8000-000000000002",
+                "stableSurfaceId": "F0000002-0000-4000-8000-000000000002",
+                "title": "aba so com agent",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp",
+                  "agent": {
+                    "hadActivePromptTurn": false,
+                    "kind": "claude",
+                    "permissionMode": "bypassPermissions",
+                    "sessionId": "22222222-0000-4000-8000-000000000002",
+                    "workingDirectory": "/tmp/projeto-2222"
+                  },
+                  "wasAgentRunning": false
+                }
+              },
+              {
+                "id": "B0000003-0000-4000-8000-000000000003",
+                "stableSurfaceId": "F0000003-0000-4000-8000-000000000003",
+                "title": "aba so com binding",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp",
+                  "resumeBinding": {
+                    "approvalPolicy": "auto",
+                    "autoResume": true,
+                    "checkpointId": "33333333-0000-4000-8000-000000000003",
+                    "cwd": "/tmp/projeto-3333",
+                    "kind": "claude",
+                    "name": "Claude Code",
+                    "source": "agent-hook",
+                    "updatedAt": 1793400000.0
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "workspaceId": "A2000000-0000-4000-8000-000000000002",
+            "customTitle": "projeto beta",
+            "panels": [
+              {
+                "id": "B0000004-0000-4000-8000-000000000004",
+                "stableSurfaceId": "F0000004-0000-4000-8000-000000000004",
+                "title": "aba dormindo",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp"
+                }
+              },
+              {
+                "id": "B0000005-0000-4000-8000-000000000005",
+                "stableSurfaceId": "F0000005-0000-4000-8000-000000000005",
+                "title": "aba com binding cli",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp",
+                  "resumeBinding": {
+                    "approvalPolicy": "manual",
+                    "autoResume": false,
+                    "checkpointId": "55555555-0000-4000-8000-000000000005",
+                    "cwd": "/tmp/projeto-5555",
+                    "kind": "claude",
+                    "name": "Claude Code",
+                    "source": "cli",
+                    "updatedAt": 1793400000.0
+                  }
+                }
+              },
+              {
+                "id": "B0000006-0000-4000-8000-000000000006",
+                "stableSurfaceId": "F0000006-0000-4000-8000-000000000006",
+                "title": "aba com binding desligado",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp",
+                  "resumeBinding": {
+                    "approvalPolicy": "manual",
+                    "autoResume": false,
+                    "checkpointId": "66666666-0000-4000-8000-000000000006",
+                    "cwd": "/tmp/projeto-6666",
+                    "kind": "claude",
+                    "name": "Claude Code",
+                    "source": "agent-hook",
+                    "updatedAt": 1793400000.0
+                  }
+                }
+              },
+              {
+                "id": "B0000007-0000-4000-8000-000000000007",
+                "stableSurfaceId": "F0000007-0000-4000-8000-000000000007",
+                "title": "navegador",
+                "type": "browser",
+                "directory": "/tmp",
+                "ttyName": "ttys900"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "windowId": "A1000000-0000-4000-8000-000000000002",
+      "tabManager": {
+        "selectedWorkspaceIndex": 0,
+        "workspaces": [
+          {
+            "workspaceId": "A2000000-0000-4000-8000-000000000003",
+            "customTitle": "projeto gama",
+            "panels": [
+              {
+                "id": "B0000008-0000-4000-8000-000000000008",
+                "stableSurfaceId": "F0000008-0000-4000-8000-000000000008",
+                "title": "agent com binding desligado",
+                "type": "terminal",
+                "directory": "/tmp",
+                "ttyName": "ttys900",
+                "terminal": {
+                  "hasReceivedExplicitInput": true,
+                  "isRemoteTerminal": false,
+                  "workingDirectory": "/tmp",
+                  "agent": {
+                    "hadActivePromptTurn": false,
+                    "kind": "claude",
+                    "permissionMode": "bypassPermissions",
+                    "sessionId": "88888888-0000-4000-8000-000000000008",
+                    "workingDirectory": "/tmp/projeto-8888"
+                  },
+                  "resumeBinding": {
+                    "approvalPolicy": "manual",
+                    "autoResume": false,
+                    "checkpointId": "88888888-0000-4000-8000-000000000008",
+                    "cwd": "/tmp/projeto-8888",
+                    "kind": "claude",
+                    "name": "Claude Code",
+                    "source": "agent-hook",
+                    "updatedAt": 1793400000.0
+                  },
+                  "wasAgentRunning": false
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

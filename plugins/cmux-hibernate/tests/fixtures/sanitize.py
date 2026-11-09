@@ -10,9 +10,18 @@ A substituicao e' deterministica e injetora — dois identificadores diferentes
 no cru continuam diferentes no sanitizado, senao os testes de vinculo perderiam
 o sentido.
 
+A linha do `ps eww` e' reconstruida por LISTA DE PERMISSAO, nao de bloqueio: sai
+so' o argv que os parsers leem (binario, --resume/--session-id, a flag de
+permissao, o marcador de daemon) e as variaveis de PERMITIDAS. Todo o resto do
+ambiente (tokens do socket do cmux, TMPDIR, HOME, PATH, o argv codificado em
+base64) fica de fora; o CMUX_AGENT_LAUNCH_ARGV_B64 e' recodificado a partir do
+argv ja sintetico. Ate' 31/10/2026 a sanitizacao era por substituicao e deixou
+passar um token de socket e o argv real em base64.
+
 Uso: python3 sanitize.py
 """
 from pathlib import Path
+import base64
 import getpass
 import re
 import socket
@@ -82,6 +91,43 @@ def sanitizar_titulo(texto, mapa_ws):
     return "workspace {}".format(mapa_ws.de(texto).rsplit("-", 1)[-1])
 
 
+PERMITIDAS = ("CMUX_SURFACE_ID", "CMUX_WORKSPACE_ID", "CMUX_AGENT_LAUNCH_KIND")
+KINDS = {"claude", "codex"}
+_RE_SESSAO = re.compile(r"--(resume|session-id)\s+(\S+)")
+
+
+def sanitizar_ps(linha, mai, mino):
+    """Uma linha `<pid> <command + environment>` reconstruida so' com o permitido."""
+    pid = linha.split()[0]
+    argv = ["/Users/dev/.local/bin/claude"]
+    if " daemon run" in linha:
+        argv += ["daemon", "run"]
+    for marca in ("bg-pty-host", "bg-spare"):
+        if marca in linha:
+            argv.append(marca)
+    m = _RE_SESSAO.search(linha)
+    if m:
+        valor = m.group(2)
+        argv += ["--" + m.group(1),
+                 mino.de(valor) if RE_UUID_MIN.fullmatch(valor) else "titulo-sintetico"]
+    if "--dangerously-skip-permissions" in linha:
+        argv.append("--dangerously-skip-permissions")
+    env = []
+    for nome in PERMITIDAS:
+        v = re.search(r"(?:^|\s)%s=(\S+)" % nome, linha)
+        if not v:
+            continue
+        valor = v.group(1)
+        if RE_UUID_MAI.fullmatch(valor):
+            env.append("%s=%s" % (nome, mai.de(valor)))
+        elif nome == "CMUX_AGENT_LAUNCH_KIND" and valor in KINDS:
+            env.append("%s=%s" % (nome, valor))
+    if "CMUX_AGENT_LAUNCH_ARGV_B64=" in linha:
+        b64 = base64.b64encode("\0".join(argv).encode()).decode()
+        env.append("CMUX_AGENT_LAUNCH_ARGV_B64=" + b64)
+    return " ".join([pid] + argv + env)
+
+
 def main():
     if not RAW.exists():
         raise SystemExit("nada em .raw/ — rode capture.sh antes")
@@ -94,12 +140,16 @@ def main():
         if not origem.exists():
             continue
         texto = origem.read_text(errors="ignore")
-
-        texto = RE_UUID_MAI.sub(lambda m: mai.de(m.group(0)), texto)
-        texto = RE_UUID_MIN.sub(lambda m: mino.de(m.group(0)), texto)
-        texto = RE_TITULO.sub(
-            lambda m: '"{}"'.format(sanitizar_titulo(m.group(1), rotulos)), texto)
-        texto = RE_PATH.sub(lambda m: substituir_caminho(m, paths), texto)
+        if nome == "ps-eww.txt":
+            # reconstruida do zero: nao passa pelas substituicoes da arvore
+            texto = "\n".join(sanitizar_ps(l, mai, mino) for l in texto.splitlines()
+                              if l.strip()) + "\n"
+        else:
+            texto = RE_UUID_MAI.sub(lambda m: mai.de(m.group(0)), texto)
+            texto = RE_UUID_MIN.sub(lambda m: mino.de(m.group(0)), texto)
+            texto = RE_TITULO.sub(
+                lambda m: '"{}"'.format(sanitizar_titulo(m.group(1), rotulos)), texto)
+            texto = RE_PATH.sub(lambda m: substituir_caminho(m, paths), texto)
         # varredura final: usuario e host da maquina, lidos do ambiente para nao
         # ficarem hardcoded num repositorio publico
         texto = texto.replace(getpass.getuser(), "dev")
@@ -112,7 +162,8 @@ def main():
         print("  {} -> {} linhas".format(nome, len(texto.splitlines())))
 
     print("\nfixtures sanitizadas. Confira antes de commitar:")
-    print("  grep -inE \"$(whoami)|$(hostname -s)|/Documents/\" {}/*.txt".format(DIR))
+    print("  grep -inE \"$(whoami)|$(hostname -s)|/Documents/|/var/folders\" {}/*.txt".format(DIR))
+    print("  bash ../run-tests.sh   # test_sanitize.py reprova ambiente real nas fixtures")
 
 
 if __name__ == "__main__":

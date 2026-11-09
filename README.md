@@ -49,7 +49,7 @@ Drop any line you don't want — every plugin is independent. After reload, skil
 | [**generate-session-prompt**](./plugins/generate-session-prompt/) | `1.1.1+upstream-4.0.0` | Generates a handoff prompt to resume work in a new session — for long sessions, pauses, or tool switches. |
 | [**enhanced-planning**](./plugins/enhanced-planning/) | `1.1.1+upstream-2.0.0` | Adds structural guardrails to implementation plans — human checkpoints, risk registry, decision locks, multi-session protocol, and Codex review. Complements `writing-plans`. |
 | [**multica-ops**](./plugins/multica-ops/) | `0.2.12` | Companion to Multica's official CLI skill — desktop-app binary discovery, the bridged-session route, the shapes and limits the reference omits, and the constraints of a governed board. |
-| [**cmux-hibernate**](./plugins/cmux-hibernate/) | `0.2.0` | Hibernates the Claude Code sessions open across cmux workspaces before you quit cmux, so they come back one at a time, as you open each tab, instead of all at once. |
+| [**cmux-hibernate**](./plugins/cmux-hibernate/) | `0.3.0` | Before you quit cmux, ends the idle Claude Code sessions across its workspaces and checks that cmux will not relaunch them, so reopening brings back only the tab you are in; the rest resume when you ask. |
 | [**decisoes**](./plugins/decisoes/) | `0.1.1` | A Claude Code mod that collects the decisions only you can make in each session, lets you answer them with buttons, and takes you to the other cmux sessions waiting on you. Texts in Portuguese. |
 
 <details>
@@ -169,7 +169,7 @@ Point `MULTICA_PLAYBOOK` at that repository and the skill defers to it. Nothing 
 
 <br>
 
-Dozens of tabs running Claude Code cost memory, and quitting cmux is risky: the resume binding it keeps records an intention, not the live process, and reopening starts every session at once. `hibernate.py` reads the state from the processes (`CMUX_SURFACE_ID`, `lsof`), rewrites each binding with the right directory and `auto_resume: false`, and writes a dated snapshot; after you reopen, each tab wakes when you open it, and `wake.py` checks or rebuilds what is missing. `--surface <tab>` hibernates a single tab, including the one the command runs from.
+Dozens of tabs running Claude Code cost memory, and quitting cmux is risky: reopening relaunches every session at once, and on cmux 0.65.2 rewriting the resume binding is silently refused while the CLI prints `OK`. `hibernate.py` builds the inventory from the processes (`CMUX_SURFACE_ID`, `lsof`) and from cmux's own autosave, the file the restore reads; with `--apply` it ends each idle `claude` with SIGTERM, which frees the memory at once and drops the tab from the restore, clears the record of tabs that are armed with no process, and checks the rewritten autosave before it says you can quit. `wake.py` compares the last `--apply` plan with what came back, tab by tab: asleep, relaunched on its own, woken by you (with the time), still armed, missing. `--surface <tab>` handles a single tab; the command never ends the session it runs in, and asks for `/exit` when that session is a target.
 
 ```
 /cmux-hibernate:cmux-hibernate

@@ -23,6 +23,7 @@ class TestLerEstado(unittest.TestCase):
         com_sessao = [a for a in abas if a.sessao]
         self.assertGreater(len(com_sessao), 0)
         self.assertTrue(all(a.fonte == "processo" for a in com_sessao))
+        self.assertGreaterEqual(len(estado.processos), len(com_sessao))
 
     def test_cmux_bin_respeita_env(self):
         with mock.patch.dict("os.environ", {"CMUX_BUNDLED_CLI_PATH": "/custom/cmux"}), \

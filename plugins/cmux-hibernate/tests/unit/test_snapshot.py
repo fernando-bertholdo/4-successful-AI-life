@@ -9,7 +9,8 @@ sys.path.insert(0, str(RAIZ / "scripts"))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from fuso import FusoFixo  # noqa: E402
 from lib.cmux_state import Aba, Estado, Janela, Pane, Workspace  # noqa: E402
-from lib.snapshot import aplicar_retencao, gravar, serializar  # noqa: E402
+from lib.snapshot import (  # noqa: E402
+    NOME_DRY_RUN, aplicar_retencao, gravar, gravar_dry_run, serializar)
 
 
 def estado_exemplo():
@@ -45,6 +46,18 @@ class TestSnapshot(unittest.TestCase):
             lido = json.loads((destino / "snapshot.json").read_text())
             self.assertEqual(lido["aba_de_controle"], "U1")
 
+    def test_tipo_e_plano_vao_no_snapshot(self):
+        plano = [{"surface": "U1", "acao": "encerrar", "resultado": {"verificado": True}}]
+        d = serializar(estado_exemplo(), None, 7, tipo="apply", plano=plano, escopo="padrao",
+                       versao_cmux="cmux 0.65.2")
+        self.assertEqual((d["tipo"], d["escopo"], d["versao_cmux"]), ("apply", "padrao",
+                                                                       "cmux 0.65.2"))
+        self.assertEqual(d["plano"], plano)
+        self.assertRegex(d["versao_plugin"] or "", r"^\d+\.\d+\.\d+$")
+
+    def test_tipo_padrao_e_dry_run(self):
+        self.assertEqual(serializar(estado_exemplo(), None, 7)["tipo"], "dry-run")
+
     def test_gerado_em_e_utc_com_z(self):
         d = serializar(estado_exemplo(), aba_controle=None, stale_days=7)
         self.assertRegex(d["gerado_em"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
@@ -54,6 +67,44 @@ class TestSnapshot(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             destino = gravar(dados, pathlib.Path(tmp))
             self.assertEqual(destino.name, "2026-10-04T01-30-05Z")
+
+
+class TestComandoDoInventario(unittest.TestCase):
+    def test_cwd_com_aspas_e_espaco_vai_citado(self):
+        """Uma pasta com apostrofo quebrava o comando colado no terminal."""
+        e = estado_exemplo()
+        e.janelas[0].workspaces[0].panes[0].abas[0].cwd = "/tmp/o'neil dir"
+        with tempfile.TemporaryDirectory() as tmp:
+            destino = gravar(serializar(e, None, 7), pathlib.Path(tmp))
+            texto = (destino / "INVENTARIO.md").read_text()
+        self.assertIn("cd '/tmp/o'\"'\"'neil dir' && claude --resume", texto)
+
+
+class TestDryRun(unittest.TestCase):
+    """O dry-run nao entra na retencao dos 5 nem e' o que o wake compara (F6, F5)."""
+
+    def test_dry_run_vai_para_diretorio_fixo_e_sobrescreve(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = pathlib.Path(tmp)
+            for i in range(7):
+                (base / ("2026-08-04T10-00-0%dZ" % i)).mkdir()
+            d1 = gravar_dry_run(serializar(estado_exemplo(), None, 7), base)
+            (d1 / "lixo").write_text("x")
+            d2 = gravar_dry_run(serializar(estado_exemplo(), None, 7), base)
+            self.assertEqual((d1, d2.name), (d2, NOME_DRY_RUN))
+            self.assertFalse((d2 / "lixo").exists())
+            self.assertTrue((d2 / "INVENTARIO.md").exists())
+            self.assertEqual(len([d for d in base.iterdir() if d.name.endswith("Z")]), 7)
+
+    def test_retencao_nao_conta_nem_apaga_o_dry_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = pathlib.Path(tmp)
+            gravar_dry_run(serializar(estado_exemplo(), None, 7), base)
+            for i in range(6):
+                (base / ("2026-08-04T10-00-0%dZ" % i)).mkdir()
+            removidos = aplicar_retencao(base, manter=5)
+            self.assertEqual([d.name for d in removidos], ["2026-08-04T10-00-00Z"])
+            self.assertTrue((base / NOME_DRY_RUN).exists())
 
 
 class TestInventario(FusoFixo, unittest.TestCase):

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "activeSessionsBySurface": {},
+  "activeSessionsByWorkspace": {},
+  "sessions": {
+    "11111111-0000-4000-8000-000000000001": {
+      "sessionId": "11111111-0000-4000-8000-000000000001",
+      "surfaceId": "B0000001-0000-4000-8000-000000000001",
+      "runtimeStatus": "idle",
+      "agentLifecycle": "idle",
+      "hookEventName": "Stop"
+    },
+    "22222222-0000-4000-8000-000000000002": {
+      "sessionId": "22222222-0000-4000-8000-000000000002",
+      "surfaceId": "B0000002-0000-4000-8000-000000000002",
+      "runtimeStatus": "running",
+      "agentLifecycle": "running",
+      "hookEventName": "UserPromptSubmit"
+    },
+    "33333333-0000-4000-8000-000000000003": {
+      "sessionId": "33333333-0000-4000-8000-000000000003",
+      "surfaceId": "B0000003-0000-4000-8000-000000000003",
+      "runtimeStatus": "idle",
+      "agentLifecycle": "backgroundWorkPending",
+      "hookEventName": "Stop"
+    },
+    "55555555-0000-4000-8000-000000000005": {
+      "sessionId": "55555555-0000-4000-8000-000000000005",
+      "surfaceId": "B0000005-0000-4000-8000-000000000005",
+      "runtimeStatus": "needsInput",
+      "agentLifecycle": "needsInput",
+      "hookEventName": "Notification"
+    }
+  }
+}
