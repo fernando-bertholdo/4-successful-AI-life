@@ -81,7 +81,14 @@
   em base64, o `TMPDIR` e o serviço do launchd, publicados desde a 0.1.0. A linha passou a
   ser reconstruída por lista de permissão, e `test_sanitize.py` reprova ambiente real em
   qualquer fixture versionada.
-- Testes: de 83 para 210, medidos em 31/10/2026. Os do `main()` rodam contra um cmux falso
+- **Aviso sobre `claude` vivo no cmux sem `CMUX_SURFACE_ID`.** O plugin só enxerga uma
+  sessão pela variável, então uma aberta enquanto o socket recusava clientes ficava fora
+  do plano e do inventário, e caía no Cmd+Q sem aviso (caso real de 09/11/2026). O
+  dry-run e o `--apply` agora a listam, com o pid, o `cwd` e o `claude --resume <id>`
+  (id do argv ou do `~/.claude/sessions/<pid>.json`), e o snapshot a guarda em `sem_aba`.
+  É aviso, não trava: o Cmd+Q continua liberado, com um lembrete logo antes. "No cmux"
+  é o `__CFBundleIdentifier=com.cmuxterm.app` que o app passa aos filhos.
+- Testes: de 83 para 218, medidos em 31/10/2026 (210) e 09/11/2026 (218). Os do `main()` rodam contra um cmux falso
   (`tests/unit/cmux_falso.py`), que reproduz o SIGTERM, o autosave regravado e o `OK` que
   não pega; as fixtures novas (`autosave.json`, `claude-hook-sessions.json`) são
   inventadas.

@@ -23,6 +23,7 @@ import time
 
 STALE_DAYS = 7
 RAIZ_PROJETOS = Path.home() / ".claude" / "projects"
+RAIZ_SESSOES = Path.home() / ".claude" / "sessions"  # <pid>.json que o Claude Code grava
 
 
 @dataclass
@@ -177,6 +178,40 @@ def claudes_por_surface(saida_ps: str) -> Dict[str, List[str]]:
         if m and _e_claude_de_aba(linha):
             por.setdefault(m.group(1), []).append(linha.split()[0])
     return por
+
+
+_MARCA_CMUX = "__CFBundleIdentifier=com.cmuxterm.app"
+
+
+def _registro_do_claude(pid: str, raiz: Path) -> dict:
+    """O `~/.claude/sessions/<pid>.json` que o Claude Code grava, se for deste pid."""
+    try:
+        dados = json.loads((raiz / ("%s.json" % pid)).read_text())
+    except (OSError, ValueError):
+        return {}
+    return dados if isinstance(dados, dict) and str(dados.get("pid")) == pid else {}
+
+
+def claudes_sem_aba(saida_ps: str, raiz_sessoes: Optional[Path] = None) -> List[dict]:
+    """Claude vivo que descende do app cmux mas nao tem CMUX_SURFACE_ID.
+
+    O plugin so' enxerga uma sessao pela variavel, entao esta fica fora do plano e do
+    inventario; mesmo assim ela morre no Cmd+Q, junto com o terminal do cmux. A marca de
+    "aberto no cmux" e' o __CFBundleIdentifier que o app passa aos filhos. O id da sessao
+    sai do argv ou, sem ele, do registro do Claude Code por pid.
+    """
+    raiz = raiz_sessoes or RAIZ_SESSOES
+    achados = []
+    for linha in saida_ps.splitlines():
+        if not _e_claude_de_aba(linha) or _RE_SURFACE.search(linha) or _MARCA_CMUX not in linha:
+            continue
+        pid = linha.split()[0]
+        registro = _registro_do_claude(pid, raiz)
+        m_sess = _RE_SESSAO.search(linha)
+        achados.append({"pid": pid,
+                        "sessao": m_sess.group(1) if m_sess else registro.get("sessionId"),
+                        "cwd": registro.get("cwd")})
+    return achados
 
 
 def _ppid(pid: str) -> Optional[str]:

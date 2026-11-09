@@ -11,6 +11,7 @@ from lib.cmux_state import (  # noqa: E402
     _inicios_de_ps,
     _inicio_do_cmux_de_ps,
     aplicar_processos,
+    claudes_sem_aba,
     detectar_duplicatas,
     parse_processos,
     parse_tree,
@@ -147,3 +148,55 @@ class TestRetomadaPorTitulo(unittest.TestCase):
         linha = ("1 /Users/x/.local/bin/claude daemon run "
                  "CMUX_SURFACE_ID=AAAAAAAA-1111-2222-3333-444444444444")
         self.assertEqual(surfaces_com_processo(linha), {})
+
+
+class TestClaudeSemAba(unittest.TestCase):
+    """Claude aberto no cmux sem CMUX_SURFACE_ID: o plugin nao o ve, mas ele cai no Cmd+Q.
+
+    Caso real de 09/11/2026: uma sessao aberta enquanto o socket recusava todo cliente
+    ficou sem a variavel e sumiria no quit sem aparecer no inventario.
+    """
+    SEM_ABA = ("6001 /Users/x/.local/bin/claude --dangerously-skip-permissions "
+               "__CFBundleIdentifier=com.cmuxterm.app TERM_PROGRAM=ghostty")
+    COM_ABA = ("6002 /Users/x/.local/bin/claude --resume bbbbbbbb-5555-6666-7777-888888888888 "
+               "__CFBundleIdentifier=com.cmuxterm.app "
+               "CMUX_SURFACE_ID=CCCCCCCC-1111-2222-3333-444444444444")
+    FORA_DO_CMUX = ("6003 /Users/x/.local/bin/claude --dangerously-skip-permissions "
+                    "__CFBundleIdentifier=com.apple.Terminal TERM_PROGRAM=Apple_Terminal")
+    DAEMON = ("6004 /Users/x/.local/bin/claude daemon run --json-path /x "
+              "__CFBundleIdentifier=com.cmuxterm.app")
+    COM_ID = ("6005 /Users/x/.local/bin/claude --session-id "
+              "dddddddd-1111-2222-3333-444444444444 __CFBundleIdentifier=com.cmuxterm.app")
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.sessoes = pathlib.Path(self.tmp.name)
+
+    def test_acha_so_o_do_cmux_sem_aba(self):
+        saida = "\n".join([self.SEM_ABA, self.COM_ABA, self.FORA_DO_CMUX, self.DAEMON])
+        achados = claudes_sem_aba(saida, raiz_sessoes=self.sessoes)
+        self.assertEqual([a["pid"] for a in achados], ["6001"])
+        self.assertIsNone(achados[0]["sessao"])
+
+    def test_sessao_vem_do_argv(self):
+        achados = claudes_sem_aba(self.COM_ID, raiz_sessoes=self.sessoes)
+        self.assertEqual(achados[0]["sessao"], "dddddddd-1111-2222-3333-444444444444")
+
+    def test_sessao_e_cwd_vem_do_registro_do_claude_por_pid(self):
+        (self.sessoes / "6001.json").write_text(
+            '{"pid": 6001, "sessionId": "eeeeeeee-1111-2222-3333-444444444444", '
+            '"cwd": "/Users/x/projeto"}')
+        achado = claudes_sem_aba(self.SEM_ABA, raiz_sessoes=self.sessoes)[0]
+        self.assertEqual(achado["sessao"], "eeeeeeee-1111-2222-3333-444444444444")
+        self.assertEqual(achado["cwd"], "/Users/x/projeto")
+
+    def test_registro_de_outro_pid_nao_vale(self):
+        (self.sessoes / "6001.json").write_text(
+            '{"pid": 9999, "sessionId": "eeeeeeee-1111-2222-3333-444444444444"}')
+        self.assertIsNone(claudes_sem_aba(self.SEM_ABA, raiz_sessoes=self.sessoes)[0]["sessao"])
+
+    def test_registro_ilegivel_nao_quebra(self):
+        (self.sessoes / "6001.json").write_text("{nao e json")
+        self.assertIsNone(claudes_sem_aba(self.SEM_ABA, raiz_sessoes=self.sessoes)[0]["sessao"])

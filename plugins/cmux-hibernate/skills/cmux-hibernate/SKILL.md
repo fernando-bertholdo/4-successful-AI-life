@@ -49,6 +49,11 @@ Repita ao usuário as duas instruções que a saída traz:
   processos antigos terminarem, o restore da aba de controle pode falhar com
   "conflict: The surface restore record changed".
 
+Se a saída trouxer "aviso: N claude vivo(s) no cmux sem CMUX_SURFACE_ID", repita a lista
+ao usuário antes do Cmd+Q: são sessões abertas no cmux que o plugin não vê nem desarma, e
+que caem no quit. Cada linha diz como retomá-la (`claude --resume <id>`) ou que o id é
+desconhecido; nesse caso, peça que ele anote o que ela fazia.
+
 A aba de controle é a única que sobe quando o cmux reabre. `--all` a inclui.
 
 Para uma aba só, `--surface <uuid|surface:N>`: planeja aquela aba e nenhuma outra. As

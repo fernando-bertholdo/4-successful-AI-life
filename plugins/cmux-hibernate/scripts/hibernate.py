@@ -26,6 +26,7 @@ from lib.bindings import abas_que_casam  # noqa: E402
 from lib.cmux_state import (  # noqa: E402
     STALE_DAYS,
     _ps_eww,
+    claudes_sem_aba,
     detectar_duplicatas,
     ler_estado,
     inicios_de,
@@ -133,7 +134,9 @@ def main() -> int:
 
     controle = None if args.all else (os.environ.get("CMUX_SURFACE_ID") or "").upper() or None
     abas = [a for *_, a in estado.todas_abas() if a.sessao]
-    duplicadas = detectar_duplicatas(parse_processos(so_principais(_ps_eww())))
+    saida_ps = so_principais(_ps_eww())
+    duplicadas = detectar_duplicatas(parse_processos(saida_ps))
+    sem_aba = claudes_sem_aba(saida_ps)
     _SESSOES_DE_ABA.clear()
     _SESSOES_DE_ABA.update(a.sessao for a in abas)
     plano = planejar(estado, controle, duplicadas, so_aba, ancestrais(), hooks,
@@ -166,6 +169,7 @@ def main() -> int:
     print("\n  Plano:")
     for p in plano:
         print(_linha(p))
+    _avisar_sem_aba(sem_aba)
 
     escopo_nome = "surface" if so_aba else ("all" if args.all else "padrao")
     controle_snap = None if so_aba is not None and so_aba == controle else controle
@@ -174,6 +178,7 @@ def main() -> int:
     if not args.apply:
         dados = serializar(estado, controle_snap, args.stale_days, tipo="dry-run",
                            plano=_limpo(plano), escopo=escopo_nome)
+        dados["sem_aba"] = sem_aba
         destino = gravar_dry_run(dados, args.estado)
         print("\n  Encerraria %d, limparia %d, pularia %d; %d ja dormem (dry-run)."
               % (conta[ENCERRAR], conta[LIMPAR], conta[PULAR], conta[DORMINDO]))
@@ -191,6 +196,7 @@ def main() -> int:
     dados = serializar(estado, controle_snap, args.stale_days, tipo="apply",
                        plano=_limpo(plano) + herdados, escopo=escopo_nome, versao_cmux=versao)
     dados["concluido"] = False
+    dados["sem_aba"] = sem_aba
     destino = gravar(dados, args.estado)  # antes dos sinais: o plano ja fica registrado
     fora = []
     try:
@@ -235,9 +241,31 @@ def main() -> int:
         print("  SessionEnd desarma a aba. Depois disso, pode dar Cmd+Q; espere uns 10 s antes")
         print("  de reabrir o cmux.")
         return 3
+    if sem_aba:
+        print("\n  Antes do Cmd+Q, veja o aviso acima: %s fora do plano." % _conta_sem_aba(sem_aba))
     print("\n  Pode dar Cmd+Q. Nao abra as abas encerradas antes disso: abrir rearma a aba.")
     print("  Depois do Cmd+Q, espere uns 10 s antes de reabrir o cmux.")
     return 0
+
+
+def _conta_sem_aba(sem_aba: list) -> str:
+    return "%d claude vivo%s no cmux sem CMUX_SURFACE_ID" % (
+        len(sem_aba), "" if len(sem_aba) == 1 else "s")
+
+
+def _avisar_sem_aba(sem_aba: list) -> None:
+    """Quem roda no cmux sem a variavel nao entra no plano, mas cai no Cmd+Q."""
+    if not sem_aba:
+        return
+    um = len(sem_aba) == 1
+    print("\n  aviso: %s. O plugin nao %s ve nem desarma, mas %s no Cmd+Q:"
+          % (_conta_sem_aba(sem_aba), "o" if um else "os", "ele cai" if um else "eles caem"))
+    for c in sem_aba:
+        if c["sessao"]:
+            retomar = "retome depois com: claude --resume %s" % c["sessao"]
+        else:
+            retomar = "sessao desconhecida: anote o que ela fazia antes do Cmd+Q"
+        print("    pid %s  %s  %s" % (c["pid"], c["cwd"] or "", retomar))
 
 
 def _feito(p: dict) -> str:

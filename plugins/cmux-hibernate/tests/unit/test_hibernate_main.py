@@ -34,6 +34,7 @@ class Base(unittest.TestCase):
         saida, erro = io.StringIO(), io.StringIO()
         with self.cmux.ligado(hibernate, protegidos=protegidos), \
                 mock.patch.dict("os.environ", {"CMUX_SURFACE_ID": controle}), \
+                mock.patch("lib.cmux_state.RAIZ_SESSOES", pathlib.Path(self.tmp.name) / "sessoes"), \
                 mock.patch.object(sys, "argv", ["hibernate.py", "--estado",
                                                 str(self.estado_dir), *argv]), \
                 contextlib.redirect_stdout(saida), contextlib.redirect_stderr(erro):
@@ -186,6 +187,27 @@ class TestConferenciaFinal(Base):
         rc = self.rodar("--apply", extra_ps=[linha])
         self.assertEqual(rc, 1)
         self.assertIn("claude vivo na aba %s (pid 777), fora do plano" % uuid(9), self.saida)
+
+    def test_claude_sem_aba_no_cmux_e_avisado_sem_segurar_o_cmd_q(self):
+        linha = ("888 /Users/x/.local/bin/claude --session-id %s "
+                 "__CFBundleIdentifier=com.cmuxterm.app" % sessao(8))
+        rc = self.rodar("--apply", extra_ps=[linha])
+        self.assertEqual(rc, 0)
+        self.assertIn("1 claude vivo no cmux sem CMUX_SURFACE_ID", self.saida)
+        self.assertIn("pid 888", self.saida)
+        self.assertIn("claude --resume %s" % sessao(8), self.saida)
+        self.assertLess(self.saida.index("sem CMUX_SURFACE_ID"), self.saida.index("Pode dar Cmd+Q"))
+
+    def test_claude_sem_aba_aparece_no_dry_run(self):
+        linha = "889 /Users/x/.local/bin/claude __CFBundleIdentifier=com.cmuxterm.app"
+        self.assertEqual(self.rodar(extra_ps=[linha]), 0)
+        self.assertIn("pid 889", self.saida)
+        self.assertIn("sessao desconhecida", self.saida)
+
+    def test_claude_fora_do_cmux_nao_e_avisado(self):
+        linha = "890 /Users/x/.local/bin/claude __CFBundleIdentifier=com.apple.Terminal"
+        self.assertEqual(self.rodar("--apply", extra_ps=[linha]), 0)
+        self.assertNotIn("sem CMUX_SURFACE_ID", self.saida)
 
     def test_aba_armada_fora_da_arvore_segura_o_cmd_q(self):
         abas = PADRAO + [{"n": 6}]
