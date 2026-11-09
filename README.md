@@ -202,7 +202,7 @@ Prompt Master includes specific profiles for 20+ tools. For anything not on the 
 | Tool | Category | What Prompt Master Fixes |
 |------|----------|--------------------------|
 | **Claude 5 / current Claude** | Reasoning and agentic LLM | Model-aware effort, scope, XML structure, and delegation control |
-| **ChatGPT / GPT-5.6** | Reasoning and agentic LLM | Sol/Terra/Luna routing, lean contracts, autonomy and effort control |
+| **ChatGPT / OpenAI GPT models** | Reasoning and agentic LLM | GPT-6 Luna, GPT-6.1 Sol, GPT-6 Astra, and GPT-5.6 compatibility; lean contracts and verified controls |
 | **Codex** | Coding agent | File scope, approval boundaries, verification, bounded subagents |
 | **Grok 4.6** | Reasoning and agentic LLM | Search grounding, reasoning effort, tools, caching, and stop conditions |
 | **Gemini 2.x** | Reasoning LLM | Grounding anchors, citation rules, format locks |
@@ -243,12 +243,12 @@ Prompt Master includes specific profiles for 20+ tools. For anything not on the 
 
 ---
 
-## 📐 13 Prompt Templates (Auto-Selected)
+## 📐 14 Prompt Templates (Auto-Selected)
 
 Prompt Master picks the right architecture for every task automatically and routes silently — you never see the framework name, just the prompt.
 
 <details>
-<summary><h3> Click to view all 13 templates</h3></summary>
+<summary><h3> Click to view all 14 templates</h3></summary>
 
 | Template | Best For |
 |----------|----------|
@@ -265,6 +265,7 @@ Prompt Master picks the right architecture for every task automatically and rout
 | **ComfyUI** | Node-based image workflows — positive/negative split per checkpoint |
 | **Prompt Decompiler** | Breaking down, adapting, simplifying, or splitting existing prompts |
 | **Current Claude Task Brief** | Complex, multi-step, or agentic tasks on current Claude models |
+| **OpenAI Task Brief** | Complex tasks in ChatGPT, Codex, or the API; GPT-6 guidance alongside GPT-5.6 compatibility |
 
 </details>
 
@@ -292,7 +293,7 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 | # | Pattern | Before | After |
 |---|---------|--------|-------|
 | 1 | **Vague task verb** | "help me with my code" | "Refactor `getUserData()` to use async/await and handle null returns" |
-| 2 | **Two tasks in one prompt** | "explain AND rewrite this function" | Split: explain first, rewrite second |
+| 2 | **Unrelated tasks in one prompt** | "fix login and write a sales email" | Split unrelated outcomes; combine related work with shared acceptance criteria |
 | 3 | **No success criteria** | "make it better" | "Done when function passes existing unit tests and handles null input" |
 | 4 | **Over-permissive agent** | "do whatever it takes" | Explicit allowed + forbidden actions list |
 | 5 | **Emotional task description** | "it's totally broken, fix everything" | "Throws uncaught TypeError on line 43 when `user` is null" |
@@ -325,7 +326,7 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 |---|---------|--------|-------|
 | 14 | **Missing output format** | "explain this concept" | "3 bullet points, each under 20 words, one-sentence summary at top" |
 | 15 | **Implicit length** | "write a summary" | "Write a summary in exactly 3 sentences" |
-| 16 | **No role assignment** | (blank) | "You are a senior backend engineer specializing in Node.js and PostgreSQL" |
+| 16 | **Missing domain perspective** | Specialized task without domain context | Add an expert role only when it changes the result |
 | 17 | **Vague aesthetic adjectives** | "make it look professional" | "Monochrome palette, 16px base font, 24px line height, no decorative elements" |
 | 18 | **No negative prompts (image AI)** | "a portrait of a woman" | Add: "no watermark, no blur, no extra fingers, no distortion, no text" |
 | 19 | **Prose prompt for Midjourney** | Full descriptive sentence | "subject, style, mood, lighting, --ar 16:9 --v 6" |
@@ -340,7 +341,7 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 |---|---------|--------|-------|
 | 20 | **No scope boundary** | "fix my app" | "Fix only login form validation in `src/auth.js`. Touch nothing else." |
 | 21 | **No stack constraints** | "build a React component" | "React 18, TypeScript strict, no external libraries, Tailwind only" |
-| 22 | **No stop condition for agents** | "build the whole feature" | Explicit stop conditions + checkpoint after each step |
+| 22 | **No stop condition for agents** | "build the whole feature" | Explicit stop conditions + meaningful milestones and verification evidence |
 | 23 | **No file path for IDE AI** | "update the login function" | "Update `handleLogin()` in `src/pages/Login.tsx` only" |
 | 24 | **Wrong template for tool** | GPT-style prose used in Cursor | Adapted to File-Scope Template with path + scope |
 | 25 | **Pasting entire codebase** | Full repo context every prompt | Scoped to relevant function and file only |
@@ -368,7 +369,7 @@ Prompt Master only uses techniques with reliable, bounded effects. Methods known
 |---|---------|--------|-------|
 | 31 | **No starting state** | "build me a REST API" | "Empty Node.js project, Express installed, `src/app.js` exists" |
 | 32 | **No target state** | "add authentication" | "`/src/middleware/auth.js` with JWT verify. `POST /login` and `POST /register` in `/src/routes/auth.js`" |
-| 33 | **Silent agent** | No progress output | "After each step output: ✅ [what was completed]" |
+| 33 | **Silent agent** | No progress output | "Report meaningful milestones, blockers, and final verification results" |
 | 34 | **Unlocked filesystem** | No file restrictions | "Only edit files inside `src/`. Do not touch `package.json`, `.env`, or any config file." |
 | 35 | **No human review trigger** | Agent decides everything | "Stop and ask before: deleting any file, adding any dependency, or touching the database schema" |
 | 36 | **Vague first turn for an agentic model** | "fix the auth bug" with no scope, files, or criteria | Front-load outcome, context, scope, boundaries, and acceptance criteria |
