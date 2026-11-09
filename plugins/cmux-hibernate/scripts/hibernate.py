@@ -229,7 +229,8 @@ def main() -> int:
     print("\n  Desarmadas e conferidas: %d de %d abas-alvo" % (
         len(alvos) - len(falhas) - len(pendentes), len(alvos)))
     if any(p["acao"] == CONTROLE for p in plano):
-        print("  Esta aba continua armada: e' a unica que sobe quando o cmux reabrir.")
+        print("  Esta aba continua armada: e' a unica que pode subir quando o cmux reabrir;"
+              " se nao subir, o wake.py aponta.")
     print("\n  Snapshot: %s" % destino)
     if falhas or fora:
         print("\n  Nao de Cmd+Q ainda: %d abas podem subir sozinhas ao reabrir."

@@ -54,7 +54,9 @@ ao usuário antes do Cmd+Q: são sessões abertas no cmux que o plugin não vê 
 que caem no quit. Cada linha diz como retomá-la (`claude --resume <id>`) ou que o id é
 desconhecido; nesse caso, peça que ele anote o que ela fazia.
 
-A aba de controle é a única que sobe quando o cmux reabre. `--all` a inclui.
+A aba de controle é a única que pode subir quando o cmux reabre. `--all` a inclui. No
+Cmd+Q de 09/11/2026 (cmux 0.65.2) nem ela subiu, embora estivesse armada: se o `wake.py`
+apontar a falha, retome-a com `claude --resume <id>`.
 
 Para uma aba só, `--surface <uuid|surface:N>`: planeja aquela aba e nenhuma outra. As
 outras herdam, no snapshot, o plano do último `--apply`, para o `wake.py` continuar

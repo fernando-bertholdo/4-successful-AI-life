@@ -28,8 +28,9 @@ que é o arquivo que a restauração lê. Para cada aba, ele planeja uma ação 
 - **confere no autosave regravado** que nenhuma aba-alvo vai subir. Só então diz "Pode dar
   Cmd+Q".
 
-A aba de onde o comando roda continua armada: é a única que sobe ao reabrir. As outras
-voltam sem o Claude, e você retoma cada uma quando quiser.
+A aba de onde o comando roda continua armada: é a única que pode subir ao reabrir. As
+outras voltam sem o Claude, e você retoma cada uma quando quiser. Na prova de 09/11/2026,
+no cmux 0.65.2, nem ela subiu; o `wake.py` aponta isso, e `claude --resume <id>` a retoma.
 
 `wake` compara o snapshot do último `--apply` com o estado real, aba a aba: dormindo,
 subiu sozinha (o desarme falhou), acordada por você (com a hora), armada para o próximo
@@ -78,9 +79,10 @@ comando.
   painel, ou um binding `agent-hook` com `autoResume: true`) e o `rpc` de reserva, cujo
   parâmetro `agent_session_ended` é contrato interno do hook do cmux, foram lidos no
   código dessa versão e medidos no autosave. Outra versão pode mudar os dois.
-- **A primeira reabertura ainda não foi medida com o processo encerrado.** Que só a aba
-  de controle sobe, e o que a aba encerrada mostra ao ser aberta, ficam a confirmar no
-  primeiro Cmd+Q com a 0.3.0.
+- **Medido no Cmd+Q de 09/11/2026:** nenhuma aba hibernada subiu. A aba de controle,
+  armada no autosave do quit, também não subiu: é o restore do cmux 0.65.2, e o
+  `wake.py` aponta a falha. O que uma aba encerrada mostra ao ser aberta ainda não foi
+  medido.
 - **Aba ocupada é pulada, e o critério é heurístico:** transcript escrito há menos de
   60 s (o da sessão ou um `.jsonl` novo do mesmo projeto) ou o registro do hook do cmux
   dizendo que há turno. Uma ferramenta longa sem registro no hook passa por ociosa.
