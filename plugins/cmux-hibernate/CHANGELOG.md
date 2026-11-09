@@ -93,9 +93,16 @@
   não pega; as fixtures novas (`autosave.json`, `claude-hook-sessions.json`) são
   inventadas.
 
+### Prova com Cmd+Q (09/11/2026, TECH-1307)
+- `--apply` em 17 abas: 4 encerradas ou limpas, 13 que já dormiam, todas conferidas. O
+  autosave do quit tinha só a aba de controle armada, e **nenhuma aba hibernada subiu** ao
+  reabrir (em 31/10 tinham subido 11 de 13).
+
 ### Em aberto
-- A primeira reabertura com a 0.3.0: que só a aba de controle sobe, e o que a aba
-  encerrada mostra ao ser aberta. Só o Cmd+Q prova.
+- **A aba de controle também não subiu**, embora estivesse armada no autosave do quit
+  (`agent` presente e binding `agent-hook` com `autoResume: true`). É o mesmo sintoma das 8
+  abas armadas de 07/11 e está no restore do cmux 0.65.2, fora do plugin. O `wake.py`
+  aponta a falha; retome a aba com `claude --resume <id>`.
 
 ## [0.2.0] — 2026-10-04
 
